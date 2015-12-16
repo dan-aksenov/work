@@ -1,0 +1,3 @@
+sqlplus " / as sysdba" @EC_MES
+
+sql_store.bat
