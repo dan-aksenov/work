@@ -19,5 +19,7 @@ CREATE EXTENSION plpythonu SCHEMA pg_catalog;
 CREATE EXTENSION pg_buffercache SCHEMA public;
 EOF
 
+#3' todo exp/imp only metadata, exp/imp needed spr tables
+
 #3. import etalon (add logging)
 pg_restore --host localhost --port 5432 --username postgres --dbname $DBNAME --role $ROLENAME --no-password  --no-owner --no-privileges --no-tablespaces --verbose .\etalon.dmp
