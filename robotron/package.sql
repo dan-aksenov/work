@@ -1,31 +1,15 @@
-
-CREATE OR REPLACE PACKAGE EC_MES.RBT_PKG
-   AUTHID CURRENT_USER
-AS
-   PROCEDURE rbt_blk;
-
-   PROCEDURE rbt_load (P_SCHM IN VARCHAR);
-
-   PROCEDURE rbt_sql (p_filename IN VARCHAR2,p_querytype in varchar2);
-   
-   PROCEDURE rbt_load_decode (P_SCHM IN VARCHAR);
-
---v3 release notes:
---ascue dubl del disabled
-
-END RBT_PKG;
-/
 CREATE OR REPLACE PACKAGE BODY EC_MES.RBT_PKG
 AS
    PROCEDURE rbt_blk
    AS
       v_jbname   VARCHAR2 (50);
       v_err      VARCHAR2 (2000);
+      --v_cnt      NUMBER;
+      --v_jb       VARCHAR2 (50);
       v_cnt      NUMBER;
-      v_jb       VARCHAR2 (50);
-     /* cursor c1 is 
-      select count(*) into v_jb from dba_scheduler_jobs where owner = 'EC_MES' and job_name like '%PROM%';*/
-      
+   /* cursor c1 is
+    select count(*) into v_jb from dba_scheduler_jobs where owner = 'EC_MES' and job_name like '%PROM%';*/
+
    BEGIN
       --clear logs
       DELETE FROM load_log
@@ -36,10 +20,24 @@ AS
 
       COMMIT;
 
-      FOR i IN (SELECT r.nm_schema
-                  FROM dba_users u, prom_nsi.prom_region r
-                 WHERE username LIKE 'PROM%' AND u.username = r.nm_schema)
+      FOR i
+         IN (SELECT r.nm_schema
+               FROM dba_users u, prom_nsi.prom_region r
+              WHERE     username LIKE 'PROM%'
+                    AND u.username = r.nm_schema
+                    AND username <> 'PROM_311')
       LOOP
+         --ensure that number of simultaneous jobs is not more then 10
+         SELECT COUNT (*)
+           INTO v_cnt
+           FROM dba_scheduler_jobs
+          WHERE owner = 'EC_MES' AND job_name LIKE 'RBT_BLK%';
+
+         IF v_cnt > 10
+         THEN
+            DBMS_LOCK.sleep (10);
+         END IF;
+
          BEGIN
             v_jbname := 'EC_MES.RBT_BLK_' || i.nm_schema;
             --dbms_output.put_line (v_jbname);
@@ -117,24 +115,24 @@ AS
          END;
       END LOOP;
 
-      --DELETE ASKUE dubles section 
+      --DELETE ASKUE dubles section
       --disabled in v3
-     /* select count(*) into v_jb from dba_scheduler_jobs where owner = 'EC_MES' and job_name like '%PROM%';
-      while v_jb > 0
-      loop
-      dbms_lock.sleep(5);
-      select count(*) into v_jb from dba_scheduler_jobs where owner = 'EC_MES' and job_name like '%PROM%';
-      end loop;
-      
-      DELETE FROM Q_COUNTERS_NEW
-            WHERE KD_ASKUE IN (  SELECT KD_ASKUE
-                                   FROM Q_COUNTERS_NEW
-                               GROUP BY KD_ASKUE, PR_TRANSIT
-                                 HAVING COUNT (*) > 1);
+      /* select count(*) into v_jb from dba_scheduler_jobs where owner = 'EC_MES' and job_name like '%PROM%';
+       while v_jb > 0
+       loop
+       dbms_lock.sleep(5);
+       select count(*) into v_jb from dba_scheduler_jobs where owner = 'EC_MES' and job_name like '%PROM%';
+       end loop;
 
-      COMMIT;
-        v_cnt:= sql%rowcount;
-      dbms_output.put_line ('ASKUE DBLs deleted '||sql%rowcount);*/
+       DELETE FROM Q_COUNTERS_NEW
+             WHERE KD_ASKUE IN (  SELECT KD_ASKUE
+                                    FROM Q_COUNTERS_NEW
+                                GROUP BY KD_ASKUE, PR_TRANSIT
+                                  HAVING COUNT (*) > 1);
+
+       COMMIT;
+         v_cnt:= sql%rowcount;
+       dbms_output.put_line ('ASKUE DBLs deleted '||sql%rowcount);*/
 
       /*INSERT INTO EC_MES.LOAD_LOG
            VALUES (v_start,
