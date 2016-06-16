@@ -50,6 +50,7 @@ BEGIN
       DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
    END LOOP;
 
+   --UPDATE WORKLOG
    DBMS_OUTPUT.put_line ('WORKLOG');
 
    FOR i IN (SELECT ID
@@ -60,6 +61,23 @@ BEGIN
          SET (created) =
                 (SELECT created - l_days_ago created
                    FROM WORKLOG
+                  WHERE id = i.id)
+       WHERE id = i.id;
+
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+   END LOOP;
+
+   --UPDATE FILEATTACHMENT
+   DBMS_OUTPUT.put_line ('WORKLOG');
+
+   FOR i IN (SELECT ID
+               FROM FILEATTACHMENT
+              WHERE issueid = l_issue_id)
+   LOOP
+      UPDATE FILEATTACHMENT
+         SET (created) =
+                (SELECT created - l_days_ago created
+                   FROM FILEATTACHMENT
                   WHERE id = i.id)
        WHERE id = i.id;
 
