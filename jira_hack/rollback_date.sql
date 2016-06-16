@@ -1,4 +1,5 @@
-create or replace procedure JIRA_ROLLBACK_DATES(p_days in number, p_issue in number)
+CREATE OR REPLACE PROCEDURE JIRA_ROLLBACK_DATES (p_days    IN NUMBER,
+                                                 p_issue   IN NUMBER)
 AS
    l_days_ago   NUMBER := p_days;
    l_issue_id   NUMBER := p_issue;
@@ -14,7 +15,7 @@ BEGIN
                WHERE id = l_issue_id)
     WHERE id = l_issue_id;
 
-   DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+   DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
 
    --UPDATE JIRAACTION
    DBMS_OUTPUT.put_line ('JIRAACTION');
@@ -31,7 +32,7 @@ BEGIN
                   WHERE id = i.id)
        WHERE id = i.id;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
    --update CHANGEGROUP
@@ -48,7 +49,7 @@ BEGIN
                   WHERE id = i.id)
        WHERE id = i.id;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
    --UPDATE WORKLOG
@@ -59,13 +60,15 @@ BEGIN
               WHERE issueid = l_issue_id)
    LOOP
       UPDATE WORKLOG
-         SET (created,startdate,updated) =
-                (SELECT created - l_days_ago creatdate, startdate - l_days_ago startdate, updated - l_days_ago updated 
+         SET (created, startdate, updated) =
+                (SELECT created - l_days_ago creatdate,
+                        startdate - l_days_ago startdate,
+                        updated - l_days_ago updated
                    FROM WORKLOG
                   WHERE id = i.id)
        WHERE id = i.id;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
    --UPDATE FILEATTACHMENT
@@ -82,7 +85,7 @@ BEGIN
                   WHERE id = i.id)
        WHERE id = i.id;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
    --UPDATE USERASSOCIATION
@@ -96,10 +99,16 @@ BEGIN
          SET (created) =
                 (SELECT created - l_days_ago created
                    FROM USERASSOCIATION
-                  WHERE SOURCE_NAME = i.source_name and SINK_NODE_ID=i.sink_node_id and SINK_NODE_ENTITY=i.SINK_NODE_ENTITY and ASSOCIATION_TYPE=i.ASSOCIATION_TYPE)
-       WHERE SOURCE_NAME = i.source_name and SINK_NODE_ID=i.sink_node_id and SINK_NODE_ENTITY=i.SINK_NODE_ENTITY and ASSOCIATION_TYPE=i.ASSOCIATION_TYPE;
+                  WHERE     SOURCE_NAME = i.source_name
+                        AND SINK_NODE_ID = i.sink_node_id
+                        AND SINK_NODE_ENTITY = i.SINK_NODE_ENTITY
+                        AND ASSOCIATION_TYPE = i.ASSOCIATION_TYPE)
+       WHERE     SOURCE_NAME = i.source_name
+             AND SINK_NODE_ID = i.sink_node_id
+             AND SINK_NODE_ENTITY = i.SINK_NODE_ENTITY
+             AND ASSOCIATION_TYPE = i.ASSOCIATION_TYPE;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
    --UPDATE OS_CURRENTSTEP
@@ -107,36 +116,41 @@ BEGIN
 
    FOR i IN (SELECT id
                FROM OS_CURRENTSTEP
-              WHERE entry_id in (SELECT workflow_id FROM jiraissue where id=l_issue_id))
+              WHERE entry_id IN (SELECT workflow_id
+                                   FROM jiraissue
+                                  WHERE id = l_issue_id))
    LOOP
       UPDATE OS_CURRENTSTEP
          SET (start_date) =
                 (SELECT start_date - l_days_ago created
                    FROM OS_CURRENTSTEP
-                  WHERE id=i.id)
-       WHERE id=i.id;
+                  WHERE id = i.id)
+       WHERE id = i.id;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
---update OS_HISTORYSTEP
-DBMS_OUTPUT.put_line ('OS_HISTORYSTEP');
+   --update OS_HISTORYSTEP
+   DBMS_OUTPUT.put_line ('OS_HISTORYSTEP');
+
    FOR i IN (SELECT id
                FROM OS_HISTORYSTEP
-              WHERE entry_id in (SELECT workflow_id FROM jiraissue where id = l_issue_id))
+              WHERE entry_id IN (SELECT workflow_id
+                                   FROM jiraissue
+                                  WHERE id = l_issue_id))
    LOOP
       UPDATE OS_HISTORYSTEP
-         SET (start_date,finish_date) =
-                (SELECT start_date - l_days_ago start_date,finish_date - l_days_ago finish_date
+         SET (start_date, finish_date) =
+                (SELECT start_date - l_days_ago start_date,
+                        finish_date - l_days_ago finish_date
                    FROM OS_HISTORYSTEP
-                  WHERE id=i.id)
-       WHERE id=i.id;
+                  WHERE id = i.id)
+       WHERE id = i.id;
 
-      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
    COMMIT;
-   --rollback;
+--rollback;
 END;
 /
-
