@@ -68,7 +68,7 @@ BEGIN
    END LOOP;
 
    --UPDATE FILEATTACHMENT
-   DBMS_OUTPUT.put_line ('WORKLOG');
+   DBMS_OUTPUT.put_line ('FILEATTACHMENT');
 
    FOR i IN (SELECT ID
                FROM FILEATTACHMENT
@@ -80,6 +80,23 @@ BEGIN
                    FROM FILEATTACHMENT
                   WHERE id = i.id)
        WHERE id = i.id;
+
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+   END LOOP;
+
+   --UPDATE USERASSOCIATION --выбирать по ПК?
+   DBMS_OUTPUT.put_line ('USERASSOCIATION');
+
+   FOR i IN (SELECT *
+               FROM USERASSOCIATION
+              WHERE sink_node_id = l_issue_id)
+   LOOP
+      UPDATE USERASSOCIATION
+         SET (created) =
+                (SELECT created - l_days_ago created
+                   FROM USERASSOCIATION
+                  WHERE SOURCE_NAME = i.source_name and SINK_NODE_ID=i.sink_node_id and SINK_NODE_ENTITY=i.SINK_NODE_ENTITY and ASSOCIATION_TYPE=i.ASSOCIATION_TYPE)
+       WHERE SOURCE_NAME = i.source_name and SINK_NODE_ID=i.sink_node_id and SINK_NODE_ENTITY=i.SINK_NODE_ENTITY and ASSOCIATION_TYPE=i.ASSOCIATION_TYPE;
 
       DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
    END LOOP;
