@@ -1,6 +1,7 @@
-DECLARE
-   l_days_ago   NUMBER := 1;
-   l_issue_id   NUMBER := 100104;
+create or replace procedure JIRA_ROLLBACK_DATES(p_days in number, p_issue in number)
+AS
+   l_days_ago   NUMBER := p_days;
+   l_issue_id   NUMBER := p_issue;
 BEGIN
    --UPDATE JIRAISSUE
    DBMS_OUTPUT.put_line ('JIRAISSUE');
@@ -43,7 +44,7 @@ BEGIN
       UPDATE CHANGEGROUP
          SET (created) =
                 (SELECT created - l_days_ago created
-                   FROM JIRAACTION
+                   FROM CHANGEGROUP
                   WHERE id = i.id)
        WHERE id = i.id;
 
@@ -58,8 +59,8 @@ BEGIN
               WHERE issueid = l_issue_id)
    LOOP
       UPDATE WORKLOG
-         SET (created) =
-                (SELECT created - l_days_ago created
+         SET (created,startdate,updated) =
+                (SELECT created - l_days_ago creatdate, startdate - l_days_ago startdate, updated - l_days_ago updated 
                    FROM WORKLOG
                   WHERE id = i.id)
        WHERE id = i.id;
@@ -84,7 +85,7 @@ BEGIN
       DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
    END LOOP;
 
-   --UPDATE USERASSOCIATION --выбирать по ПК?
+   --UPDATE USERASSOCIATION
    DBMS_OUTPUT.put_line ('USERASSOCIATION');
 
    FOR i IN (SELECT *
@@ -101,6 +102,41 @@ BEGIN
       DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
    END LOOP;
 
-   ROLLBACK;
+   --UPDATE OS_CURRENTSTEP
+   DBMS_OUTPUT.put_line ('OS_CURRENTSTEP');
+
+   FOR i IN (SELECT id
+               FROM OS_CURRENTSTEP
+              WHERE entry_id in (SELECT workflow_id FROM jiraissue where id=l_issue_id))
+   LOOP
+      UPDATE OS_CURRENTSTEP
+         SET (start_date) =
+                (SELECT start_date - l_days_ago created
+                   FROM OS_CURRENTSTEP
+                  WHERE id=i.id)
+       WHERE id=i.id;
+
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+   END LOOP;
+
+--update OS_HISTORYSTEP
+DBMS_OUTPUT.put_line ('OS_HISTORYSTEP');
+   FOR i IN (SELECT id
+               FROM OS_HISTORYSTEP
+              WHERE entry_id in (SELECT workflow_id FROM jiraissue where id = l_issue_id))
+   LOOP
+      UPDATE OS_HISTORYSTEP
+         SET (start_date,finish_date) =
+                (SELECT start_date - l_days_ago start_date,finish_date - l_days_ago finish_date
+                   FROM OS_HISTORYSTEP
+                  WHERE id=i.id)
+       WHERE id=i.id;
+
+      DBMS_OUTPUT.put_line (SQL%ROWCOUNT);
+   END LOOP;
+
+   COMMIT;
+   --rollback;
 END;
 /
+
