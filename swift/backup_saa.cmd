@@ -36,8 +36,11 @@ rem backup "source" to "current"
 robocopy %SRC_BACKUP% %DST_BACKUP% curr.rar /LOG+:"log\%log%" /NJH /NFL /NP /NDL /MT /z 
 
 rem summary
-findstr /r "Dirs Files Bytes Ended" "log\%log%" | find /v "*.*" >> log\summary_%tag%.log
+findstr /r "Dirs Files Bytes Ended Times" "log\%log%" | find /v "*.*" >> log\summary_%tag%.log
 echo ############################################################################## >> log\summary_%tag%.log
+
+ATTRIB -s -h %DST_MIRROR%
+ATTRIB -s -h %DST_BACKUP%
 
 rem purge older logs
 forfiles -p ".\log" -s -m *.* /D -120 /C "cmd /c del @path"

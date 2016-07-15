@@ -14,6 +14,9 @@ echo 1 > tmp\arch.lock
 xcopy %SRC_MIRROR% m:\MIRROR /s
 xcopy %SRC_BACKUP% f:\BACKUP /s
 
+del m:\curr.rar
+del f:\curr.rar
+
 rar a m:\curr.rar -m5 -df -r %TMP_MIRROR%
 rar a f:\curr.rar -m5 -df -r %TMP_BACKUP%
 del tmp\arch.lock
