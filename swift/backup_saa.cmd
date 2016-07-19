@@ -7,33 +7,33 @@ set tag=min
 
 set src=192.168.12.1
 
-set SRC_MIRROR=\\%SRC%\m$\
-set SRC_BACKUP=\\%SRC%\f$\
+set SRC_MIRROR=\\%SRC%\m$\SAA_DBRECOVERY_sbxaruee
+set SRC_BACKUP=\\%SRC%\f$\SAA_DBRECOVERY_sbxaruee
 
-set DST_MIRROR=C:\MIRROR\%tag%
-set DST_BACKUP=C:\BACKUP\%tag%
+set DST_MIRROR=E:\MIRROR\%tag%
+set DST_BACKUP=E:\BACKUP\%tag%
 
-IF NOT EXIST %DST_MIRROR% MD %DST_MIRROR%
-IF NOT EXIST %DST_BACKUP% MD %DST_BACKUP%
+IF NOT EXIST %DST_MIRROR%\curr MD %DST_MIRROR%\curr
+IF NOT EXIST %DST_BACKUP%\curr MD %DST_BACKUP%\curr
 
-if not exist \\%src%\C$\scripts\backup\tmp\arch.lock goto :resume
-:wait
-echo waiting for remote archival to complete...
-@ping 127.0.0.1 -n 5
-if exist \\%src%\C$\scripts\backup\tmp\arch.lock goto :wait
+IF NOT EXIST %DST_MIRROR%\prev MD %DST_MIRROR%\prev
+IF NOT EXIST %DST_BACKUP%\prev MD %DST_BACKUP%\prev
 
-:resume
-REM MOVE "current" to "previous"
-move %DST_MIRROR%\curr.rar %DST_MIRROR%\prev.rar
+REM END RUN VARIABLE SECTION
 
-rem backup "source" to "current"
-robocopy %SRC_MIRROR% %DST_MIRROR% curr.rar /LOG+:"log\%log%" /NJH /NFL /NP /NDL /MT /z 
+REM MOVE "current" MIRROR to "previous"
+del %DST_MIRROR%\prev\prev.rar
+rar a %DST_MIRROR%\prev\prev.rar -m5 -df -r %DST_MIRROR%\curr
 
-rem copy "current" to "previous"
-move %DST_BACKPU%\curr.rar %DST_BACKUP%\prev.rar
+rem backup "source" MIRROR to "current"
+robocopy %SRC_MIRROR% %DST_MIRROR%\curr /LOG+:"log\%log%" /NJH /NFL /NP /NDL /MIR /MT /z 
 
-rem backup "source" to "current"
-robocopy %SRC_BACKUP% %DST_BACKUP% curr.rar /LOG+:"log\%log%" /NJH /NFL /NP /NDL /MT /z 
+rem copy "current" BACKUP to "previous"
+del %DST_BACKUP%\prev\prev.rar
+rar a %DST_BACKUP%\prev\prev.rar -m5 -df -r %DST_BACKUP%\curr
+
+rem backup "source" BACKUP to "current"
+robocopy %SRC_BACKUP% %DST_BACKUP%\curr /LOG+:"log\%log%" /NJH /NFL /NP /NDL /MIR /MT /z 
 
 rem summary
 findstr /r "Dirs Files Bytes Ended Times" "log\%log%" | find /v "*.*" >> log\summary_%tag%.log
@@ -43,6 +43,6 @@ ATTRIB -s -h %DST_MIRROR%
 ATTRIB -s -h %DST_BACKUP%
 
 rem purge older logs
-forfiles -p ".\log" -s -m *.* /D -120 /C "cmd /c del @path"
+forfiles -p ".\log" -s -m *.* /D -1 /C "cmd /c del @path"
 
 exit
