@@ -9,6 +9,7 @@ IF %TAG%==min set STAMP=%time:~0,2%%time:~3,2%%time:~6,2%_%date:~-10,2%%date:~-7
 REM Remote site 
 net use %4: /delete
 
+IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:host\user password
 
 set DEST="%4:\REMOTE_BACKUP\%TAG%_%STAMP%"
 IF NOT EXIST %DEST% MD %DEST%
