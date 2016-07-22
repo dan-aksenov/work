@@ -39,8 +39,12 @@ rar a %STAGE_MIRROR%.RAR -m5 -df -r %STAGE_MIRROR%
 rar a %STAGE_BACKUP%.RAR -m5 -df -r %STAGE_BACKUP%%  
 	
 REM copy archives to remote backup destination
-robocopy M:\ %DEST% %STAGE_MIRROR%.RAR /LOG+:"log\%STAMP%.log" /NP /z /TIMFIX
-robocopy F:\ %DEST% %STAGE_BACKUP%.RAR /LOG+:"log\%STAMP%.log" /NP /z /TIMFIX
+:copy1
+xcopy %STAGE_MIRROR%.RAR %DEST% /z || goto :copy1
+:copy2
+xcopy %STAGE_BACKUP%.RAR %DEST% /z || goto :copy2
+
+
 
 REM append current backup's result to summary logfile
 findstr /r "Dirs Files Bytes Ended Times" "log\%STAMP%.log" | find /v "*.*" >> log\summary_%TAG%.log
