@@ -27,14 +27,23 @@ IF EXIST %STAGE_MIRROR% rd %STAGE_MIRROR% /q /s
 IF EXIST %STAGE_BACKUP% rd %STAGE_BACKUP% /q /s
 IF NOT EXIST %STAGE_MIRROR% MD %STAGE_MIRROR%
 IF NOT EXIST %STAGE_BACKUP% MD %STAGE_BACKUP%
+IF EXIST %STAGE_MIRROR%.RAR del %STAGE_MIRROR%.RAR /q
+IF EXIST %STAGE_BACKUP%.RAR del %STAGE_BACKUP%.RAR /q
 
 REM Copy backups to staging area
 xcopy %SRC_MIRROR% %STAGE_MIRROR% /s
 xcopy %SRC_BACKUP% %STAGE_BACKUP% /s
 
+REM Archive
+rar a %STAGE_MIRROR%.RAR -m5 -df -r %STAGE_MIRROR%  
+rar a %SRC_BACKUP%.RAR -m5 -df -r %STAGE_BACKUP%%  
+	
 REM Copy staging to remote site
-robocopy %STAGE_MIRROR% %DEST%\MIRROR /LOG+:"log\%STAMP%.log" /NP /MIR /z 
-robocopy %STAGE_BACKUP% %DEST%\BACKUP /LOG+:"log\%STAMP%.log" /NP /MIR /z 
+robocopy M:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z
+robocopy F:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z 
+
+rem robocopy %STAGE_MIRROR% %DEST%\MIRROR /LOG+:"log\%STAMP%.log" /NP /MIR /z 
+rem robocopy %STAGE_BACKUP% %DEST%\BACKUP /LOG+:"log\%STAMP%.log" /NP /MIR /z 
 
 REM Backup summary
 findstr /r "Dirs Files Bytes Ended Times" "log\%STAMP%.log" | find /v "*.*" >> log\summary_%TAG%.log
