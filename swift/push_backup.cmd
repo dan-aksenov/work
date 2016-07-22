@@ -35,8 +35,8 @@ rar a %STAGE_MIRROR%.RAR -m5 -df -r %STAGE_MIRROR%
 rar a %STAGE_BACKUP%.RAR -m5 -df -r %STAGE_BACKUP%%  
 	
 REM Copy staging to remote site
-robocopy M:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z
-robocopy F:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z 
+robocopy M:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z /TIMFIX
+robocopy F:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z /TIMFIX
 
 rem robocopy %STAGE_MIRROR% %DEST%\MIRROR /LOG+:"log\%STAMP%.log" /NP /z 
 rem robocopy %STAGE_BACKUP% %DEST%\BACKUP /LOG+:"log\%STAMP%.log" /NP /z 
