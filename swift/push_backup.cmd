@@ -7,8 +7,6 @@ IF %TAG%==day set STAMP=%date:~-10,2%%date:~-7,2%%date:~-4,4%
 IF %TAG%==min set STAMP=%time:~0,2%%time:~3,2%%time:~6,2%_%date:~-10,2%%date:~-7,2%%date:~-4,4%
 
 REM Remote site 
-net use %4: /delete
-
 IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:host\user password
 
 set DEST="%4:\REMOTE_BACKUP\%TAG%_%STAMP%"
@@ -42,8 +40,8 @@ REM Copy staging to remote site
 robocopy M:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z
 robocopy F:\ %DEST% *.RAR /LOG+:"log\%STAMP%.log" /NP /z 
 
-rem robocopy %STAGE_MIRROR% %DEST%\MIRROR /LOG+:"log\%STAMP%.log" /NP /MIR /z 
-rem robocopy %STAGE_BACKUP% %DEST%\BACKUP /LOG+:"log\%STAMP%.log" /NP /MIR /z 
+rem robocopy %STAGE_MIRROR% %DEST%\MIRROR /LOG+:"log\%STAMP%.log" /NP /z 
+rem robocopy %STAGE_BACKUP% %DEST%\BACKUP /LOG+:"log\%STAMP%.log" /NP /z 
 
 REM Backup summary
 findstr /r "Dirs Files Bytes Ended Times" "log\%STAMP%.log" | find /v "*.*" >> log\summary_%TAG%.log
