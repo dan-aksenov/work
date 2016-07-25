@@ -37,13 +37,14 @@ xcopy %SRC_BACKUP% %STAGE_BACKUP% /s
 REM Archive backups in staging area
 rar a %STAGE_MIRROR%.RAR -m5 -df -r %STAGE_MIRROR%  
 rar a %STAGE_BACKUP%.RAR -m5 -df -r %STAGE_BACKUP%%  
-	
+
+time /t	
 REM copy archives to remote backup destination
 :copy1
 xcopy %STAGE_MIRROR%.RAR %DEST% /z || goto :copy1
 :copy2
 xcopy %STAGE_BACKUP%.RAR %DEST% /z || goto :copy2
-
+time /t
 
 
 REM append current backup's result to summary logfile
@@ -51,8 +52,8 @@ findstr /r "Dirs Files Bytes Ended Times" "log\%STAMP%.log" | find /v "*.*" >> l
 echo ############################################################################## >> log\summary_%TAG%.log
 
 REM remove old backups 
-forfiles -p "%4\REMOTE_BACKUP\day*" -s -m *.* /D -2 /C "cmd /c del @path"
-forfiles -p "%4\REMOTE_BACKUP\min*" -s -m *.* /D -1 /C "cmd /c del @path"
+forfiles -p %4:\REMOTE_BACKUP\day* -s -m *.* /D -2 /C "cmd /c del @path"
+forfiles -p %4:\REMOTE_BACKUP\min* -s -m *.* /D -1 /C "cmd /c del @path"
 
 rem unmount network drive
 net use %4: /delete
