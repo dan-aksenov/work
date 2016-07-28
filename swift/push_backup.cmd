@@ -60,8 +60,8 @@ findstr /r "Dirs Files Bytes Ended Times" "log\%STAMP%.log" | find /v "*.*" >> l
 echo ############################################################################## >> log\summary_%TAG%.log
 
 REM remove old backups 
-forfiles -p %4:\REMOTE_BACKUP\day* -s -m *.* /D -2 /C "cmd /c del @path"
-forfiles -p %4:\REMOTE_BACKUP\min* -s -m *.* /D -1 /C "cmd /c del @path"
+forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -2 /C "cmd /c del @path"
+rem forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -1 /C "cmd /c del @path"
 
 rem unmount network drive
 net use %4: /delete
