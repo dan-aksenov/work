@@ -2,14 +2,22 @@ REM %1 - local of remote backup, %2 remote host, %3 network drive, %4 mapped dri
 
 REM perform day copy on midnight
 for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set curtime=%%a)
-if %curtime%==0 set TAG=day
-if not %curtime%==0 set TAG=min
+
+if %curtime%==00 set TAG=day
+if not %curtime%==00 set TAG=min
 
 REM create logging folder and get timestamp for unique filenames
 IF NOT EXIST log MD log
+IF NOT EXIST tmp MD tmp
 IF %TAG%==day set STAMP=%date:~-10,2%%date:~-7,2%%date:~-4,4%
 IF %TAG%==min set STAMP=%time:~0,2%%time:~3,2%%time:~6,2%_%date:~-10,2%%date:~-7,2%%date:~-4,4%
 
+:wait
+echo is another backup in progress?...
+ping  127.0.0.1
+IF EXIST tmp\copy.lock GOTO :wait
+
+echo lock > tmp\copy.lock
 REM mount remote network dirve, create backup directory and set propper attributes
 IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:host\user password
 set DEST="%4:\REMOTE_BACKUP\%TAG%_%STAMP%"
@@ -57,4 +65,7 @@ forfiles -p %4:\REMOTE_BACKUP\min* -s -m *.* /D -1 /C "cmd /c del @path"
 
 rem unmount network drive
 net use %4: /delete
+rem delete lock file
+del tmp\copy.lock
+
 exit
