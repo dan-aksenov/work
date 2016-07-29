@@ -63,6 +63,14 @@ REM remove old backups
 forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -2 /C "cmd /c del @path"
 rem forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -1 /C "cmd /c del @path"
 
+rem CONVERT to PS for smarter old files removal
+rem $limit = (Get-Date).AddDays(-15)
+rem $path = "C:\Some\Path"
+rem # Delete files older than the $limit.
+rem Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $limit } | Remove-Item -Force
+rem # Delete any empty directories left behind after deleting the old files.
+rem Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.PSIsContainer -and (Get-ChildItem -Path $_.FullName -Recurse rem-Force | Where-Object { !$_.PSIsContainer }) -eq $null } | Remove-Item -Force -Recurse
+
 rem unmount network drive
 net use %4: /delete
 rem delete lock file
