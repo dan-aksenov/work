@@ -62,6 +62,8 @@ echo ###########################################################################
 REM remove old backups 
 forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -2 /C "cmd /c del @path"
 rem forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -1 /C "cmd /c del @path"
+REM remove empty directories
+for /f "delims=" %%d in ('dir /s /b /ad ^| sort /r') do rd "%%d"
 
 rem CONVERT to PS for smarter old files removal
 rem $limit = (Get-Date).AddDays(-15)
