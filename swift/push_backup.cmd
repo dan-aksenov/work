@@ -56,8 +56,9 @@ time /t
 
 
 REM append current backup's result to summary logfile
-findstr /r "Dirs Files Bytes Ended Times" "log\%STAMP%.log" | find /v "*.*" >> log\summary_%TAG%.log
-echo ############################################################################## >> log\summary_%TAG%.log
+rem echo %STAMP% >> log\summary_%TAG%.log
+rem findstr /c:"File(s) copied" "log\%TAG%.log" >> log\summary_%TAG%.log
+rem echo ############################################################################## >> log\summary_%TAG%.log
 
 REM remove old backups 
 forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -2 /C "cmd /c del @path"
