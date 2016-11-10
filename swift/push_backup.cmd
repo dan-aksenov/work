@@ -2,7 +2,7 @@ REM %1 - local of remote backup, %2 remote host, %3 network drive, %4 mapped dri
 
 REM perform day copy on midnight
 for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set curtime=%%a)
-
+rem echo %curtime% | findstr /c:"00" || set %currtime%=0
 if %curtime%==00 set TAG=day
 if not %curtime%==00 set TAG=min
 
@@ -19,7 +19,7 @@ IF EXIST tmp\copy.lock GOTO :wait
 
 echo lock > tmp\copy.lock
 REM mount remote network dirve, create backup directory and set propper attributes
-IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:host\user password
+IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:localhost\administrator Streaming911!
 set DEST="%4:\REMOTE_BACKUP\%TAG%_%STAMP%"
 IF NOT EXIST %DEST% MD %DEST%
 attrib -A -H -S %DEST% /S
@@ -38,6 +38,9 @@ IF NOT EXIST %STAGE_BACKUP% MD %STAGE_BACKUP%
 IF EXIST %STAGE_MIRROR%.RAR del %STAGE_MIRROR%.RAR /q
 IF EXIST %STAGE_BACKUP%.RAR del %STAGE_BACKUP%.RAR /q
 
+for /f %%i in ('time /t') do set START_TIME=%%i
+echo Backup started at %START_TIME%
+
 REM Copy online backups to staging area
 xcopy %SRC_MIRROR% %STAGE_MIRROR% /s
 xcopy %SRC_BACKUP% %STAGE_BACKUP% /s
@@ -54,29 +57,24 @@ xcopy %STAGE_MIRROR%.RAR %DEST% /z || goto :copy1
 xcopy %STAGE_BACKUP%.RAR %DEST% /z || goto :copy2
 time /t
 
-
-REM append current backup's result to summary logfile
-rem echo %STAMP% >> log\summary_%TAG%.log
-rem findstr /c:"File(s) copied" "log\%TAG%.log" >> log\summary_%TAG%.log
-rem echo ############################################################################## >> log\summary_%TAG%.log
+for /f %%i in ('time /t') do set END_TIME=%%i
+echo Backup completed at %END_TIME%
 
 REM remove old backups 
-forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -2 /C "cmd /c del @path"
-rem forfiles -p %4:\REMOTE_BACKUP -s -m *.* /D -1 /C "cmd /c del @path"
+forfiles -p %4:\REMOTE_BACKUP\ -s -m *.* /D -2 /C "cmd /c del @path"
 REM remove empty directories
 for /f "delims=" %%d in ('dir %4:\REMOTE_BACKUP /s /b /ad ^| sort /r') do rd "%%d"
 
-rem CONVERT to PS for smarter old files removal
-rem $limit = (Get-Date).AddDays(-15)
-rem $path = "C:\Some\Path"
-rem # Delete files older than the $limit.
-rem Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $limit } | Remove-Item -Force
-rem # Delete any empty directories left behind after deleting the old files.
-rem Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.PSIsContainer -and (Get-ChildItem -Path $_.FullName -Recurse rem-Force | Where-Object { !$_.PSIsContainer }) -eq $null } | Remove-Item -Force -Recurse
-
 rem unmount network drive
-net use %4: /delete
+rem net use %4: /delete
 rem delete lock file
 del tmp\copy.lock
 
-exit
+REM append backup result to summary logfile
+echo %STAMP% >> log\summary_R.log
+@findstr /c:"Backup started" "log\backupL.log" >> log\summary_R.log
+@findstr /c:"File(s) copied" "log\backupL.log" >> log\summary_R.log
+@findstr /c:"Backup completed" "log\backupL.log" >> log\summary_R.log
+echo ############################################################################## >> log\summary_R.log
+
+rem exit
