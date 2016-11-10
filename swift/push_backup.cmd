@@ -39,7 +39,7 @@ IF EXIST %STAGE_MIRROR%.RAR del %STAGE_MIRROR%.RAR /q
 IF EXIST %STAGE_BACKUP%.RAR del %STAGE_BACKUP%.RAR /q
 
 for /f %%i in ('time /t') do set START_TIME=%%i
-echo Backup started at %START_TIME%
+@echo Backup started at %START_TIME%
 
 REM Copy online backups to staging area
 xcopy %SRC_MIRROR% %STAGE_MIRROR% /s
@@ -58,7 +58,7 @@ xcopy %STAGE_BACKUP%.RAR %DEST% /z || goto :copy2
 time /t
 
 for /f %%i in ('time /t') do set END_TIME=%%i
-echo Backup completed at %END_TIME%
+@echo Backup completed at %END_TIME%
 
 REM remove old backups 
 forfiles -p %4:\REMOTE_BACKUP\ -s -m *.* /D -2 /C "cmd /c del @path"
