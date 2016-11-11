@@ -71,7 +71,7 @@ rem delete lock file
 del tmp\copy.lock
 
 REM append backup result to summary logfile
-echo %STAMP% >> log\summary_R.log
+echo %STAMP% >> log\summary_%1.log
 @findstr /c:"Backup started" "log\backup%1.log" >> log\summary_%1.log
 @findstr /c:"File(s) copied" "log\backup%1.log" >> log\summary_%1.log
 @findstr /c:"Backup completed" "log\backup%1.log" >> log\summary_%1.log
