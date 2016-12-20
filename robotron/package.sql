@@ -170,8 +170,107 @@ AS
                    v_cnt);
                    
                    
-                   
-        
+/* merge for  PROM-12411          
+        MERGE INTO ec_mes.q_counters qq
+     USING (SELECT * FROM ec_mes.Q_COUNTERS_TMP) qt
+        ON --(qq.kd_askue = qt.kd_askue
+        (qq.DT_PERIOD= qt.DT_PERIOD and qq.PR_TRANSIT =  qt.PR_TRANSIT and qq.ID_ABN = qt.id_abn and qq.ID_TU = qt.ID_TU and qq.KD_ASKUE = qt.KD_ASKUE)
+WHEN MATCHED
+THEN
+   UPDATE SET qq.NM_SCHEMA = qt.NM_SCHEMA,
+              --qq.DT_PERIOD = qt.DT_PERIOD,
+              qq.NN_ABN = qt.NN_ABN,
+              qq.DT_WORK = qt.DT_WORK,
+              qq.KD_WORK = qt.KD_WORK,
+              qq.NM_TU = qt.NM_TU,
+              qq.PR_TU_POWER = qt.PR_TU_POWER,
+              qq.TU_STATE = qt.TU_STATE,
+              --qq.ID_ABN = qt.ID_ABN,
+              --qq.ID_TU = qt.ID_TU,
+              qq.NN_SCH = qt.NN_SCH,
+              qq.VOLT_LVL = qt.VOLT_LVL,
+              qq.NM_TP_TU = qt.NM_TP_TU,
+              qq.VL_RAS_KOEFF = qt.VL_RAS_KOEFF,
+              qq.VL_ZNACH = qt.VL_ZNACH,
+              qq.VL_LOSS_PRC = qt.VL_LOSS_PRC,
+              qq.NM_TP_RASCH = qt.NM_TP_RASCH,
+              qq.KD_VOLT_LVL = qt.KD_VOLT_LVL,
+              qq.KD_TU_STATUS = qt.KD_TU_STATUS,
+              qq.VL_KOEF = qt.VL_KOEF,
+              qq.ID_ABN_PRIMARY = qt.ID_ABN_PRIMARY,
+              qq.NN_TU_GROUP = qt.NN_TU_GROUP,
+              qq.PR_DATACHECK = qt.PR_DATACHECK,
+              qq.KD_SUBABONENT = qt.KD_SUBABONENT,
+              qq.ID_SCHET = qt.ID_SCHET,
+              qq.DT_TU_STATUS = qt.DT_TU_STATUS,
+              --qq.KD_ASKUE = qt.KD_ASKUE,
+              --qq.PR_TRANSIT = qt.PR_TRANSIT,
+              qq.NET_ASKUE = qt.NET_ASKUE,
+              qq.PR_KOEF_TRANSFORM = qt.PR_KOEF_TRANSFORM
+WHEN NOT MATCHED
+THEN
+   INSERT     (qq.NM_SCHEMA,
+               qq.DT_PERIOD,
+               qq.NN_ABN,
+               qq.DT_WORK,
+               qq.KD_WORK,
+               qq.NM_TU,
+               qq.PR_TU_POWER,
+               qq.TU_STATE,
+               qq.ID_ABN,
+               qq.ID_TU,
+               qq.NN_SCH,
+               qq.VOLT_LVL,
+               qq.NM_TP_TU,
+               qq.VL_RAS_KOEFF,
+               qq.VL_ZNACH,
+               qq.VL_LOSS_PRC,
+               qq.NM_TP_RASCH,
+               qq.KD_VOLT_LVL,
+               qq.KD_TU_STATUS,
+               qq.VL_KOEF,
+               qq.ID_ABN_PRIMARY,
+               qq.NN_TU_GROUP,
+               qq.PR_DATACHECK,
+               qq.KD_SUBABONENT,
+               qq.ID_SCHET,
+               qq.DT_TU_STATUS,
+               qq.KD_ASKUE,
+               qq.PR_TRANSIT,
+               qq.NET_ASKUE,
+               qq.PR_KOEF_TRANSFORM)
+       VALUES (qt.NM_SCHEMA,
+qt.DT_PERIOD,
+qt.NN_ABN,
+qt.DT_WORK,
+qt.KD_WORK,
+qt.NM_TU,
+qt.PR_TU_POWER,
+qt.TU_STATE,
+qt.ID_ABN,
+qt.ID_TU,
+qt.NN_SCH,
+qt.VOLT_LVL,
+qt.NM_TP_TU,
+qt.VL_RAS_KOEFF,
+qt.VL_ZNACH,
+qt.VL_LOSS_PRC,
+qt.NM_TP_RASCH,
+qt.KD_VOLT_LVL,
+qt.KD_TU_STATUS,
+qt.VL_KOEF,
+qt.ID_ABN_PRIMARY,
+qt.NN_TU_GROUP,
+qt.PR_DATACHECK,
+qt.KD_SUBABONENT,
+qt.ID_SCHET,
+qt.DT_TU_STATUS,
+qt.KD_ASKUE,
+qt.PR_TRANSIT,
+qt.NET_ASKUE,
+qt.PR_KOEF_TRANSFORM);
+		*/
+		
        delete from  Q_COUNTERS_NEW;
        insert into Q_COUNTERS_NEW select * from Q_COUNTERS_TMP;
        delete from  Q_COUNTERS_TMP;
