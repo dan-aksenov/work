@@ -1,71 +1,63 @@
-# %1 - local of remote backup, %2 remote host, %3 network drive, %4 mapped drive
-# Variables
-$lock="tmp\copy.lock"
+#%1 - local of remote backup, %2 remote host, %3 network drive, %4 mapped drive
 
-#create logging folder
-IF NOT EXIST log MD log
-IF NOT EXIST tmp MD tmp
+$SRC_MIRROR=m:\SAA_DBRECOVERY_sbxaruee
+$SRC_BACKUP=f:\SAA_DBRECOVERY_sbxaruee
+$STAGE_MIRROR=m:\MIRROR_%1
+$STAGE_BACKUP=f:\BACKUP_%1
+$LOG=
 
-# if day backup not exists make one
-$tag="day"
-$tag="min"
+function f_robocopy  ($src, $dst, $tag) 
+{ 
+   robocopy $src $dst *.* /ndl /njh /njs /log:$LOG\copy_$tag.log
+   #get file list ready for archiving
+   (Get-Content $LOG\copy_$tag.log) | %{ $_.Split('c:')[2];} | %{ $_.Substring(32);} | Set-Content $LOG\diff_$tag.lst
+   #archive diff
+   type $LOG\diff_$tag.lst | zip $STAGE_MIRROR.zip -@
+}
 
-# get timestamp for unique dirnames
-if ($tag -eq "day"){$stamp=$tag + $(get-date -f ddMMyyyy)}
-if ($tag -eq "min"){$stamp=$tag + $(get-date -f HmddMMyyyy)}
+function 
+{ 
+   dir C:Windows | 
+   where {$_.length –gt 100000} 
+}
 
-# wait if another backup already in porgress 
-while (Test-Path $lock) { Start-Sleep 10 }
+#IF %TAG%==day set STAMP=%date:~-10,2%%date:~-7,2%%date:~-4,4%
+#IF %TAG%==min set STAMP=%time:~0,2%%time:~3,2%%time:~6,2%_%date:~-10,2%%date:~-7,2%%date:~-4,4%
 
-echo lock > $lock
-REM mount remote network dirve, create backup directory and set propper attributes
-New-PSDrive –Name "$drive" –PSProvider FileSystem –Root "\\$host\$drive" –Persist
-#IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:host\user password
-$dest=$drive + ":" + 
-set DEST="%4:\REMOTE_BACKUP\%TAG%_%STAMP%"
-IF NOT EXIST %DEST% MD %DEST%
-attrib -A -H -S %DEST% /S
+#IF NOT EXIST log MD log
+#IF NOT EXIST tmp MD tmp
 
-REM set directory names for local site
-SET SRC_MIRROR=m:\SAA_DBRECOVERY_sbxaruee
-SET SRC_BACKUP=f:\SAA_DBRECOVERY_sbxaruee
-SET STAGE_MIRROR=m:\MIRROR_%1
-SET STAGE_BACKUP=f:\BACKUP_%1
+#:wait
+#echo is another backup in progress?...
+#@ping  127.0.0.1
+#IF EXIST tmp\copy_%1.lock GOTO :wait
 
-REM clear and recreate staging area
-IF EXIST %STAGE_MIRROR% rd %STAGE_MIRROR% /q /s
-IF EXIST %STAGE_BACKUP% rd %STAGE_BACKUP% /q /s
-IF NOT EXIST %STAGE_MIRROR% MD %STAGE_MIRROR%
-IF NOT EXIST %STAGE_BACKUP% MD %STAGE_BACKUP%
-IF EXIST %STAGE_MIRROR%.RAR del %STAGE_MIRROR%.RAR /q
-IF EXIST %STAGE_BACKUP%.RAR del %STAGE_BACKUP%.RAR /q
+echo lock > tmp\copy_$1.lock
 
-REM Copy online backups to staging area
-xcopy %SRC_MIRROR% %STAGE_MIRROR% /s
-xcopy %SRC_BACKUP% %STAGE_BACKUP% /s
-	
-REM Archive backups in staging area
-rar a %STAGE_MIRROR%.RAR -m5 -df -r %STAGE_MIRROR%  
-rar a %STAGE_BACKUP%.RAR -m5 -df -r %STAGE_BACKUP%%  
+IF NOT EXIST $STAGE_MIRROR MD $STAGE_MIRROR
+IF NOT EXIST $STAGE_BACKUP MD $STAGE_BACKUP
+
+#copy from source to stage make file list - redo as function
+robocopy $SRC_MIRROR $STAGE_MIRROR *.* /ndl /njh /njs /log:log\copy_M.log
+robocopy $SRC_BACKUP $STAGE_BACKUP *.* /ndl /njh /njs /log:log\copy_B.log
+
+#get file list ready for archiving
+(Get-Content .\copy.log) | %{ $_.Split('c:')[2];} | %{ $_.Substring(32);}
+
+#zip or rar
+cd $STAGE_MIRROR
+type incr.lst | zip $STAGE_MIRROR.zip -@
+
+cd $STAGE_BACKUP
+type incr.lst | zip $STAGE_BACKUP.zip -@
 
 time /t	
-REM copy archives to remote backup destination
+# copy archives to remote backup destination
 :copy1
-xcopy %STAGE_MIRROR%.RAR %DEST% /z || goto :copy1
+xcopy $STAGE_MIRROR.RAR $DEST /z || goto :copy1
 :copy2
-xcopy %STAGE_BACKUP%.RAR %DEST% /z || goto :copy2
+xcopy $STAGE_BACKUP.RAR $DEST /z || goto :copy2
 time /t
 
-# old files removal
-# todo: add day/min differese
-$limit = (Get-Date).AddDays(-15)
-$path = "C:\Some\Path"
-# Delete files older than the $limit.
-Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.CreationTime -lt $limit } | Remove-Item -Force
-# Delete any empty directories left behind after deleting the old files.
-Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.PSIsContainer -and (Get-ChildItem -Path $_.FullName -Recurse rem-Force | Where-Object { !$_.PSIsContainer }) -eq $null } | Remove-Item -Force -Recurse
-
 #delete lock file
-del $lock
-
-exit
+del tmp\copy_$1.lock /y
