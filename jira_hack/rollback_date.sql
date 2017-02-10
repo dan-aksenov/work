@@ -130,7 +130,7 @@ BEGIN
       DBMS_OUTPUT.put_line (SQL%ROWCOUNT || ' rows updated.');
    END LOOP;
 
-   --update OS_HISTORYSTEP
+   --UPDATE OS_HISTORYSTEP
    DBMS_OUTPUT.put_line ('OS_HISTORYSTEP');
 
    FOR i IN (SELECT id
