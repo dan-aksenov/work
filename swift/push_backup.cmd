@@ -20,7 +20,7 @@ IF EXIST tmp\copy.lock GOTO :wait
 echo lock > tmp\copy.lock
 REM mount remote network dirve, create backup directory and set propper attributes
 IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:localhost\administrator Streaming911!
-set DEST="%4:\REMOTE_BACKUP\%TAG%_%STAMP%"
+set DEST="%4:\REMOTE_BACKUP\%TAG%\%STAMP%"
 IF NOT EXIST %DEST% MD %DEST%
 attrib -A -H -S %DEST% /S
 
@@ -60,8 +60,12 @@ time /t
 for /f %%i in ('time /t') do set END_TIME=%%i
 @echo Backup completed at %END_TIME%
 
-REM remove old backups 
-forfiles -p %4:\REMOTE_BACKUP\ -s -m *.* /D -2 /C "cmd /c del @path"
+REM Remove old backups
+REM set retention according to day of min backup. keep 3 daily and 
+if %tag%==day set retention=adddays(-2)
+if %tag%==min set retention=addhours(-12)
+REM forfiles -p %4:\REMOTE_BACKUP\%TAG% -s -m *.* %retention% /C "cmd /c del @path"
+powershell -Command "Get-ChildItem %4:\REMOTE_BACKUP\%TAG% | where {$_.Lastwritetime -lt (date).%retention%}"
 REM remove empty directories
 for /f "delims=" %%d in ('dir %4:\REMOTE_BACKUP /s /b /ad ^| sort /r') do rd "%%d"
 
