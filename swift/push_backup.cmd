@@ -1,24 +1,29 @@
 REM %1 - local of remote backup, %2 remote host, %3 network drive, %4 mapped drive
 
-REM perform day copy on midnight
+REM Perform day copy on midnight.
+REM get current timestamp
 for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set curtime=%%a)
-rem echo %curtime% | findstr /c:"00" || set %currtime%=0
+REM if timestamp starts with 00 initiate "daily backup"
 if %curtime%==00 set TAG=day
+REM if timestamp doesn't starts with 00 initiate "hourly(min) backup"
 if not %curtime%==00 set TAG=min
 
-REM create logging folder and get timestamp for unique filenames
+REM Create logging folder and get timestamp for unique filenames
 IF NOT EXIST log MD log
 IF NOT EXIST tmp MD tmp
 IF %TAG%==day set STAMP=%date:~-10,2%%date:~-7,2%%date:~-4,4%
 IF %TAG%==min set STAMP=%time:~0,2%%time:~3,2%%time:~6,2%_%date:~-10,2%%date:~-7,2%%date:~-4,4%
 
+REM Wait if another backup already in progress.
 :wait
 echo is another backup in progress?...
 ping  127.0.0.1
 IF EXIST tmp\copy.lock GOTO :wait
 
+REM Create lock file to avoid interference from other backup jobs.
 echo lock > tmp\copy.lock
-REM mount remote network dirve, create backup directory and set propper attributes
+
+REM mount remote network dirve, create backup directory and set propper attributes.
 IF NOT EXIST %4:\ net use %4: \\%2\%3$ /USER:localhost\administrator Streaming911!
 set DEST="%4:\REMOTE_BACKUP\%TAG%\%STAMP%"
 IF NOT EXIST %DEST% MD %DEST%
@@ -30,7 +35,7 @@ SET SRC_BACKUP=f:\SAA_DBRECOVERY_sbxaruee
 SET STAGE_MIRROR=m:\MIRROR_%1
 SET STAGE_BACKUP=f:\BACKUP_%1
 
-REM clear and recreate staging area
+REM clear and recreate backup staging area
 IF EXIST %STAGE_MIRROR% rd %STAGE_MIRROR% /q /s
 IF EXIST %STAGE_BACKUP% rd %STAGE_BACKUP% /q /s
 IF NOT EXIST %STAGE_MIRROR% MD %STAGE_MIRROR%
@@ -38,6 +43,7 @@ IF NOT EXIST %STAGE_BACKUP% MD %STAGE_BACKUP%
 IF EXIST %STAGE_MIRROR%.RAR del %STAGE_MIRROR%.RAR /q
 IF EXIST %STAGE_BACKUP%.RAR del %STAGE_BACKUP%.RAR /q
 
+REM Start backup.
 for /f %%i in ('time /t') do set START_TIME=%%i
 @echo Backup started at %START_TIME%
 
@@ -61,7 +67,7 @@ for /f %%i in ('time /t') do set END_TIME=%%i
 @echo Backup completed at %END_TIME%
 
 REM Remove old backups
-REM set retention according to day of min backup. keep 3 daily and 
+REM set retention according to day or min backup.
 if %tag%==day set retention=adddays(-2)
 if %tag%==min set retention=addhours(-12)
 REM forfiles -p %4:\REMOTE_BACKUP\%TAG% -s -m *.* %retention% /C "cmd /c del @path"
