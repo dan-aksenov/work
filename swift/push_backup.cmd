@@ -74,7 +74,7 @@ REM forfiles -p %4:\REMOTE_BACKUP\%TAG% -s -m *.* %retention% /C "cmd /c del @pa
 
 echo deleted because of retention settings
 powershell -Command "Get-ChildItem %4:\REMOTE_BACKUP\%TAG% | where {$_.Lastwritetime -lt (date).%retention%}"
-powershell -Command "Get-ChildItem %4:\REMOTE_BACKUP\%TAG% | where {$_.Lastwritetime -lt (date).%retention%} | remove-item"
+powershell -Command "Get-ChildItem %4:\REMOTE_BACKUP\%TAG% | where {$_.Lastwritetime -lt (date).%retention%} | remove-item -recurse -force -confirm:$false"
 REM remove empty directories
 for /f "delims=" %%d in ('dir %4:\REMOTE_BACKUP /s /b /ad ^| sort /r') do rd "%%d"
 
