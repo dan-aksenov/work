@@ -80,12 +80,14 @@ grant select on prom_nsi.prom_schetch_mod to EC_MES;
 --
 -- ERR_LOG  (Table) 
 --
+
 CREATE TABLE EC_MES.ERR_LOG
 (
-  DT         DATE,
-  PROC_NAME  VARCHAR2(50 BYTE),
-  SCHM_NAME  VARCHAR2(50 BYTE),
-  ERR_MSG    VARCHAR2(2000 BYTE)
+  DT            DATE,
+  PROC_NAME     VARCHAR2(50 BYTE),
+  SCHM_NAME     VARCHAR2(50 BYTE),
+  ERR_MSG       VARCHAR2(2000 BYTE),
+  ACKNOWLEDGED  NUMBER                          DEFAULT 0
 )
 ;
 

@@ -1,5 +1,3 @@
-DROP PACKAGE EC_MES.RBT_PKG;
-
 CREATE OR REPLACE PACKAGE EC_MES.RBT_PKG
    AUTHID CURRENT_USER
 AS
@@ -16,7 +14,6 @@ AS
 
 END RBT_PKG;
 /
-DROP PACKAGE BODY EC_MES.RBT_PKG;
 
 CREATE OR REPLACE PACKAGE BODY EC_MES.RBT_PKG
 AS
@@ -94,7 +91,8 @@ AS
                     VALUES (SYSDATE,
                             $$PLSQL_UNIT,
                             i.nm_schema,
-                            v_err);
+                            v_err,
+                            0);
 
                COMMIT;
          END;
@@ -132,7 +130,7 @@ AS
                     VALUES (SYSDATE,
                             $$PLSQL_UNIT,
                             i.nm_schema,
-                            v_err);
+                            v_err,0);
 
                COMMIT;
          END;
@@ -188,7 +186,7 @@ AS
                     VALUES (SYSDATE,
                             $$PLSQL_UNIT,
                             'ALL',
-                            v_err);
+                            v_err,0);
 
                COMMIT;
       END;
@@ -287,7 +285,7 @@ AS
               VALUES (SYSDATE,
                       $$PLSQL_UNIT,
                       v_schm,
-                      lvl_err||' '||v_err);
+                      lvl_err||' '||v_err,0);
 
          COMMIT;
    END RBT_LOAD;
@@ -352,7 +350,7 @@ AS
               VALUES (SYSDATE,                       -- добавить имя таблицы ?
                       $$PLSQL_UNIT,
                       v_schm,
-                      v_err);
+                      v_err,0);
 
          COMMIT;
    END RBT_LOAD_DECODE;
