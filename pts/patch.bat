@@ -1,6 +1,7 @@
+rem Update pts script
 set stage_dir=d:\pts_patch
 set ssh_key=C:\Users\daniil.aksenov\Documents\ssh\id_rsa.ppk
-set dst_nix=%1
+set dst_host=%1
 set usr_nix=ansible
 rem Positional parameter to add suffix if needed. Like apache-tomcat-8.5.4-dev. Dash needed!
 set app_name=apache-tomcat-8.5.4%2
@@ -10,6 +11,10 @@ cd /d %stage_dir%
 ren pts-integration-*.war integration.war
 ren pts-public-*.war portal.war;
 ren pts-restricted-*.war pts.war
+
+rem Check tomcat befoure stoppig.
+plink -i %ssh_key% %usr_nix%@%dst_host% "sudo systemctl status tomcat%2"
+pause
 
 rem Stop tomcat.
 plink -i %ssh_key% %usr_nix%@%dst_host% "sudo systemctl stop tomcat%2"
@@ -28,3 +33,6 @@ plink -i %ssh_key% %usr_nix%@%dst_host% "sudo cp /tmp/webapps/*.war /opt/%app_na
 rem Start tomcat.
 plink -i %ssh_key% %usr_nix%@%dst_host% "sudo systemctl start tomcat%2"
 
+rem Check tomcat after starting.
+plink -i %ssh_key% %usr_nix%@%dst_host% "sudo systemctl status tomcat%2"
+pause
