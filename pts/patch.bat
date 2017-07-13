@@ -15,7 +15,6 @@ ren pts-restricted-*.war pts.war
 
 rem Check tomcat befoure stoppig.
 plink -i %ssh_key% %usr_nix%@%dst_host% "sudo systemctl status tomcat%2"
-pause
 
 rem Stop tomcat.
 %plink_cmd% "sudo systemctl stop tomcat%2"
@@ -37,11 +36,10 @@ md5sum integration.war
 md5sum portal.war
 %plink_cmd% "sudo md5sum /opt/%app_name%/webapps/portal.war"
 md5sum pts.war
-%plink_cmd% "sudo sudo md5sum /opt/%app_name%/webapps/pts.war"
+%plink_cmd% "sudo md5sum /opt/%app_name%/webapps/pts.war"
 
 rem Start tomcat.
 %plink_cmd% "sudo systemctl start tomcat%2"
 
 rem Check tomcat after starting.
 %plink_cmd% "sudo systemctl status tomcat%2"
-pause
