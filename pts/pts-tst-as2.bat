@@ -1,1 +1,1 @@
-patch.bat pts-tst-as2 > log/pts-tst-as2.log
+patch.bat pts-tst-as2

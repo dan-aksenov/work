@@ -7,7 +7,6 @@ rem Positional parameter to add suffix if needed. Like apache-tomcat-8.5.4-dev. 
 set app_name=apache-tomcat-8.5.4%2
 set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
-
 rem Rename war files to desired names.
 cd /d %stage_dir%
 ren pts-integration-*.war integration.war
