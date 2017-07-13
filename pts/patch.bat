@@ -14,21 +14,22 @@ ren pts-public-*.war portal.war;
 ren pts-restricted-*.war pts.war
 
 rem Check tomcat befoure stoppig.
-plink -i %ssh_key% %usr_nix%@%dst_host% "sudo systemctl status tomcat%2"
+%plink_cmd% "sudo systemctl status tomcat%2"
 
 rem Stop tomcat.
 %plink_cmd% "sudo systemctl stop tomcat%2"
 
 rem Remove old app files and dirs
-%plink_cmd% "sudo rm /opt/%app_name%/webapps/*.war
-%plink_cmd% "sudo rm /opt/%app_name%/webapps/integration -rf
-%plink_cmd% "sudo rm /opt/%app_name%/webapps/portal -rf
-%plink_cmd% "sudo rm /opt/%app_name%/webapps/pts -rf
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/*.war"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/integration -rf"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/portal -rf"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/pts -rf"
 
 rem Copy files to nix machine.
-%plink_cmd% "mkdir /tmp/webapps"
+%plink_cmd% "test -d /tmp/webapps && rm -rf /tmp/webapps && mkdir /tmp/webapps"
 pscp -i %ssh_key% *.war %usr_nix%@%dst_host%:/tmp/webapps
-%plink_cmd% "sudo cp /tmp/webapps/*.war /opt/%app_name%/webapps 
+%plink_cmd% "sudo chown tomcat.tomcat /tmp/webapps/*.war"
+%plink_cmd% "sudo mv /tmp/webapps/*.war /opt/%app_name%/webapps" 
 
 rem Check files md5.
 md5sum integration.war
