@@ -26,7 +26,7 @@ rem Remove old app files and dirs
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/pts -rf"
 
 rem Copy files to nix machine.
-%plink_cmd% "test -d /tmp/webapps && rm -rf /tmp/webapps && mkdir /tmp/webapps"
+%plink_cmd% "rm -rf /tmp/webapps && mkdir /tmp/webapps"
 pscp -i %ssh_key% *.war %usr_nix%@%dst_host%:/tmp/webapps
 %plink_cmd% "sudo chown tomcat.tomcat /tmp/webapps/*.war"
 %plink_cmd% "sudo mv /tmp/webapps/*.war /opt/%app_name%/webapps" 
