@@ -3,7 +3,7 @@ set stage_dir=d:\pts_patch
 set ssh_key=C:\Users\daniil.aksenov\Documents\ssh\id_rsa.ppk
 set dst_host=%1
 set usr_nix=ansible
-rem Positional parameter to add suffix if needed. Like apache-tomcat-8.5.4-dev. Dash needed!
+rem %2 is positional parameter to add suffix if needed. Like apache-tomcat-8.5.4-dev. Dash needed!
 set app_name=apache-tomcat-8.5.4%2
 set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
