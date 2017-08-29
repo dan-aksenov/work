@@ -1,0 +1,1 @@
+patch.bat gudhskpdi-test-app demo> log/gudhskpdi-test-app.log
