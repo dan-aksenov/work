@@ -23,8 +23,8 @@ REM Ensure tomcat stopped.
 %plink_cmd% "sudo systemctl stop tomcat"
 
 REM Remove old app files and dirs
-%plink_cmd% "sudo rm %app_path%/*.war"
-%plink_cmd% "sudo rm %app_path%/demo -rf"
+%plink_cmd% "sudo rm %app_path%/%app_name%*.war"
+%plink_cmd% "sudo rm %app_path%/%app_name% -rf"
 
 REM Copy files to nix machine.
 %plink_cmd% "rm -rf /tmp/webapps && mkdir /tmp/webapps"
