@@ -37,6 +37,7 @@ md5sum %app_name%.war
 %plink_cmd% "sudo md5sum %app_path%/%app_name%.war"
 
 REM Start tomcat.
-%plink_cmd% "sudo systemctl start tomcat"
+rem Tomcat start commented out. Manual startap suggested.
+rem %plink_cmd% "sudo systemctl start tomcat"
 REM Check tomcat after starting.
-%plink_cmd% "sudo systemctl status tomcat"
+rem %plink_cmd% "sudo systemctl status tomcat"
