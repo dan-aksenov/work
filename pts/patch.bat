@@ -20,7 +20,9 @@ rem Stop tomcat.
 %plink_cmd% "sudo systemctl stop tomcat%2"
 
 rem Remove old app files and dirs
-%plink_cmd% "sudo rm /opt/%app_name%/webapps/*.war"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/integration.war -f"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/portal.war -f"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/pts.war -f"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/integration -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/pts -rf"
