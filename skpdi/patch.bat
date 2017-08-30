@@ -9,7 +9,7 @@ set dst_host=%1
 REM Applicateion name skpdi or demo. Passed as second parameter.
 set app_name=%2
 REM Tomcat name to create path.
-set tomcat_name=apache-tomcat-8.5.5
+set tomcat_name=apache-tomcat-8.5.8
 REM Create application folder for future use.
 set app_path=/u01/%tomcat_name%/webapps
 REM Create plink command for use in script below.
@@ -37,6 +37,6 @@ md5sum %app_name%.war
 %plink_cmd% "sudo md5sum %app_path%/%app_name%.war"
 
 REM Start tomcat.
-%plink_cmd% "sudo systemctl start tomcat%2"
+%plink_cmd% "sudo systemctl start tomcat"
 REM Check tomcat after starting.
-%plink_cmd% "sudo systemctl status tomcat%2"
+%plink_cmd% "sudo systemctl status tomcat"
