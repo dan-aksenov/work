@@ -1,2 +1,2 @@
-patch.bat gudhskpdi-app-01 skpdi> log/gudhskpdi-app-01.log
-patch.bat gudhskpdi-app-02 skpdi> log/gudhskpdi-app-02.log
+patch.bat gudhskpdi-app-01 skpdi
+patch.bat gudhskpdi-app-02 skpdi
