@@ -12,9 +12,9 @@ REM Set database name from second parameter
 set PGDATABASE=ods_prod
 
 set script_name=install_db
-set width=120
-set height=60
-mode con:cols=%width% lines=%height%
+rem set width=120 Removed to prevent far resizing
+rem set height=60
+rem mode con:cols=%width% lines=%height%
 
 set "bat_name=%~n0"
 set "bat_path=%~dp0"
