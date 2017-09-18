@@ -1,1 +1,0 @@
-patch.bat gudhskpdi-test-app demo
