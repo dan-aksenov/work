@@ -1,3 +1,4 @@
+@ECHO OFF
 REM Update skpdi application.
 REM Staging local dir to hold application data to be pushed.
 set stage_dir=d:\skpdi_patch
@@ -16,8 +17,8 @@ REM Create plink command for use in script below.
 set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
 REM Rename war files to desired names.
-cd /d %stage_dir%
-ren *.war %app_name%.war
+rem cd /d %stage_dir%
+ren %stage_dir%\*.war %stage_dir%\%app_name%.war
 
 REM Ensure tomcat stopped.
 %plink_cmd% "sudo systemctl stop tomcat"
