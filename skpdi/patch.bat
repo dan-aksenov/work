@@ -41,4 +41,3 @@ rem Tomcat start commented out. Manual startap suggested.
 rem %plink_cmd% "sudo systemctl start tomcat"
 REM Check tomcat after starting.
 rem %plink_cmd% "sudo systemctl status tomcat"
-exit
