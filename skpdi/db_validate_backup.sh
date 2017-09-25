@@ -11,25 +11,25 @@ tar xvf $STAGE_DIR/$STAGE_DATA/base.tar -C $STAGE_DIR/$STAGE_DATA
 # Make directories to create tablespaces.
 mkdir ./tablespace
 cd ./tablespace
-mkdir fdc_log_tabfdc_nsi_tabfdc_ods_big_tabfdc_ods_indfdc_parameter_indfdc_secr_ind
+mkdir fdc_log_tab fdc_nsi_tab fdc_ods_big_tab fdc_ods_ind fdc_parameter_ind fdc_secr_ind
 
 # Use this query on original DB to generate move command for tablespace archives.
 # select 'mv '|| oid || '.tar $STAGE_DIR/tablespace/'||spcname from pg_tablespace;
 
 # Move tablespace archives to destinagion direcrories.
-mv 129717.tar $STAGE_DIR/tablespace/fdc_log_ind
-mv 129718.tar $STAGE_DIR/tablespace/fdc_log_tab 
-mv 129719.tar $STAGE_DIR/tablespace/fdc_nsi_ind 
-mv 129720.tar $STAGE_DIR/tablespace/fdc_nsi_tab 
-mv 129721.tar $STAGE_DIR/tablespace/fdc_ods_big_ind 
-mv 129722.tar $STAGE_DIR/tablespace/fdc_ods_big_tab 
-mv 129723.tar $STAGE_DIR/tablespace/fdc_ods_geo_ind 
-mv 129724.tar $STAGE_DIR/tablespace/fdc_ods_ind 
-mv 129725.tar $STAGE_DIR/tablespace/fdc_ods_tab 
-mv 181169.tar $STAGE_DIR/tablespace/fdc_secr_ind
-mv 181170.tar $STAGE_DIR/tablespace/fdc_secr_tab
-mv 181171.tar $STAGE_DIR/tablespace/fdc_parameter_ind 
-mv 181172.tar $STAGE_DIR/tablespace/fdc_parameter_tab
+mv $STAGE_DIR/$STAGE_DATA/129717.tar $STAGE_DIR/tablespace/fdc_log_ind/
+mv $STAGE_DIR/$STAGE_DATA/129718.tar $STAGE_DIR/tablespace/fdc_log_tab/ 
+mv $STAGE_DIR/$STAGE_DATA/129719.tar $STAGE_DIR/tablespace/fdc_nsi_ind/ 
+mv $STAGE_DIR/$STAGE_DATA/129720.tar $STAGE_DIR/tablespace/fdc_nsi_tab/ 
+mv $STAGE_DIR/$STAGE_DATA/129721.tar $STAGE_DIR/tablespace/fdc_ods_big_ind/
+mv $STAGE_DIR/$STAGE_DATA/129722.tar $STAGE_DIR/tablespace/fdc_ods_big_tab/ 
+mv $STAGE_DIR/$STAGE_DATA/129723.tar $STAGE_DIR/tablespace/fdc_ods_geo_ind/ 
+mv $STAGE_DIR/$STAGE_DATA/129724.tar $STAGE_DIR/tablespace/fdc_ods_ind/ 
+mv $STAGE_DIR/$STAGE_DATA/129725.tar $STAGE_DIR/tablespace/fdc_ods_tab/ 
+mv $STAGE_DIR/$STAGE_DATA/181169.tar $STAGE_DIR/tablespace/fdc_secr_ind/
+mv $STAGE_DIR/$STAGE_DATA/181170.tar $STAGE_DIR/tablespace/fdc_secr_tab/
+mv $STAGE_DIR/$STAGE_DATA/181171.tar $STAGE_DIR/tablespace/fdc_parameter_ind/
+mv $STAGE_DIR/$STAGE_DATA/181172.tar $STAGE_DIR/tablespace/fdc_parameter_tab/
 
 # Untar tablespace archives.
 for i in $(ls $STAGE_DIR/tablespace)
