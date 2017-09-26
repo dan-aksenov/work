@@ -12,6 +12,7 @@ tar xvf $STAGE_DIR/$STAGE_DATA/base.tar -C $STAGE_DIR/$STAGE_DATA
 mkdir ./tablespace
 cd ./tablespace
 mkdir fdc_log_tab fdc_nsi_tab fdc_ods_big_tab fdc_ods_ind fdc_parameter_ind fdc_secr_ind
+mkdir fdc_log_ind fdc_nsi_ind fdc_ods_big_ind fdc_ods_geo_ind fdc_ods_tab fdc_secr_tab fdc_parameter_tab
 
 # Use this query on original DB to generate move command for tablespace archives.
 # select 'mv '|| oid || '.tar $STAGE_DIR/tablespace/'||spcname from pg_tablespace;
