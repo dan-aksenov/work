@@ -43,24 +43,25 @@ sed -i 's/listen_addresses/#listen_addresses/g' $STAGE_DIR/$STAGE_DATA/postgresq
 sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$STAGE_DATA/postgresql.conf
 
 # Relink tablespace links with python script. to be provided.
-TABLESPACE_LINKS = $STAGE_DIR/$STAGE_DATA/pg_tblspc/
+TABLESPACE_LINKS=$STAGE_DIR/$STAGE_DATA/pg_tblspc
 
-ln -s $STAGE_DIR/tablespace/fdc_log_ind $TABLESPACE_LINKS/129717
-ln -s $STAGE_DIR/tablespace/fdc_log_tab $TABLESPACE_LINKS/129718
-ln -s $STAGE_DIR/tablespace/fdc_nsi_ind $TABLESPACE_LINKS/129719
-ln -s $STAGE_DIR/tablespace/fdc_nsi_tab $TABLESPACE_LINKS/129720
-ln -s $STAGE_DIR/tablespace/fdc_ods_big_ind $TABLESPACE_LINKS/129721
-ln -s $STAGE_DIR/tablespace/fdc_ods_big_tab $TABLESPACE_LINKS/129722
-ln -s $STAGE_DIR/tablespace/fdc_ods_geo_ind $TABLESPACE_LINKS/129723
-ln -s $STAGE_DIR/tablespace/fdc_ods_ind $TABLESPACE_LINKS/129724
-ln -s $STAGE_DIR/tablespace/fdc_ods_tab $TABLESPACE_LINKS/129725
-ln -s $STAGE_DIR/tablespace/fdc_secr_ind $TABLESPACE_LINKS/181169
-ln -s $STAGE_DIR/tablespace/fdc_secr_tab $TABLESPACE_LINKS/181170
-ln -s $STAGE_DIR/tablespace/fdc_parameter_ind $TABLESPACE_LINKS/181171
-ln -s $STAGE_DIR/tablespace/fdc_parameter_tab $TABLESPACE_LINKS/181172
+ln -sf $STAGE_DIR/tablespace/fdc_log_ind $TABLESPACE_LINKS/129717
+ln -sf $STAGE_DIR/tablespace/fdc_log_tab $TABLESPACE_LINKS/129718
+ln -sf $STAGE_DIR/tablespace/fdc_nsi_ind $TABLESPACE_LINKS/129719
+ln -sf $STAGE_DIR/tablespace/fdc_nsi_tab $TABLESPACE_LINKS/129720
+ln -sf $STAGE_DIR/tablespace/fdc_ods_big_ind $TABLESPACE_LINKS/129721
+ln -sf $STAGE_DIR/tablespace/fdc_ods_big_tab $TABLESPACE_LINKS/129722
+ln -sf $STAGE_DIR/tablespace/fdc_ods_geo_ind $TABLESPACE_LINKS/129723
+ln -sf $STAGE_DIR/tablespace/fdc_ods_ind $TABLESPACE_LINKS/129724
+ln -sf $STAGE_DIR/tablespace/fdc_ods_tab $TABLESPACE_LINKS/129725
+ln -sf $STAGE_DIR/tablespace/fdc_secr_ind $TABLESPACE_LINKS/181169
+ln -sf $STAGE_DIR/tablespace/fdc_secr_tab $TABLESPACE_LINKS/181170
+ln -sf $STAGE_DIR/tablespace/fdc_parameter_ind $TABLESPACE_LINKS/181171
+ln -sf $STAGE_DIR/tablespace/fdc_parameter_tab $TABLESPACE_LINKS/181172
 
 # Attempt start. This time this'll do.
 pg_ctl -D $STAGE_DIR/$STAGE_DATA start
 
 # Read log to be shure DB is starged.
-tail $STAGE_DIR/$STAGE_DATA/pg_log/postgresql-Mon.log
+DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
+tail $STAGE_DIR/$STAGE_DATA/pg_log/postgresql-$DOW.log
