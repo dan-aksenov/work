@@ -1,6 +1,14 @@
 ﻿@chcp 65001
 setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 REM UPDATE Skpdi server.
+
+REM plink command to stop application servers beroure.
+set ssh_key=C:\Users\daniil.aksenov\Documents\ssh\id_rsa.ppk
+set usr_nix=ansible
+set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
+set dst_host=gudhskpdi-app-01
+%plink_cmd% "sudo systemctl stop tomcat"
+
 REM Set database's host from first parameter.
 SET PGHOST=gudhskpdi-db-test
 
