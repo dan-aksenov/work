@@ -49,9 +49,17 @@ for patch in patches_targ:
     b.append(i)
 
 list(set(b) - set(a))
+'''
+В настоящее время возвращает 6 патчей, которые есть в файлах, но нет в БД
+In [139]: list(set(b) - set(a))
+Out[139]: ['0000', '0068a', '0101', '0092c', '0076', '0094a']
+Может следует сравнивать только последние Х, или чтото в этом роде.
+'''
 	
 # Copy patch installer to needed folders.
 
+call( [ "rmdir", stage_dir, "/s", "/q" ], shell=True )
+call ( [ "for /D %%a in ('d:\skpdi_patch\patches\*') do xcopy /y /d db_patch_%1.bat '%a\'" ] )
 # Stop tomcats.
 # pssh
 
