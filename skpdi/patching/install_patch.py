@@ -26,10 +26,30 @@ except:
 cur = conn.cursor()
 cur.execute("""select name from parameter.fdc_patches_log order by id desc limit 1;""")
 rows = cur.fetchall()
+patches_curr = []
+# Transform from tuples to strings to compare with list(set(patches_targ) - set(patches_curr))
 for row in rows:
-    print "   ", row[0]
+    patches_curr.append(i[0])
 
+# Database patch Directory listing 
+patches_targ = [name for name in os.listdir( patch_dir + '\\patches' )]
 
+# Get diff. lots of trash!
+list(set(patches_targ) - set(patches_curr))
+
+# Get patch number
+a = []
+for patch in patches_curr:
+    i = patch.split('_')[1]
+    a.append(i)	 
+
+b = []
+for patch in patches_targ:
+    i = patch.split('_')[1]
+    b.append(i)
+
+list(set(b) - set(a))
+	
 # Copy patch installer to needed folders.
 
 # Stop tomcats.
