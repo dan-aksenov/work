@@ -13,8 +13,8 @@ cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
 tar xvf $STAGE_DIR/$CURRENT_BACKUP/base.tar -C $STAGE_DIR/$CURRENT_BACKUP
 
 # Make directories to hold tablespaces.
-mkdir ./tablespace
-cd ./tablespace
+mkdir $STAGE_DIR/tablespace
+cd $STAGE_DIR/tablespace
 mkdir fdc_log_tab fdc_nsi_tab fdc_ods_big_tab fdc_ods_ind fdc_parameter_ind fdc_secr_ind
 mkdir fdc_log_ind fdc_nsi_ind fdc_ods_big_ind fdc_ods_geo_ind fdc_ods_tab fdc_secr_tab fdc_parameter_tab
 
@@ -71,3 +71,8 @@ pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP start
 # Read log to be shure DB is starged.
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
 tail $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log
+
+pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP stop
+
+rm -rf $STAGE_DIR/$CURRENT_BACKUP
+rm -rf $STAGE_DIR/tablespace
