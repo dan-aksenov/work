@@ -1,6 +1,6 @@
 # Move to staging directory.
 
-STAGE_DIR=/usr/local/pgsql/basebackup
+STAGE_DIR=/usr/local/pgsql/backup_test
 # Directory containing pg_basebackup should be copied here like $STAGE_DIR/db-09-22-2017_09
 STAGE_DATA=$1
 
