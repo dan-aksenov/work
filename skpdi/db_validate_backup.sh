@@ -22,7 +22,6 @@ psql -t ods_prod -c "select 'mkdir $STAGE_DIR/tablespace/'||spcname from pg_tabl
 # Move tablespace archives to destinagion direcrories.
 psql -t ods_prod -c "select 'mv $STAGE_DIR/$CURRENT_BACKUP/'|| oid || '.tar $STAGE_DIR/tablespace/'||spcname from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 
-
 # Untar tablespace archives.
 for i in $(ls $STAGE_DIR/tablespace)
 do
