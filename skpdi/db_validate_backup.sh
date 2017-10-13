@@ -65,7 +65,7 @@ ln -sf $STAGE_DIR/tablespace/fdc_secr_tab $TABLESPACE_LINKS/181170
 ln -sf $STAGE_DIR/tablespace/fdc_parameter_ind $TABLESPACE_LINKS/181171
 ln -sf $STAGE_DIR/tablespace/fdc_parameter_tab $TABLESPACE_LINKS/181172
 
-# Attempt start. This time this'll do.
+# Attempt start.
 pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP start
 
 # Read log to be shure DB is starged.
