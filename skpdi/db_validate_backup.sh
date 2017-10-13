@@ -44,6 +44,8 @@ pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP start
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
 tail $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log
 
+cp $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log /tmp/restore.log
+
 pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP stop
 
 rm -rf $STAGE_DIR/$CURRENT_BACKUP
