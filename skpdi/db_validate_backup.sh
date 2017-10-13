@@ -16,7 +16,7 @@ tar xvf $STAGE_DIR/$CURRENT_BACKUP/base.tar -C $STAGE_DIR/$CURRENT_BACKUP
 mkdir $STAGE_DIR/tablespace
 cd $STAGE_DIR/tablespace
 
-psql -t ods_prod -c "select 'mkdir $STAGE_DIR/tablespace/'||spcname from pg_tablespace where spcname not in ('pg_default','pg_global')"
+psql -t ods_prod -c "select 'mkdir $STAGE_DIR/tablespace/'||spcname from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 #mkdir fdc_log_tab fdc_nsi_tab fdc_ods_big_tab fdc_ods_ind fdc_parameter_ind fdc_secr_ind
 #mkdir fdc_log_ind fdc_nsi_ind fdc_ods_big_ind fdc_ods_geo_ind fdc_ods_tab fdc_secr_tab fdc_parameter_tab
 
@@ -51,7 +51,7 @@ sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 # Relink tablespace links with python script. to be provided.
 TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
 
-psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')"
+psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')" /bin/bash
 
 #ln -sf $STAGE_DIR/tablespace/fdc_log_ind $TABLESPACE_LINKS/129717
 #ln -sf $STAGE_DIR/tablespace/fdc_log_tab $TABLESPACE_LINKS/129718
