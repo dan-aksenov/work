@@ -34,7 +34,7 @@ sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 
 # Relink tablespace links with python script. to be provided.
 TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
-psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')" /bin/bash
+psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 
 # Attempt start.
 pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP start
