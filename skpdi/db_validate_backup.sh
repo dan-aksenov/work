@@ -32,6 +32,9 @@ done
 # Edit postgresql.conf. Restrict listener and change active port.
 sed -i 's/listen_addresses/#listen_addresses/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
+# Archive command not needed also.
+sed -i 's/archive_command/#archive_command/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
+
 
 # Relink tablespace links with python script. to be provided.
 TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
