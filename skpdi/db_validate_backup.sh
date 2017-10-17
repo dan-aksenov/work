@@ -12,6 +12,7 @@ cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
 
 # Untar main backup archive.
 tar xvf $STAGE_DIR/$CURRENT_BACKUP/base.tar -C $STAGE_DIR/$CURRENT_BACKUP
+mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 
 # Make directories to hold tablespaces.
 mkdir $STAGE_DIR/tablespace
@@ -32,9 +33,12 @@ done
 # Edit postgresql.conf. Restrict listener and change active port.
 sed -i 's/listen_addresses/#listen_addresses/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
-# Archive command not needed also.
+# Archive command not needed.
 sed -i 's/archive_command/#archive_command/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
-
+# Add restore arhivelogs from backup.
+cat >> $STAGE_DIR/$CURRENT_BACKUP/recovery.conf <<EOF
+restore_command = 'cp $BACKUP_DIR/pg_archive/%f "%p"'
+EOF
 
 # Relink tablespace links with python script. to be provided.
 TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
