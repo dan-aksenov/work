@@ -1,6 +1,7 @@
 from subprocess import call
 from sys import argv
 from psycopg2 import connect
+from os import listdir
 
 patch_num = argv[1]
 stage_dir = "d:\\tmp\\skpdi_patch"
@@ -24,18 +25,18 @@ except:
     print "ERROR: unable to connect to the database!"
 
 cur = conn.cursor()
-cur.execute("""select name from parameter.fdc_patches_log order by id desc limit 1;""")
+cur.execute("""select name from parameter.fdc_patches_log order by id desc;""")
 rows = cur.fetchall()
 patches_curr = []
 # Transform from tuples to strings to compare with list(set(patches_targ) - set(patches_curr))
 for row in rows:
     patches_curr.append(row[0])
 
-# Database patch Directory listing 
-patches_targ = [name for name in os.listdir( patch_dir + '\\patches' )]
+# Database patcho Directory listing 
+patches_targ = [name for name in listdir( patch_dir + '\\patches' )]
 
 # Get diff. lots of trash!
-list(set(patches_targ) - set(patches_curr))
+#list(set(patches_targ) - set(patches_curr))
 
 # Get patch number
 a = []
@@ -58,7 +59,7 @@ Out[139]: ['0000', '0068a', '0101', '0092c', '0076', '0094a']
 	
 # Copy patch installer to needed folders.
 
-call( [ "rmdir", stage_dir, "/s", "/q" ], shell=True )
+# not working yet.
 call ( [ "for /D %a in ('d:\skpdi_patch\patches\*') do xcopy /y /d db_patch_%1.bat '%a\'" ] )
 # Stop tomcats.
 # pssh
