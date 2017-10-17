@@ -59,7 +59,7 @@ Out[139]: ['0000', '0068a', '0101', '0092c', '0076', '0094a']
 # Copy patch installer to needed folders.
 
 call( [ "rmdir", stage_dir, "/s", "/q" ], shell=True )
-call ( [ "for /D %%a in ('d:\skpdi_patch\patches\*') do xcopy /y /d db_patch_%1.bat '%a\'" ] )
+call ( [ "for /D %a in ('d:\skpdi_patch\patches\*') do xcopy /y /d db_patch_%1.bat '%a\'" ] )
 # Stop tomcats.
 # pssh
 
