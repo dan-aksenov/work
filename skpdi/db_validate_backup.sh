@@ -12,7 +12,6 @@ cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
 
 # Untar main backup archive.
 tar xvf $STAGE_DIR/$CURRENT_BACKUP/base.tar -C $STAGE_DIR/$CURRENT_BACKUP
-mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 
 # Make directories to hold tablespaces.
 mkdir $STAGE_DIR/tablespace
@@ -44,6 +43,8 @@ EOF
 TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
 psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 
+#Create log folder.
+mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 # Attempt start.
 pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP start
 
