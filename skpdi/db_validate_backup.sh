@@ -5,6 +5,7 @@ CURRENT_BACKUP=$(ls -t $BACKUP_DIR | head -1)
 # Directory where backup will be tested.
 STAGE_DIR=/usr/local/pgsql/backup_test
 
+mkdir $STAGE_DIR
 cd $STAGE_DIR
 # Copy backup from storage.
 cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
