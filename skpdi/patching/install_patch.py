@@ -29,7 +29,7 @@ rows = cur.fetchall()
 patches_curr = []
 # Transform from tuples to strings to compare with list(set(patches_targ) - set(patches_curr))
 for row in rows:
-    patches_curr.append(i[0])
+    patches_curr.append(row[0])
 
 # Database patch Directory listing 
 patches_targ = [name for name in os.listdir( patch_dir + '\\patches' )]
