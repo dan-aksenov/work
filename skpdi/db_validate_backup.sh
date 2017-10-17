@@ -1,7 +1,7 @@
 # Basebackup storage.
 BACKUP_DIR=/mnt/nfs/backup
 # Get latest backup.
-CURRENT_BACKUP=$(ls -t $BACKUP_DIR | head -1)
+CURRENT_BACKUP=$(ls -t $BACKUP_DIR | grep db | head -1)
 # Directory where backup will be tested.
 STAGE_DIR=/usr/local/pgsql/backup_test
 
