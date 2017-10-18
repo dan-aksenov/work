@@ -43,7 +43,10 @@ EOF
 TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
 psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 
-#Create log folder.
+# Copy archivelogs
+cp $BACKUP_DIR/pg_archive $STAGE_DIR/pg_archive -r
+
+# Create log folder.
 mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 # Attempt start.
 pg_ctl -w -D $STAGE_DIR/$CURRENT_BACKUP start
@@ -56,5 +59,4 @@ cp $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log /tmp/restore.log
 
 pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP stop
 
-rm -rf $STAGE_DIR/$CURRENT_BACKUP
-rm -rf $STAGE_DIR/tablespace
+rm -rf $STAGE_DIR/*
