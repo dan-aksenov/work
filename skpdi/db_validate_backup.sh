@@ -37,6 +37,7 @@ sed -i 's/archive_command/#archive_command/g' $STAGE_DIR/$CURRENT_BACKUP/postgre
 # Add restore arhivelogs from backup.
 cat >> $STAGE_DIR/$CURRENT_BACKUP/recovery.conf <<EOF
 restore_command = 'cp $BACKUP_DIR/pg_archive/%f "%p"'
+recovery_target_timeline = 'latest'
 EOF
 
 # Relink tablespace links with python script. to be provided.
