@@ -50,8 +50,8 @@ cp $BACKUP_DIR/pg_archive $STAGE_DIR/pg_archive -r
 mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 # Attempt start.
 pg_ctl -w -D $STAGE_DIR/$CURRENT_BACKUP start
-# Read log to be shure DB is starged.
 
+# Read log to be shure DB is starged.
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
 tail $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log
 
