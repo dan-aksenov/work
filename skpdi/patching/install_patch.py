@@ -5,23 +5,29 @@ from sys import argv
 from psycopg2 import connect
 from os import listdir
 
-# for ssh connection
+# for ssh connection. Или взять plink? всеравно для копирования нужен pscp.
 import paramico
 
+# Variables:
+# Pathc number got from 1st argument
 patch_num = argv[1]
+# Stage dir to hold patch data.
 stage_dir = "d:\\tmp\\skpdi_patch"
+# Source location on sunny
 patch_store = "\\\sunny\\builds\\odsxp\\"
+# Directory with actual patch data
 patch_dir = patch_store + patch_num
 
-# Purge previous patches from stage directory. Redo it in python only w/o call.
+# Purge previous patches from stage directory. TODO: Redo it in python only w/o call.
 call( [ "rmdir", stage_dir, "/s", "/q" ], shell=True )
 call( [ "md", stage_dir ], shell=True )
 
-# Copy patch from storage. Redo it in python only w/o call.
+# Copy patch from storage. TODO: Redo it in python only w/o call.
 call( [ "xcopy", "/e", patch_dir, stage_dir ], shell=True )
 
+# Get war md5 and store for future compare.
 
-# 2. Get list of needed db patches
+# Get list of needed db patches.
 # select name from parameter.fdc_patches_log order by id desc limit 1;
 
 try:
@@ -37,36 +43,11 @@ patches_curr = []
 for row in rows:
     patches_curr.append(row[0])
 
-# Database patcho Directory listing 
+# Database patch Directory listing 
 patches_targ = [name for name in listdir( patch_dir + '\\patches' )]
 
-# Get diff. lots of trash!
-#list(set(patches_targ) - set(patches_curr))
-
-# Get patch number
+# Get missing db patches.
 '''
-Блок ниже не нужен, так как можно сравнивать patches_targ и patches_curr напрямую.
-p_curr_num = []
-for patch in patches_curr:
-    i = patch.split('_')[1]
-    p_curr_num.append(i)	 
-
-p_targ_num = []
-for patch in patches_targ:
-    i = patch.split('_')[1]
-    p_targ_num.append(i)
-
-В настоящее время возвращает 6 патчей, которые есть в файлах, но нет в БД
-In [139]: list(set(b) - set(a))
-Out[139]: ['0000', '0068a', '0101', '0092c', '0076', '0094a']
-Может следует сравнивать только последние Х, или чтото в этом роде.
-
-Проблема "вроде как решена" ниже блоком ниже.
-
-for i in (set(p_targ_num) - set(p_curr_num)):
-    if i > max(p_curr_num):
-        print i
-
 Но на мой взгляд как-то криво. Можно ли сделать проверку один раз, без двух циклов.
 На stack overflow правда пишут что решение годное. itertools у меня не получилось, наверное из-за условия булевского i>max(p_curr_num).
 '''
@@ -78,28 +59,29 @@ for i in (set(patches_targ) - set(patches_curr)):
 	
 # Copy patch installer to needed folders.
 
-# not working yet.
 for i in patches_miss:
     call( [ "copy", "/y", "C:\Users\daniil.aksenov\Documents\GitHub\work\skpdi\patching\db_patch_demo.bat", stage_dir + "\\patches\\" + i ], shell=True )
 
-# Stop tomcats. Functionize this!
+# Stop tomcats. Functionize this! or remake with subprocess call.
 host = 'gudhskpdi-test-app'
 user = 'ansible'
-key = paramiko.RSAKey.from_private_key_file("C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key")
+ssh_key = paramiko.RSAKey.from_private_key_file("C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key")
 port = 22
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect(hostname=host, username=user, password = secret, port = port, pkey = key)
+client.connect(hostname=host, username=user, password = secret, port = port, pkey = ssh_key)
 stdin, stdout, stderr = client.exec_command('sudo systemctl start tomcat')
 data = stdout.read() + stderr.read()
 client.close()
 
 # Install needed db patches.
-# Sorted 
+# Sorted to run in order. cwd require to run in cpecific dir.
 for i in sorted(patches_miss):
-    call( [ stage_dir + "\\patches\\" + i + "\\db_patch_demo.bat" ], shell=True, cwd =  stage_dir + "\\patches\\" + i)
+    call( [ stage_dir + "\\patches\\" + i + "\\db_patch_demo.bat" ], shell=True, cwd = stage_dir + "\\patches\\" + i)
 
+# TODO database patches log.
 
 # 3. Install app patches
-# pssh
+# Ключи разные для paramiko и pscp? или можно будет взять один? Хренова винда!
+ call( [ "pscp", "-i", ssh_key, "demo.war", "ansible@gudhskpdi-test-app:/tmp/webapps" ], shell = True, cwd = stage_dir )
