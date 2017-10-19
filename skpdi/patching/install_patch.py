@@ -1,7 +1,12 @@
 from subprocess import call
 from sys import argv
+
+# for db connection
 from psycopg2 import connect
 from os import listdir
+
+# for ssh connection
+import paramico
 
 patch_num = argv[1]
 stage_dir = "d:\\tmp\\skpdi_patch"
@@ -39,34 +44,62 @@ patches_targ = [name for name in listdir( patch_dir + '\\patches' )]
 #list(set(patches_targ) - set(patches_curr))
 
 # Get patch number
-a = []
+'''
+Блок ниже не нужен, так как можно сравнивать patches_targ и patches_curr напрямую.
+p_curr_num = []
 for patch in patches_curr:
     i = patch.split('_')[1]
-    a.append(i)	 
+    p_curr_num.append(i)	 
 
-b = []
+p_targ_num = []
 for patch in patches_targ:
     i = patch.split('_')[1]
-    b.append(i)
+    p_targ_num.append(i)
 
-list(set(b) - set(a))
-'''
 В настоящее время возвращает 6 патчей, которые есть в файлах, но нет в БД
 In [139]: list(set(b) - set(a))
 Out[139]: ['0000', '0068a', '0101', '0092c', '0076', '0094a']
 Может следует сравнивать только последние Х, или чтото в этом роде.
+
+Проблема "вроде как решена" ниже блоком ниже.
+
+for i in (set(p_targ_num) - set(p_curr_num)):
+    if i > max(p_curr_num):
+        print i
+
+Но на мой взгляд как-то криво. Можно ли сделать проверку один раз, без двух циклов.
+На stack overflow правда пишут что решение годное. itertools у меня не получилось, наверное из-за условия булевского i>max(p_curr_num).
 '''
+
+patches_miss = []
+for i in (set(patches_targ) - set(patches_curr)):
+    if i > max(patches_curr):
+        patches_miss.append(i)
 	
 # Copy patch installer to needed folders.
 
 # not working yet.
-call ( [ "for /D %a in ('d:\skpdi_patch\patches\*') do xcopy /y /d db_patch_%1.bat '%a\'" ] )
-# Stop tomcats.
-# pssh
+for i in patches_miss:
+    call( [ "copy", "/y", "C:\Users\daniil.aksenov\Documents\GitHub\work\skpdi\patching\db_patch_demo.bat", stage_dir + "\\patches\\" + i ], shell=True )
 
-# Install needed patches.
-# run bat files	
+# Stop tomcats. Functionize this!
+host = 'gudhskpdi-test-app'
+user = 'ansible'
+key = paramiko.RSAKey.from_private_key_file("C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key")
+port = 22
+
+client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+client.connect(hostname=host, username=user, password = secret, port = port, pkey = key)
+stdin, stdout, stderr = client.exec_command('sudo systemctl start tomcat')
+data = stdout.read() + stderr.read()
+client.close()
+
+# Install needed db patches.
+# Sorted 
+for i in sorted(patches_miss):
+    call( [ stage_dir + "\\patches\\" + i + "\\db_patch_demo.bat" ], shell=True, cwd =  stage_dir + "\\patches\\" + i)
+
 
 # 3. Install app patches
 # pssh
- 

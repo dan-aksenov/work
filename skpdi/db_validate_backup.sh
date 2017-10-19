@@ -17,7 +17,7 @@ tar xvf $STAGE_DIR/$CURRENT_BACKUP/base.tar -C $STAGE_DIR/$CURRENT_BACKUP
 mkdir $STAGE_DIR/tablespace
 cd $STAGE_DIR/tablespace
 
-# Connect to source DB and get tablespace names.
+# Create tablespace subdirs.
 psql -t ods_prod -c "select 'mkdir $STAGE_DIR/tablespace/'||spcname from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 
 # Move tablespace archives to destinagion direcrories.
@@ -49,9 +49,13 @@ cp $BACKUP_DIR/pg_archive $STAGE_DIR/pg_archive -r
 
 # Create log folder.
 mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
+# Reset xlog. where to?
+pg_resetxlog -f $STAGE_DIR/$CURRENT_BACKUP
 # Attempt start.
 pg_ctl -w -D $STAGE_DIR/$CURRENT_BACKUP start
 
+psql -p 54320 ods_prod -c "select a.datetime from event.fdc_app_log a order by datetime desc limit 1"
+ 
 # Read log to be shure DB is starged.
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
 tail $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log
