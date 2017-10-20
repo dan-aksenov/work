@@ -12,16 +12,16 @@ import paramiko
 import hashlib
 
 # Variables:
-# Pathc number got from 1st argument
+# Patch number got from 1st argument
 patch_num = argv[1]
-# Целевой контур prod или demo
+# Целевой контур prod или demo из второго параметра.
 target = argv[2]
 if target == 'demo':
     application_host = 'gudhskpdi-test-app'
 	war_name = 'demo.war'
 	db_patch_file = 'db_patch_demo.bat'
 	db_name = 'ods_demo'
-	db_host = 'gudhskpdi-db-01'
+	db_host = 'gudhskpdi-db-test'
 	
 # Stage dir to hold patch data.
 stage_dir = "d:\\tmp\\skpdi_patch"
@@ -62,14 +62,15 @@ call( [ "xcopy", "/e", patch_dir, stage_dir ], shell=True )
 
 '''
 Блок установки патчей БД.
-'''
-
-'''Подключаемся к БД и вытаскиваем номера уже устаноленных патей.'''
+Подключаемся к БД и вытаскиваем номера уже устаноленных патей.'''
+conn_string = "dbname= '" + db_name + "' user='ods' password='ods' host='" + db_host + "'"
 try:
     #redo it with variables
-	conn = connect("dbname='ods_prod' user='ods' password='ods' host='10.139.127.2'")
+	conn = connect( conn_string )
 except:
     print "ERROR: unable to connect to the database!"
+	# Exit if unable to connect.
+	exit()
 cur = conn.cursor()
 cur.execute("""select name from parameter.fdc_patches_log order by id desc;""")
 rows = cur.fetchall()
