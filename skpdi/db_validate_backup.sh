@@ -13,22 +13,6 @@ cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
 # Untar main backup archive.
 tar xvf $STAGE_DIR/$CURRENT_BACKUP/base.tar -C $STAGE_DIR/$CURRENT_BACKUP
 
-# Make directories to hold tablespaces.
-mkdir $STAGE_DIR/tablespace
-cd $STAGE_DIR/tablespace
-
-# Create tablespace subdirs.
-psql -t ods_prod -c "select 'mkdir $STAGE_DIR/tablespace/'||spcname from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
-
-# Move tablespace archives to destinagion direcrories.
-psql -t ods_prod -c "select 'mv $STAGE_DIR/$CURRENT_BACKUP/'|| oid || '.tar $STAGE_DIR/tablespace/'||spcname from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
-
-# Untar tablespace archives.
-for i in $(ls $STAGE_DIR/tablespace)
-do
-find $STAGE_DIR/tablespace/$i -name '*.tar' -exec tar xvf "{}" -C $STAGE_DIR/tablespace/$i \;
-done
-
 # Edit postgresql.conf. Restrict listener and change active port.
 sed -i 's/listen_addresses/#listen_addresses/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
@@ -39,10 +23,6 @@ cat >> $STAGE_DIR/$CURRENT_BACKUP/recovery.conf <<EOF
 restore_command = 'cp $BACKUP_DIR/pg_archive/%f "%p"'
 recovery_target_timeline = 'latest'
 EOF
-
-# Relink tablespace links with python script. to be provided.
-TABLESPACE_LINKS=$STAGE_DIR/$CURRENT_BACKUP/pg_tblspc
-psql -t ods_prod -c "select 'ln -sf $STAGE_DIR/tablespace/'|| spcname || ' $TABLESPACE_LINKS/'|| oid from pg_tablespace where spcname not in ('pg_default','pg_global')" | /bin/bash
 
 # Copy archivelogs
 cp $BACKUP_DIR/pg_archive $STAGE_DIR/pg_archive -r
