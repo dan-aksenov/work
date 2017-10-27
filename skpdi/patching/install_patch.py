@@ -2,7 +2,7 @@ from subprocess import call
 from sys import argv
 # for db connection
 from psycopg2 import connect
-from os import listdir
+from os import listdir, rename
 # for ssh connection.
 import paramiko
 # for file md5s
@@ -96,14 +96,13 @@ def linux_put( linux_host, source_path, dest_path ):
     port = 22
     
     transport = paramiko.Transport(( host, port ))
-    transport.connect( username=user, pkey = ssh_key )
+    transport.connect( username=user, pkey=ssh_key )
     sftp = paramiko.SFTPClient.from_transport(transport)
     
     localpath = source_path
     remotepath = dest_path
 
-    sftp.put(source_path, dest_path)
-
+    sftp.put(localpath, remotepath)
     sftp.close()
     transport.close()
 ''' Внутренние функции. Конец. '''
@@ -179,7 +178,8 @@ call( [ 'ren', '*.war', war_name ], shell = True, cwd = stage_dir)
 source_md5 = md5_check( stage_dir + '\\' + war_name )
 target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name )
 
-if source_md5 == target_md5:
+# Need to split result cos now :e00930ce2184b11c804ae84a49955a36  /u01/apache-tomcat-8.5.8/webapps/demo.war
+if source_md5 == target_md5.split(" ")[0]: 
    print "No application update required."
    exit()
 else:
@@ -187,26 +187,33 @@ else:
 
 # Учесть последовательное выполнение для 2 и более хостов приложений
 linux_exec( application_host, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
-linux_put( application_host, stage_dir + '\\' + war_name, '/tmp/webapps' + war_name )
+print "Copying " + stage_dir + "\\" + war_name + " to " + application_host + ":/tmp/webapps/"
+linux_put( application_host, stage_dir + '\\' + war_name, '/tmp/webapps/' + war_name )
 linux_exec( application_host, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
 
 # Ensure tomcat stopped.
 print "Stopping application servers...."
-linux_exec( application_host, 'sudo systemctl stop tomcat' )
+try:
+    result = linux_exec( application_host, 'sudo systemctl stop tomcat' )
+except:
+    print result
 
 # Remove old app files and dirs. Add app path.
-linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_name )
-linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_fldr )
+result = linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_name )
+print result
 
-linux_exec( application_host, 'sudo mv /tmp/webapps/' + war_name +  app_path + '/' )
+result = linux_exec( application_host, 'sudo rm -rf ' + app_path + '/' + war_fldr )
+print result
+
+result = linux_exec( application_host, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
+print result
 
 # Check copied files md5. To be compared with source.
 # md5sum %app_name%.war
 target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name )
 
-if source_md5 == target_md5:
+if source_md5 == target_md5.split(" ")[0]:
    print 'Application version matches ' + patch_num 
-   exit()
 else:
    print 'ERROR: Application version not matches ' + patch_num 
 
