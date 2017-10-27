@@ -24,9 +24,6 @@ restore_command = 'cp $BACKUP_DIR/pg_archive/%f "%p"'
 recovery_target_timeline = 'latest'
 EOF
 
-# Copy archivelogs
-cp $BACKUP_DIR/pg_archive $STAGE_DIR/pg_archive -r
-
 # Create log folder.
 mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 # Reset xlog. where to?

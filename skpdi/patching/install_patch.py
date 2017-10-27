@@ -20,37 +20,39 @@ for opt, arg in opts:
         patch_num = arg
     elif opt in ( '-t' ):
         target = arg
-	else
-	    usage()
+    else:
+        usage()
 
 try:
-    patch_name
+    patch_num
 except:
-    patch_name = input('Enter patch number: ')
+    patch_num = input('Enter patch number: ')
 
 try:
-    target		
-except
-    target = input('skpdi or demo: ')
-		
-if target not in [ 'skpdi', 'prod']:
+    target        
+except:
+    target = input('skpdi or demo? ')
+        
+if target not in [ 'skpdi', 'demo']:
     usage()
-		
+    exit()
+        
 if target == 'demo':
     application_host = 'gudhskpdi-test-app'
-	war_name = 'demo'
-	db_patch_file = 'db_patch_demo.bat'
-	db_name = 'ods_demo'
-	db_host = 'gudhskpdi-db-test'
+    war_name = target + '.war'
+    war_fldr = target
+    db_patch_file = 'db_patch_demo.bat'
+    db_name = 'ods_demo'
+    db_host = 'gudhskpdi-db-test'
 
-	'''
+'''
 if target == 'skpdi':
     application_host = 'gudhskpdi-app-01' # Add app-02
-	war_name = 'skpdi'
-	db_patch_file = 'db_patch_skpdi.bat'
-	db_name = 'ods_prod'
-	db_host = 'gudhskpdi-db-01'
-'''	
+    war_name = 'skpdi'
+    db_patch_file = 'db_patch_skpdi.bat'
+    db_name = 'ods_prod'
+    db_host = 'gudhskpdi-db-01'
+'''    
 
 # Stage dir to hold patch data.
 stage_dir = 'd:\\tmp\\skpdi_patch'
@@ -67,24 +69,45 @@ app_path = '/u01/' + tomcat_name + '/webapps'
 ''' Внутренние функции. Начало. ''' 
 def md5_check( checked_file ):
     '''Internal function to check files md5'''
-	md5sum = hashlib.md5(open(checked_file,'rb').read()).hexdigest()
-	return md5sum
+    md5sum = hashlib.md5(open(checked_file,'rb').read()).hexdigest()
+    return md5sum
 
 def linux_exec( linux_host, shell_command ):
-	'''Internal function for linux commands remote execution'''
-	host = linux_host
-	user = 'ansible'
-	ssh_key = paramiko.RSAKey.from_private_key_file(linux_key + 'key')
-	port = 22
-	client = paramiko.SSHClient()
-	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	client.connect(hostname=host, username=user, port = port, pkey = ssh_key)
-	stdin, stdout, stderr = client.exec_command( shell_command )
-	data = stdout.read() + stderr.read()
-	client.close()
-	return data
+    '''Internal function for linux commands remote execution'''
+    host = linux_host
+    user = 'ansible'
+    ssh_key = paramiko.RSAKey.from_private_key_file(linux_key + 'key')
+    port = 22
+    
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(hostname=host, username=user, port = port, pkey = ssh_key)
+    
+    stdin, stdout, stderr = client.exec_command( shell_command )
+    data = stdout.read() + stderr.read()
+    client.close()
+    return data
+    
+def linux_put( linux_host, source_path, dest_path ):
+    '''Internal function for to_linux file copy'''
+    host = linux_host
+    user = 'ansible'
+    ssh_key = paramiko.RSAKey.from_private_key_file(linux_key + 'key')
+    port = 22
+    
+    transport = paramiko.Transport(( host, port ))
+    transport.connect( username=user, pkey = ssh_key )
+    sftp = paramiko.SFTPClient.from_transport(transport)
+    
+    localpath = source_path
+    remotepath = dest_path
+
+    sftp.put(source_path, dest_path)
+
+    sftp.close()
+    transport.close()
 ''' Внутренние функции. Конец. '''
-	
+    
 '''
 Блок подготовки.
 Копируем папку с необхоидмым патчем с Sunny.
@@ -92,7 +115,7 @@ def linux_exec( linux_host, shell_command ):
 # Purge previous patches from stage directory. TODO: Redo it in python only w/o call.
 call( [ 'rmdir', stage_dir, '/s', '/q' ], shell=True )
 call( [ 'md', stage_dir ], shell=True )
-# Copy patch from storage. TODO: Redo it in python only w/o call.
+print "Copying patch data from SUNNY."
 call( [ 'xcopy', '/e', patch_dir, stage_dir ], shell=True )
 
 '''
@@ -102,11 +125,11 @@ call( [ 'xcopy', '/e', patch_dir, stage_dir ], shell=True )
 conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
 try:
     #redo it with variables
-	conn = connect( conn_string )
+    conn = connect( conn_string )
 except:
     print 'ERROR: unable to connect to the database!'
-	# Exit if unable to connect.
-	exit()
+    # Exit if unable to connect.
+    exit()
 cur = conn.cursor()
 cur.execute('''select name from parameter.fdc_patches_log order by id desc;''')
 rows = cur.fetchall()
@@ -121,15 +144,19 @@ patches_targ = [ name for name in listdir( patch_dir + '\\patches' ) ]
 '''Сравненеие уже установленных патчей с патчами из директории.
 Если версия на БД установлено меньше чем лежит в директории с патчами, устанавливаем недостающие патчи.
 Во всех остальных случаях - пропускаем этот блок.'''
+print "Checking database patch level...."
+print "#################################"
 if max(patches_targ) == max(patches_curr):
     print 'No database patches required.'
 elif max(patches_targ) > max(patches_curr):
+    print 'Database needs patching...'
     patches_miss = []
     for i in (set(patches_targ) - set(patches_curr)):
         if i > max(patches_curr):
             patches_miss.append(i)
 
-	# Copy patch installer to needed folders.
+    # Copy patch installer to needed folders.
+    print 'Following database patches will be applied: ' + patches_miss
     for i in patches_miss:
         call( [ 'copy', '/y', 'C:\\Users\\daniil.aksenov\\Documents\\GitHub\\work\\skpdi\\patching\\' + db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
 
@@ -141,37 +168,47 @@ elif max(patches_targ) > max(patches_curr):
         call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], shell=True, cwd = stage_dir + '\\patches\\' + i)
     # TODO database patches log.
 else:
-    print 'Something wrong.'
-	
+    print 'ERROR: Something wrong with database patching.'
+    
 '''
 Блок обновления приложения.
 '''
 # Ключи разные для paramiko и pscp? или можно будет взять один?
 # Переименовать war файл из патчевого в целевой.
-call( [ 'ren', '*.war', war_name + '.war' ], shell = True, cwd = stage_dir)
-source_md5 = md5_check( stage_dir + '\\' + war_name + '.war' )
-target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name + '.war' )
+call( [ 'ren', '*.war', war_name ], shell = True, cwd = stage_dir)
+source_md5 = md5_check( stage_dir + '\\' + war_name )
+target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name )
 
 if source_md5 == target_md5:
-   print "No application patches required"
+   print "No application update required."
    exit()
+else:
+   print "Application will be updated."
 
 # Учесть последовательное выполнение для 2 и более хостов приложений
 linux_exec( application_host, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
-call( [ 'pscp', '-i', linux_key + 'ppk', war_name + '.war', 'ansible@' + application_host + ':/tmp/webapps' ], shell = True, cwd = stage_dir )
+linux_put( application_host, stage_dir + '\\' + war_name, '/tmp/webapps' + war_name )
 linux_exec( application_host, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
 
 # Ensure tomcat stopped.
+print "Stopping application servers...."
 linux_exec( application_host, 'sudo systemctl stop tomcat' )
 
 # Remove old app files and dirs. Add app path.
-linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_name + '.war -f' )
-linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_name + ' -rf' )
-linux_exec( application_host, 'sudo mv /tmp/webapps/' + war_name + '. war + ' app_path + '/' )
+linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_name )
+linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_fldr )
+
+linux_exec( application_host, 'sudo mv /tmp/webapps/' + war_name +  app_path + '/' )
 
 # Check copied files md5. To be compared with source.
 # md5sum %app_name%.war
-target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name + '.war' )
+target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name )
+
+if source_md5 == target_md5:
+   print 'Application version matches ' + patch_num 
+   exit()
+else:
+   print 'ERROR: Application version not matches ' + patch_num 
 
 # Start tomcat.
 linux_exec( application_host, 'sudo systemctl start tomcat' )
