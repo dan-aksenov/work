@@ -7,19 +7,51 @@ from os import listdir
 import paramiko
 # for file md5s
 import hashlib
+import getopt
+
+def usage():
+    print 'Usage: -n for patch number, -t skpdi or demo'
 
 ''' Переменные. Начало. '''
-# Номер патча из первого параметра:
-patch_num = argv[1]
-# Целевой контур prod или demo из второго параметра.
-target = argv[2]
+''' Получение номера патча и контура установки(прод/предпрод) из параметров '''
+opts, args = getopt.getopt( argv[1:], 'n:t:' )
+for opt, arg in opts:
+    if opt in ( '-n' ):
+        patch_num = arg
+    elif opt in ( '-t' ):
+        target = arg
+	else
+	    usage()
+
+try:
+    patch_name
+except:
+    patch_name = input('Enter patch number: ')
+
+try:
+    target		
+except
+    target = input('skpdi or demo: ')
+		
+if target not in [ 'skpdi', 'prod']:
+    usage()
+		
 if target == 'demo':
     application_host = 'gudhskpdi-test-app'
 	war_name = 'demo'
 	db_patch_file = 'db_patch_demo.bat'
 	db_name = 'ods_demo'
 	db_host = 'gudhskpdi-db-test'
-	
+
+	'''
+if target == 'skpdi':
+    application_host = 'gudhskpdi-app-01' # Add app-02
+	war_name = 'skpdi'
+	db_patch_file = 'db_patch_skpdi.bat'
+	db_name = 'ods_prod'
+	db_host = 'gudhskpdi-db-01'
+'''	
+
 # Stage dir to hold patch data.
 stage_dir = 'd:\\tmp\\skpdi_patch'
 # Source location on sunny
@@ -27,19 +59,19 @@ patch_store = '\\\sunny\\builds\\odsxp\\'
 # Directory with actual patch data
 patch_dir = patch_store + patch_num
 # Linux key
-linux_key = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.'
+linux_key = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.' #ppk and key extensions to be added in later variables
 tomcat_name = 'apache-tomcat-8.5.8'
 app_path = '/u01/' + tomcat_name + '/webapps'
 ''' Переменные. Конец.'''
 
 ''' Внутренние функции. Начало. ''' 
 def md5_check( checked_file ):
-    '''Ingernal function to check files md5'''
+    '''Internal function to check files md5'''
 	md5sum = hashlib.md5(open(checked_file,'rb').read()).hexdigest()
 	return md5sum
 
 def linux_exec( linux_host, shell_command ):
-	'''Ingernal function for linux commands remote execution'''
+	'''Internal function for linux commands remote execution'''
 	host = linux_host
 	user = 'ansible'
 	ssh_key = paramiko.RSAKey.from_private_key_file(linux_key + 'key')
@@ -67,7 +99,7 @@ call( [ 'xcopy', '/e', patch_dir, stage_dir ], shell=True )
 Блок установки патчей БД.
 Подключаемся к БД и вытаскиваем номера уже устаноленных патей.
 '''
-conn_string = 'dbname= '' + db_name + '' user='ods' password='ods' host='' + db_host + '''
+conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
 try:
     #redo it with variables
 	conn = connect( conn_string )
@@ -116,9 +148,13 @@ else:
 '''
 # Ключи разные для paramiko и pscp? или можно будет взять один?
 # Переименовать war файл из патчевого в целевой.
-call( [ 'ren', '*.war', war_name + '.war' ] shell = True, cwd = stage_dir)
-soruce_md5 = md5_check( stage_dir + '\\' + war_name + '.war' )
+call( [ 'ren', '*.war', war_name + '.war' ], shell = True, cwd = stage_dir)
+source_md5 = md5_check( stage_dir + '\\' + war_name + '.war' )
+target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name + '.war' )
 
+if source_md5 == target_md5:
+   print "No application patches required"
+   exit()
 
 # Учесть последовательное выполнение для 2 и более хостов приложений
 linux_exec( application_host, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
@@ -135,7 +171,7 @@ linux_exec( application_host, 'sudo mv /tmp/webapps/' + war_name + '. war + ' ap
 
 # Check copied files md5. To be compared with source.
 # md5sum %app_name%.war
-target_md5 = linux_exec( application_host, ' md5sum ' + app_path + '/' + war + '.war' )
+target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name + '.war' )
 
 # Start tomcat.
 linux_exec( application_host, 'sudo systemctl start tomcat' )
