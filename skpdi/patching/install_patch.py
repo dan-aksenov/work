@@ -12,7 +12,7 @@ import paramiko
 import hashlib
 
 
-''' Переменные. Начало. '''
+''' Переменные. '''
 
 # Получение номера патча и контура установки(прод/предпрод) из параметров.
 # Функция "Инструкция по пременению".
@@ -58,35 +58,48 @@ if target not in [ 'skpdi', 'demo']:
 if target == 'demo':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-test-app' ]
-    # Имя файла приложения (demo.war/skpdi.war).
+    
+	# Имя файла приложения (demo.war/skpdi.war).
     war_name = target + '.war'
-    # Директория с распакованным приложением (demo/skpdi).
+    
+	# Директория с распакованным приложением (demo/skpdi).
     war_fldr = target
-    # Батник для установки патчей БД.
+    
+	# Батник для установки патчей БД.
     db_patch_file = 'db_patch_demo.bat'
-    # Имя БД.
+    
+	# Имя БД.
     db_name = 'ods_demo'
-    # Сервер БД.
+    
+	# Сервер БД.
     db_host = 'gudhskpdi-db-test'
+	
 elif target == 'skpdi':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
-    # Имя файла приложения (demo.war/skpdi.war).
+    
+	# Имя файла приложения (demo.war/skpdi.war).
     war_name = target + '.war'
-    # Директория с распакованным приложением (demo/skpdi).
+    
+	# Директория с распакованным приложением (demo/skpdi).
     war_fldr = target
-    # Батник для установки патчей БД.
+    
+	# Батник для установки патчей БД.
     db_patch_file = 'db_patch_skpdi.bat'
-    # Имя БД.
+    
+	# Имя БД.
     db_name = 'ods_prod'
-    # Сервер БД.
+    
+	# Сервер БД.
     db_host = 'gudhskpdi-db-01'
+	
 else:
     usage()
     exit()
 
 # Директория для временного хранения файлов установки
 stage_dir = 'd:\\tmp\\skpdi_patch'
+
 # Адрес хранилища SUNNY.
 sunny_path = '\\\sunny\\builds\\odsxp\\'
 # Путь к директории с конкретным патчем.
@@ -108,7 +121,7 @@ app_path = '/u01/' + tomcat_name + '/webapps'
 
 ''' Переменные. Конец.'''
 
-''' Внутренние функции. Начало. ''' 
+''' Внутренние функции. ''' 
 
 def md5_check( checked_file ):
     ''' Проверка md5 для war файлов '''
@@ -214,8 +227,10 @@ print "Checking java application version:"
 # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
 # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
 war_path = glob( sunny_patch + '\\ods*.war')[0]
+
 # Получение md5 архива с приложением на Sunny.
 source_md5 = md5_check( war_path )
+
 # Получение md5 архива с приложением на целевом сервере приложения.
 # Последовательное сравнение с md5 на серверах приложений.
 # По результатам формируется список hosts_to_update для установки обновления.
@@ -226,29 +241,38 @@ for i in application_host:
         print "\tJava application on " + i + " will be updated."
         hosts_to_update.append(i)
 
+# Завершить работу, если в hosts_to_update пусто.
 if hosts_to_update == []:
     print "\tAll application hosts alreasy up to date."
     exit()   
 
+# Просто для форматирования.    
 print "\n"
 
 for i in hosts_to_update:
+    # Удалить и пересоздать директорию для временного хранения war файла.
     linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+    
+    # Скопировать war файл на сервер приложений.
     print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
     linux_put( i, war_path, '/tmp/webapps/' + war_name )
     linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
-    # Остановить сервера приложений.
+    
+    # Остановить сервер приложений.
     print "Stopping application server " + i + "..."
     linux_exec( i, 'sudo systemctl stop tomcat' )
-    # Удалить старое приложение.
+    
+	# Удалить старое приложение.
     print "Applying application patch on " + i + "..."
     linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
     linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
-    # Копировать war в целевую директорию на сервере приложений.
+    
+	# Копировать war в целевую директорию на сервере приложений.
     linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
-    print "Starting application server " + i + "..."
+    print "Starting application server " + i + "...\n"
     linux_exec( i, 'sudo systemctl start tomcat' )
-    # Проверить работу сервера приложений после запуска.
+    
+	# Проверить работу сервера приложений после запуска.
     print linux_exec( i, 'sudo systemctl status tomcat' )
 
 
