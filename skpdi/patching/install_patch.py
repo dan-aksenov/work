@@ -87,9 +87,9 @@ else:
 # Директория для временного хранения файлов установки
 stage_dir = 'd:\\tmp\\skpdi_patch'
 # Адрес хранилища SUNNY.
-patch_store = '\\\sunny\\builds\\odsxp\\'
+sunny_path = '\\\sunny\\builds\\odsxp\\'
 # Путь к директории с конкретным патчем.
-patch_dir = patch_store + patch_num
+sunny_patch = sunny_path + patch_num
 
 ''' Linux stuff '''
 # Путь к расположения ключа SSH.
@@ -173,15 +173,15 @@ for row in rows:
     patches_curr.append(row[0])
 
 # Получение списка патчей БД из директории с патчами.
-patches_targ = [ name for name in listdir( patch_dir + '\\patches' ) ]
+patches_targ = [ name for name in listdir( sunny_patch + '\\patches' ) ]
 
 # Сравненеие уже установленных патчей с патчами из директории.
 # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
 print "Checking database patch level:\n"
 if max(patches_targ) == max(patches_curr):
-    print "\tNo database patches required.\n"
+    print "No database patch required.\n"
 elif max(patches_targ) > max(patches_curr):
-    print "\tDatabase needs patching.\n"
+    print "Database needs patching.\n"
     patches_miss = []
     for i in (set(patches_targ) - set(patches_curr)):
         if i > max(patches_curr):
@@ -190,7 +190,7 @@ elif max(patches_targ) > max(patches_curr):
     print "Following database patches will be applied: " + ', '.join(patches_miss)
     for i in patches_miss:
         # Копирование только недостающих патчей с Sunny.
-        call( [ 'xcopy', '/e', patch_dir + '\\patches' + i, stage_dir + '\\patches\\' + i  ], shell=True )
+        call( [ 'xcopy', '/e', sunny_patch + '\\patches' + i, stage_dir + '\\patches\\' + i  ], shell=True )
         # Копирование установщика патчей в директории с патчами.
         call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
 
@@ -212,46 +212,48 @@ else:
 print "Checking java application version:\n"
 # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
 # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
-war_path = glob( patch_dir + '\\ods*.war')[0]
+war_path = glob( sunny_patch + '\\ods*.war')[0]
 # Получение md5 архива с приложением на Sunny.
 source_md5 = md5_check( war_path )
-# Получение md5 архива с приложением на целевом сервере приложения. Пока только для первого хоста в массиве.
-target_md5 = linux_exec( application_host[0], 'sudo md5sum ' + app_path + '/' + war_name )
-
-# Сравнение хешей приложения. target_md5.split(" ")[0] нужен для того, чтобы "причесать" linux вывод md5sum
-if source_md5 == target_md5.split(" ")[0]: 
-    print "\tNo application update required.\n"
-    exit()
-else:
-    print "\tJava application will be updated.\n"
-
-# Добавить: Учесть последовательное выполнение для 2 и более хостов приложений.
+# Получение md5 архива с приложением на целевом сервере приложения.
+# Последовательное сравнение с md5 на серверах приложений.
+# По результатам формируется список hosts_to_update для установки обновления.
 for i in application_host:
+    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+    hosts_to_update = []
+    if source_md5 != target_md5.split(" ")[0]: 
+        print "Java application on " + i + " will be updated.\n"
+        hosts_to_update.append(i)
+
+if hosts_to_update == []:
+    print "All application hosts alreasy up to date."
+    exit()   
+
+for i in hosts_to_update:
     linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
-    print "Copying " + war_path + " to " + i + ":/tmp/webapps/"
+    print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
     linux_put( i, war_path, '/tmp/webapps/' + war_name )
     linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
-
-# Остановить сервера приложений.
-print "Stopping application servers..."
-for i in application_host:
+    # Остановить сервера приложений.
+    print "Stopping application server " + i + "...\n"
     linux_exec( i, 'sudo systemctl stop tomcat' )
     # Удалить старое приложение.
+    print "Applying application patch on " + i + "...\n"
     linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
     linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
     # Копировать war в целевую директорию на сервере приложений.
     linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
-
-
-# Еще раз проверить md5. Пока только для первого хоста в массиве.
-target_md5 = linux_exec( application_host[0], 'sudo md5sum ' + app_path + '/' + war_name )
-if source_md5 == target_md5.split(" ")[0]:
-   print "Application version matches " + patch_num + "\n" 
-else:
-   print "ERROR: Application version not matches " + patch_num 	+ "\n" 
-
-# Запустить сервера приложений.
-for i in application_host:
+    print "Starting application server " + i + "...\n"
     linux_exec( i, 'sudo systemctl start tomcat' )
     # Проверить работу сервера приложений после запуска.
     print linux_exec( i, 'sudo systemctl status tomcat' )
+
+
+# Еще раз проверить md5. Пока только для первого хоста в массиве.
+for i in hosts_to_update:
+    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+    if source_md5 == target_md5.split(" ")[0]: 
+        print "Application version on " + i + " now matches " + patch_num + ".\n"
+    else:
+        print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
+        hosts_to_update.append(i)
