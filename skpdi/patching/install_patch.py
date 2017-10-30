@@ -3,13 +3,14 @@ from sys import argv, exit
 # for db connection
 from psycopg2 import connect
 from os import listdir, rename
-# for ssh connection.
-import paramiko
 # for war file search
 from glob import glob
+from getopt import getopt
+# for ssh connection and ftp transfer.
+import paramiko
 # for file md5s
 import hashlib
-import getopt
+
 
 ''' Переменные. Начало. '''
 
@@ -20,7 +21,7 @@ def usage():
 
 # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
 try:    
-    opts, args = getopt.getopt( argv[1:], 'n:t:' )
+    opts, args = getopt( argv[1:], 'n:t:' )
 except:
     usage()
     exit()
@@ -126,7 +127,7 @@ def linux_exec( linux_host, shell_command ):
     data = stdout.read() + stderr.read()
     client.close()
     return data
-    
+
 def linux_put( linux_host, source_path, dest_path ):
     ''' Копирование файлов на удаленный Linux '''
            
@@ -137,7 +138,7 @@ def linux_put( linux_host, source_path, dest_path ):
     localpath = source_path
     remotepath = dest_path
 
-    sftp.put(localpath, remotepath)
+    sftp.put( localpath, remotepath )
     sftp.close()
     transport.close()
 
@@ -177,17 +178,17 @@ patches_targ = [ name for name in listdir( sunny_patch + '\\patches' ) ]
 
 # Сравненеие уже установленных патчей с патчами из директории.
 # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
-print "Checking database patch level:\n"
+print "Checking database patch level:"
 if max(patches_targ) == max(patches_curr):
-    print "No database patch required.\n"
+    print "\tNo database patch required.\n"
 elif max(patches_targ) > max(patches_curr):
-    print "Database needs patching.\n"
+    print "\tDatabase needs patching.\n"
     patches_miss = []
     for i in (set(patches_targ) - set(patches_curr)):
         if i > max(patches_curr):
             patches_miss.append(i)
 
-    print "Following database patches will be applied: " + ', '.join(patches_miss)
+    print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
     for i in patches_miss:
         # Копирование только недостающих патчей с Sunny.
         call( [ 'xcopy', '/e', sunny_patch + '\\patches' + i, stage_dir + '\\patches\\' + i  ], shell=True )
@@ -203,13 +204,13 @@ elif max(patches_targ) > max(patches_curr):
         call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], shell=True, cwd = stage_dir + '\\patches\\' + i)
     # Добавить: чтение и анализ лога установки.
 else:
-    print 'ERROR: Something wrong with database patching.'
+    print "ERROR: Something wrong with database patching!\n"
     
 '''
 Блок обновления приложения.
 '''
 
-print "Checking java application version:\n"
+print "Checking java application version:"
 # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
 # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
 war_path = glob( sunny_patch + '\\ods*.war')[0]
@@ -222,12 +223,14 @@ for i in application_host:
     target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
     hosts_to_update = []
     if source_md5 != target_md5.split(" ")[0]: 
-        print "Java application on " + i + " will be updated.\n"
+        print "\tJava application on " + i + " will be updated."
         hosts_to_update.append(i)
 
 if hosts_to_update == []:
-    print "All application hosts alreasy up to date."
+    print "\tAll application hosts alreasy up to date."
     exit()   
+
+print "\n"
 
 for i in hosts_to_update:
     linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
@@ -235,15 +238,15 @@ for i in hosts_to_update:
     linux_put( i, war_path, '/tmp/webapps/' + war_name )
     linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
     # Остановить сервера приложений.
-    print "Stopping application server " + i + "...\n"
+    print "Stopping application server " + i + "..."
     linux_exec( i, 'sudo systemctl stop tomcat' )
     # Удалить старое приложение.
-    print "Applying application patch on " + i + "...\n"
+    print "Applying application patch on " + i + "..."
     linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
     linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
     # Копировать war в целевую директорию на сервере приложений.
     linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
-    print "Starting application server " + i + "...\n"
+    print "Starting application server " + i + "..."
     linux_exec( i, 'sudo systemctl start tomcat' )
     # Проверить работу сервера приложений после запуска.
     print linux_exec( i, 'sudo systemctl status tomcat' )
