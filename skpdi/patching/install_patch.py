@@ -11,12 +11,21 @@ from glob import glob
 import hashlib
 import getopt
 
-def usage():
-    print 'Usage: -n for patch number, -t skpdi or demo'
-
 ''' Переменные. Начало. '''
-''' Получение номера патча и контура установки(прод/предпрод) из параметров '''
-opts, args = getopt.getopt( argv[1:], 'n:t:' )
+
+# Получение номера патча и контура установки(прод/предпрод) из параметров.
+# Функция "Инструкция по пременению.
+def usage():
+    print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or demo'
+
+# Прием параметров n и t, с дополнительной проверкой, что введены именно они.
+try:    
+    opts, args = getopt.getopt( argv[1:], 'n:t:' )
+except:
+    usage()
+    exit()
+
+# Назначение переменныч n - patch_num, t - target.
 for opt, arg in opts:
     if opt in ( '-n' ):
         patch_num = arg
@@ -26,7 +35,8 @@ for opt, arg in opts:
         usage()
         exit()
 
-''' Если параметров не передано - запросить их ввод '''        
+# Если параметров не передано - запрашиваетя их воод их ввод.
+# raw_input используется, для того, чтоб вводить без кавычек.
 try:
     patch_num
 except:
@@ -36,19 +46,27 @@ try:
     target        
 except:
     target = raw_input('skpdi or demo? ')
-        
+
+# Проверка правильного указания контура установки skpdi или demo.    
 if target not in [ 'skpdi', 'demo']:
     usage()
     exit()
-        
-if target == 'demo':
-    application_host = 'gudhskpdi-test-app'
-    war_name = target + '.war'
-    war_fldr = target
-    db_patch_file = 'db_patch_demo.bat'
-    db_name = 'ods_demo'
-    db_host = 'gudhskpdi-db-test'
 
+# В зависимости от контура назначаются остальные переменные.
+    
+if target == 'demo':
+    # Сервер приложения tomcat.
+    application_host = [ 'gudhskpdi-test-app' ]
+    # Имя файла приложения (demo.war/skpdi.war).
+    war_name = target + '.war'
+    # Директория с распакованным приложением (demo/skpdi).
+    war_fldr = target
+    # Батник для установки патчей БД.
+    db_patch_file = 'db_patch_demo.bat'
+    # Имя БД.
+    db_name = 'ods_demo'
+    # Сервер БД.
+    db_host = 'gudhskpdi-db-test'
 '''
 if target == 'skpdi':
     application_host = 'gudhskpdi-app-01' # Add app-02
@@ -56,39 +74,45 @@ if target == 'skpdi':
     db_patch_file = 'db_patch_skpdi.bat'
     db_name = 'ods_prod'
     db_host = 'gudhskpdi-db-01'
-'''    
+  
+else:
+    usage()
+    exit()
+'''
 
-# Stage dir to hold patch data.
+# Директория для временного хранения файлов установки
 stage_dir = 'd:\\tmp\\skpdi_patch'
-# Source location on sunny
+# Адрес хранилища SUNNY.
 patch_store = '\\\sunny\\builds\\odsxp\\'
-# Directory with actual patch data
+# Путь к директории с конкретным патчем.
 patch_dir = patch_store + patch_num
 
 ''' Linux stuff '''
-# SSH key location
+# Путь к расположения ключа SSH.
 linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
-# SSH key prepared for paramiko
+# Ключ SSH подготовленный для работы paramiko.
 linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
-# SSH user
+# Пользователь SSH.
 ssh_user = 'ansible'
-# SSH Port
+# Порт SSH.
 ssh_port = 22
 
-# Tomcat version and path
+# Версия и расположение приложений Tomcat.
 tomcat_name = 'apache-tomcat-8.5.8'
 app_path = '/u01/' + tomcat_name + '/webapps'
 
 ''' Переменные. Конец.'''
 
 ''' Внутренние функции. Начало. ''' 
+
 def md5_check( checked_file ):
-    '''Internal function to check files md5'''
+    ''' Проверка md5 для war файлов '''
+    
     md5sum = hashlib.md5(open(checked_file,'rb').read()).hexdigest()
     return md5sum
 
 def linux_exec( linux_host, shell_command ):
-    '''Internal function for linux commands remote execution'''
+    ''' Удаленное выполение команд на Linux '''
        
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -100,7 +124,7 @@ def linux_exec( linux_host, shell_command ):
     return data
     
 def linux_put( linux_host, source_path, dest_path ):
-    '''Internal function for to_linux file copy'''
+    ''' Копирование файлов на удаленный Linux '''
            
     transport = paramiko.Transport(( linux_host, ssh_port ))
     transport.connect( username = ssh_user, pkey = linux_key )
@@ -112,24 +136,22 @@ def linux_put( linux_host, source_path, dest_path ):
     sftp.put(localpath, remotepath)
     sftp.close()
     transport.close()
+
 ''' Внутренние функции. Конец. '''
     
 '''
 Блок подготовки.
-Копируем папку с необхоидмым патчем с Sunny.
 '''
-# Purge previous patches from stage directory. TODO: Redo it in python only w/o call.
+
+# Очистка временной директории. TODO: Redo it in python only w/o call.
 call( [ 'rmdir', stage_dir, '/s', '/q' ], shell=True )
 call( [ 'md', stage_dir ], shell=True )
 
-# Это нужно убрать. патчи будут копироваться только в случае необходимости.
-#print "Copying patch data from SUNNY."
-#call( [ 'xcopy', '/e', patch_dir, stage_dir ], shell=True )
-
 '''
 Блок установки патчей БД.
-Подключаемся к БД и вытаскиваем номера уже устаноленных патей.
 '''
+
+#Подключение к БД и получение номеров уже устаноленных патей.
 conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
 try:
     #redo it with variables
@@ -146,12 +168,11 @@ patches_curr = []
 for row in rows:
     patches_curr.append(row[0])
 
-''' Берем список БД патчей из директории с патчами '''
+# Получение списка патчей БД из директории с патчами.
 patches_targ = [ name for name in listdir( patch_dir + '\\patches' ) ]
 
-'''Сравненеие уже установленных патчей с патчами из директории.
-Если версия на БД установлено меньше чем лежит в директории с патчами, устанавливаем недостающие патчи.
-Во всех остальных случаях - пропускаем этот блок.'''
+# Сравненеие уже установленных патчей с патчами из директории.
+# Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
 print "Checking database patch level:\n"
 if max(patches_targ) == max(patches_curr):
     print "\tNo database patches required.\n"
@@ -162,73 +183,71 @@ elif max(patches_targ) > max(patches_curr):
         if i > max(patches_curr):
             patches_miss.append(i)
 
-    # Copy patch installer to needed folders.
     print "Following database patches will be applied: " + ', '.join(patches_miss)
     for i in patches_miss:
-        # Copy missing db patches from SUNNY.
+        # Копирование только недостающих патчей с Sunny.
         call( [ 'xcopy', '/e', patch_dir + '\\patches' + i, stage_dir + '\\patches\\' + i  ], shell=True )
-        # Copy dbpatch installer to parch directories.
-        call( [ 'copy', '/y', 'C:\\Users\\daniil.aksenov\\Documents\\GitHub\\work\\skpdi\\patching\\' + db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
+        # Копирование установщика патчей в директории с патчами.
+        call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
 
-    # Stop tomcats.
-    linux_exec( application_host, 'sudo systemctl stop tomcat' )
-    # Install needed db patches.
-    # Sorted to run in order, cwd require to run in cpecific dir.
+    # Остановка tomcat.
+    for i in application_host:
+        linux_exec( i, 'sudo systemctl stop tomcat' )
+    # Установка патчей БД
+    # Для выполенния по-порядку применен sort.
     for i in sorted(patches_miss):
         call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], shell=True, cwd = stage_dir + '\\patches\\' + i)
-    # TODO: database patches log.
+    # Добавить: чтение и анализ лога установки.
 else:
     print 'ERROR: Something wrong with database patching.'
     
 '''
 Блок обновления приложения.
 '''
-# Ключи разные для paramiko и pscp? или можно будет взять один?
-# Переименовать war файл из патчевого в целевой.
-# Это убрать вообще. Сравнивать и копировать будем с Synny
-#call( [ 'ren', '*.war', war_name ], shell = True, cwd = stage_dir)
 
-# glob search returns array, so need to add [0] into md5_check
-# Path to source *.war file on Sunny.
 print "Checking java application version:\n"
-war_path = glob( patch_dir + '\\*.war')[0]
+# glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
+# Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
+war_path = glob( patch_dir + '\\ods*.war')[0]
+# Получение md5 архива с приложением на Sunny.
 source_md5 = md5_check( war_path )
-target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name )
+# Получение md5 архива с приложением на целевом сервере приложения. Пока только для первого хоста в массиве.
+target_md5 = linux_exec( application_host[0], 'sudo md5sum ' + app_path + '/' + war_name )
 
-# Need to split result cos on linux :e00930ce2184b11c804ae84a49955a36  /u01/apache-tomcat-8.5.8/webapps/demo.war
+# Сравнение хешей приложения. target_md5.split(" ")[0] нужен для того, чтобы "причесать" linux вывод md5sum
 if source_md5 == target_md5.split(" ")[0]: 
-   print "\tNo application update required.\n"
-   exit()
+    print "\tNo application update required.\n"
+    exit()
 else:
-   print "\tJava application will be updated.\n"
+    print "\tJava application will be updated.\n"
 
-# Учесть последовательное выполнение для 2 и более хостов приложений
-linux_exec( application_host, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
-print "Copying " + war_path + " to " + application_host + ":/tmp/webapps/"
-linux_put( application_host, war_path, '/tmp/webapps/' + war_name )
-linux_exec( application_host, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
+# Добавить: Учесть последовательное выполнение для 2 и более хостов приложений.
+for i in application_host:
+    linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+    print "Copying " + war_path + " to " + i + ":/tmp/webapps/"
+    linux_put( i, war_path, '/tmp/webapps/' + war_name )
+    linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
 
-# Ensure tomcat stopped.
-print "Stopping application servers...."
-cmd_result = linux_exec( application_host, 'sudo systemctl stop tomcat' )
+# Остановить сервера приложений.
+print "Stopping application servers..."
+for i in application_host:
+    linux_exec( i, 'sudo systemctl stop tomcat' )
+    # Удалить старое приложение.
+    linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
+    linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
+    # Копировать war в целевую директорию на сервере приложений.
+    linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
 
-# Remove old app files and dirs. Add app path.
-linux_exec( application_host, 'sudo rm ' + app_path + '/' + war_name )
-linux_exec( application_host, 'sudo rm -rf ' + app_path + '/' + war_fldr )
-# Copy applicateion *.war file to tomcat dir.
-linux_exec( application_host, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
 
-
-# Check copied files md5. To be compared with source.
-# md5sum %app_name%.war
-target_md5 = linux_exec( application_host, 'sudo md5sum ' + app_path + '/' + war_name )
-
+# Еще раз проверить md5. Пока только для первого хоста в массиве.
+target_md5 = linux_exec( application_host[0], 'sudo md5sum ' + app_path + '/' + war_name )
 if source_md5 == target_md5.split(" ")[0]:
-   print 'Application version matches ' + patch_num 
+   print "Application version matches " + patch_num + "\n" 
 else:
-   print 'ERROR: Application version not matches ' + patch_num
+   print "ERROR: Application version not matches " + patch_num 	+ "\n" 
 
-# Start tomcat.
-linux_exec( application_host, 'sudo systemctl start tomcat' )
-# Check tomcat after starting.
-linux_exec( application_host, 'sudo systemctl status tomcat' )
+# Запустить сервера приложений.
+for i in application_host:
+    linux_exec( i, 'sudo systemctl start tomcat' )
+    # Проверить работу сервера приложений после запуска.
+    print linux_exec( i, 'sudo systemctl status tomcat' )
