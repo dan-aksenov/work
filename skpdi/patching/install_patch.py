@@ -67,18 +67,22 @@ if target == 'demo':
     db_name = 'ods_demo'
     # Сервер БД.
     db_host = 'gudhskpdi-db-test'
-'''
-if target == 'skpdi':
-    application_host = 'gudhskpdi-app-01' # Add app-02
-    war_name = 'skpdi'
+elif target == 'skpdi':
+    # Сервер приложения tomcat.
+    application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
+    # Имя файла приложения (demo.war/skpdi.war).
+    war_name = target + '.war'
+    # Директория с распакованным приложением (demo/skpdi).
+    war_fldr = target
+    # Батник для установки патчей БД.
     db_patch_file = 'db_patch_skpdi.bat'
+    # Имя БД.
     db_name = 'ods_prod'
+    # Сервер БД.
     db_host = 'gudhskpdi-db-01'
-  
 else:
     usage()
     exit()
-'''
 
 # Директория для временного хранения файлов установки
 stage_dir = 'd:\\tmp\\skpdi_patch'
