@@ -204,7 +204,7 @@ elif max(patches_targ) > max(patches_curr):
     print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
     for i in patches_miss:
         # Копирование только недостающих патчей с Sunny.
-        call( [ 'xcopy', '/e', sunny_patch + '\\patches' + i, stage_dir + '\\patches\\' + i  ], shell=True )
+        call( [ 'xcopy', '/e', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], shell=True )
         # Копирование установщика патчей в директории с патчами.
         call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
 
