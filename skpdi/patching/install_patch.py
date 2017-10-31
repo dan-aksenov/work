@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Для чтения русских комментов.
 
-import subprocess
 from sys import argv, exit
 # for db connection
 from psycopg2 import connect
@@ -14,6 +13,7 @@ import paramiko
 # for file md5s
 import hashlib
 
+import subprocess
 import shutil
 import os
 
