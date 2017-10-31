@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Для чтения русских комментов.
+
 from subprocess import call
 from sys import argv, exit
 # for db connection
