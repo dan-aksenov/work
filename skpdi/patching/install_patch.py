@@ -204,18 +204,33 @@ elif max(patches_targ) > max(patches_curr):
     print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
     for i in patches_miss:
         # Копирование только недостающих патчей с Sunny.
-        call( [ 'xcopy', '/e', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], shell=True )
+        call( [ 'xcopy', '/e', '/i', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], shell=True )
         # Копирование установщика патчей в директории с патчами.
         call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
 
     # Остановка tomcat.
     for i in application_host:
+        print "Stopping application server " + i + "..."
         linux_exec( i, 'sudo systemctl stop tomcat' )
     # Установка патчей БД
     # Для выполенния по-порядку применен sort.
     for i in sorted(patches_miss):
         call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], shell=True, cwd = stage_dir + '\\patches\\' + i)
     # Добавить: чтение и анализ лога установки.
+	# Очистка панелей
+	cur.execute('''DELETE FROM core.fdc_sys_class_impl_lnk;''')
+	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl_lnk."
+	cur.execute('''DELETE FROM core.fdc_sys_class_impl;''')
+	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl."
+	cur.execute('''DELETE FROM core.fdc_sys_class_panel_lnk;''')
+	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel_lnk."
+	cur.execute('''DELETE FROM core.fdc_sys_class_panel;''')
+	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel.\n"
+	# Обязательно нужно делать commit, иначе сессия останется в idle in transaction.
+    conn.commit()
+    # Закрытие курсора и коннекта не обязательно, просто для порядка.
+    cur.close()
+    conn.close()
 else:
     print "ERROR: Something wrong with database patching!\n"
     
@@ -280,7 +295,7 @@ for i in hosts_to_update:
 for i in hosts_to_update:
     target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
     if source_md5 == target_md5.split(" ")[0]: 
-        print "Application version on " + i + " now matches " + patch_num + ".\n"
+        print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
     else:
         print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
         hosts_to_update.append(i)
