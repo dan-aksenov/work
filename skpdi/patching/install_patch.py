@@ -2,7 +2,7 @@ from subprocess import call
 from sys import argv, exit
 # for db connection
 from psycopg2 import connect
-from os import listdir, rename
+#from os import os.listdir, os.rename, rmdir, os.path, os.makedirs
 # for war file search
 from glob import glob
 from getopt import getopt
@@ -11,6 +11,8 @@ import paramiko
 # for file md5s
 import hashlib
 
+import shutil
+import os
 
 ''' Переменные. '''
 
@@ -21,7 +23,7 @@ def usage():
 
 # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
 try:    
-    opts, args = getopt( argv[1:], 'n:t:' )
+    opts, args = getopt( argv[1:], 'n:t:h:' )
 except:
     usage()
     exit()
@@ -32,6 +34,8 @@ for opt, arg in opts:
         patch_num = arg
     elif opt in ( '-t' ):
         target = arg
+    elif opt in ( '-h' ):
+        usage()
     else:
         usage()
         exit()
@@ -59,40 +63,40 @@ if target == 'demo':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-test-app' ]
     
-	# Имя файла приложения (demo.war/skpdi.war).
+    # Имя файла приложения (demo.war/skpdi.war).
     war_name = target + '.war'
     
-	# Директория с распакованным приложением (demo/skpdi).
+    # Директория с распакованным приложением (demo/skpdi).
     war_fldr = target
     
-	# Батник для установки патчей БД.
+    # Батник для установки патчей БД.
     db_patch_file = 'db_patch_demo.bat'
     
-	# Имя БД.
+    # Имя БД.
     db_name = 'ods_demo'
     
-	# Сервер БД.
+    # Сервер БД.
     db_host = 'gudhskpdi-db-test'
-	
+    
 elif target == 'skpdi':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
     
-	# Имя файла приложения (demo.war/skpdi.war).
+    # Имя файла приложения (demo.war/skpdi.war).
     war_name = target + '.war'
     
-	# Директория с распакованным приложением (demo/skpdi).
+    # Директория с распакованным приложением (demo/skpdi).
     war_fldr = target
     
-	# Батник для установки патчей БД.
+    # Батник для установки патчей БД.
     db_patch_file = 'db_patch_skpdi.bat'
     
-	# Имя БД.
+    # Имя БД.
     db_name = 'ods_prod'
     
-	# Сервер БД.
+    # Сервер БД.
     db_host = 'gudhskpdi-db-01'
-	
+    
 else:
     usage()
     exit()
@@ -118,6 +122,9 @@ ssh_port = 22
 # Версия и расположение приложений Tomcat.
 tomcat_name = 'apache-tomcat-8.5.8'
 app_path = '/u01/' + tomcat_name + '/webapps'
+
+# Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного
+dnull = open("NUL", "w")
 
 ''' Переменные. Конец.'''
 
@@ -148,10 +155,10 @@ def linux_put( linux_host, source_path, dest_path ):
     transport.connect( username = ssh_user, pkey = linux_key )
     sftp = paramiko.SFTPClient.from_transport( transport )
     
-    localpath = source_path
-    remotepath = dest_path
+    localos.path = source_path
+    remoteos.path = dest_path
 
-    sftp.put( localpath, remotepath )
+    sftp.put( localos.path, remoteos.path )
     sftp.close()
     transport.close()
 
@@ -161,9 +168,13 @@ def linux_put( linux_host, source_path, dest_path ):
 Блок подготовки.
 '''
 
-# Очистка временной директории. TODO: Redo it in python only w/o call.
-call( [ 'rmdir', stage_dir, '/s', '/q' ], shell=True )
-call( [ 'md', stage_dir ], shell=True )
+# Очистка временной директории.
+
+if os.path.exists( stage_dir ):
+    shutil.rmtree( stage_dir )
+else:
+    os.makedirs( stage_dir )
+
 
 '''
 Блок установки патчей БД.
@@ -187,7 +198,7 @@ for row in rows:
     patches_curr.append(row[0])
 
 # Получение списка патчей БД из директории с патчами.
-patches_targ = [ name for name in listdir( sunny_patch + '\\patches' ) ]
+patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
 
 # Сравненеие уже установленных патчей с патчами из директории.
 # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
@@ -204,29 +215,45 @@ elif max(patches_targ) > max(patches_curr):
     print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
     for i in patches_miss:
         # Копирование только недостающих патчей с Sunny.
-        call( [ 'xcopy', '/e', '/i', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], shell=True )
+        call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
         # Копирование установщика патчей в директории с патчами.
-        call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], shell=True )
+        call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
 
     # Остановка tomcat.
     for i in application_host:
-        print "Stopping application server " + i + "..."
+        print "Stopping application server " + i + "...\n"
         linux_exec( i, 'sudo systemctl stop tomcat' )
     # Установка патчей БД
     # Для выполенния по-порядку применен sort.
     for i in sorted(patches_miss):
-        call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], shell=True, cwd = stage_dir + '\\patches\\' + i)
-    # Добавить: чтение и анализ лога установки.
-	# Очистка панелей
-	cur.execute('''DELETE FROM core.fdc_sys_class_impl_lnk;''')
-	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl_lnk."
-	cur.execute('''DELETE FROM core.fdc_sys_class_impl;''')
-	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl."
-	cur.execute('''DELETE FROM core.fdc_sys_class_panel_lnk;''')
-	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel_lnk."
-	cur.execute('''DELETE FROM core.fdc_sys_class_panel;''')
-	print "Deleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel.\n"
-	# Обязательно нужно делать commit, иначе сессия останется в idle in transaction.
+        print "Applying database patch " + i + "..."
+        # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога
+        call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
+        # Просмотре лога на предмет фразы "finsih install patch ods objects"
+        try:
+            logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
+        except:
+            print "\tUnable to read logfile. Somethnig wrong with installation.\n"
+            exit()
+        loglines = logfile.read()
+        success_marker = loglines.find('finsih install patch ods objects')
+        if success_marker != -1:
+            print "\tDone.\n"
+        else:
+            print "\tError installing database patch.\n"
+            exit()
+        logfile.close()
+    # Очистка панелей
+    print "Purging panels: "
+    cur.execute('''DELETE FROM core.fdc_sys_class_impl_lnk;''')
+    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl_lnk."
+    cur.execute('''DELETE FROM core.fdc_sys_class_impl;''')
+    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl."
+    cur.execute('''DELETE FROM core.fdc_sys_class_panel_lnk;''')
+    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel_lnk."
+    cur.execute('''DELETE FROM core.fdc_sys_class_panel;''')
+    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel.\n"
+    # Обязательно нужно делать commit, иначе сессия останется в idle in transaction.
     conn.commit()
     # Закрытие курсора и коннекта не обязательно, просто для порядка.
     cur.close()
@@ -277,25 +304,28 @@ for i in hosts_to_update:
     print "Stopping application server " + i + "..."
     linux_exec( i, 'sudo systemctl stop tomcat' )
     
-	# Удалить старое приложение.
+    # Удалить старое приложение.
     print "Applying application patch on " + i + "..."
     linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
     linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
     
-	# Копировать war в целевую директорию на сервере приложений.
+    # Копировать war в целевую директорию на сервере приложений.
     linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
-    print "Starting application server " + i + "...\n"
+    print "Starting application server " + i + "..."
     linux_exec( i, 'sudo systemctl start tomcat' )
     
-	# Проверить работу сервера приложений после запуска.
-    print linux_exec( i, 'sudo systemctl status tomcat' )
+    # Проверить работу сервера приложений после запуска.
+    tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
+    tcat_status = tcat_sctl.find( 'Active: active (running) since' )
+    if tcat_status != -1:
+        print "\tDone!\n"
+    else:
+        print "\tFailed!\n"
 
-
-# Еще раз проверить md5. Пока только для первого хоста в массиве.
+# Еще раз проверить md5. Пока только для первого хоста в массиве. Может перенести в предъидущий цикл?
 for i in hosts_to_update:
     target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
     if source_md5 == target_md5.split(" ")[0]: 
         print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
     else:
         print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
-        hosts_to_update.append(i)
