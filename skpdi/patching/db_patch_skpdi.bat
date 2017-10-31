@@ -42,5 +42,3 @@ psql -c "DELETE FROM core.fdc_sys_class_impl_lnk;"
 psql -c "DELETE FROM core.fdc_sys_class_impl;"
 psql -c "DELETE FROM core.fdc_sys_class_panel_lnk;"
 psql -c "DELETE FROM core.fdc_sys_class_panel;"
-
-type %spool_file%
