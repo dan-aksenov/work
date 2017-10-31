@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Для чтения русских комментов.
 
-from subprocess import call
+import subprocess
 from sys import argv, exit
 # for db connection
 from psycopg2 import connect
@@ -218,9 +218,9 @@ elif max(patches_targ) > max(patches_curr):
     print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
     for i in patches_miss:
         # Копирование только недостающих патчей с Sunny.
-        call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
+        subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
         # Копирование установщика патчей в директории с патчами.
-        call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
+        subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
 
     # Остановка tomcat.
     for i in application_host:
@@ -231,7 +231,7 @@ elif max(patches_targ) > max(patches_curr):
     for i in sorted(patches_miss):	
         print "Applying database patch " + i + "..."
         # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога
-        call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
+        subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
         # Просмотре лога на предмет фразы "finsih install patch ods objects"
         try:
             logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
