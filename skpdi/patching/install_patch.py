@@ -155,10 +155,10 @@ def linux_put( linux_host, source_path, dest_path ):
     transport.connect( username = ssh_user, pkey = linux_key )
     sftp = paramiko.SFTPClient.from_transport( transport )
     
-    localos.path = source_path
-    remoteos.path = dest_path
+    localpath = source_path
+    remotepath = dest_path
 
-    sftp.put( localos.path, remoteos.path )
+    sftp.put( localpath, remotepath )
     sftp.close()
     transport.close()
 
@@ -186,7 +186,7 @@ try:
     #redo it with variables
     conn = connect( conn_string )
 except:
-    print 'ERROR: unable to connect to the database!'
+    print '\nERROR: unable to connect to the database!'
     # Exit if unable to connect.
     exit()
 cur = conn.cursor()
@@ -202,7 +202,7 @@ patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
 
 # Сравненеие уже установленных патчей с патчами из директории.
 # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
-print "Checking database patch level:"
+print "\nChecking database patch level:"
 if max(patches_targ) == max(patches_curr):
     print "\tNo database patch required.\n"
 elif max(patches_targ) > max(patches_curr):
@@ -225,10 +225,10 @@ elif max(patches_targ) > max(patches_curr):
         linux_exec( i, 'sudo systemctl stop tomcat' )
     # Установка патчей БД
     # Для выполенния по-порядку применен sort.
-    for i in sorted(patches_miss):
+    for i in sorted(patches_miss):	
         print "Applying database patch " + i + "..."
         # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога
-        call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
+        call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
         # Просмотре лога на предмет фразы "finsih install patch ods objects"
         try:
             logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
