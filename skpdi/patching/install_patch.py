@@ -202,6 +202,7 @@ except:
     # sys.exit if unable to connect.
     sys.exit()
 cur = conn.cursor()
+
 cur.execute('''select name from parameter.fdc_patches_log order by id desc;''')
 rows = cur.fetchall()
 patches_curr = []
@@ -280,7 +281,7 @@ else:
 print "Checking java application version:"
 # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
 # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
-if glob( sunny_patch + '\\ods*.war') == []
+if glob( sunny_patch + '\\ods*.war') == []:
     print "ERROR: Unable to locate war file!"
     sys.exit()
 
