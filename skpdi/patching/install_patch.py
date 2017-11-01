@@ -310,7 +310,8 @@ if hosts_to_update == []:
 print "\n"
 
 for i in hosts_to_update:
-    # Удалить и пересоздать директорию для временного хранения war файла.
+    #/need separate function for war update?
+	# Удалить и пересоздать директорию для временного хранения war файла.
     linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
     
     # Скопировать war файл на сервер приложений.
