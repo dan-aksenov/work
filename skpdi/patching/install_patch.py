@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Для чтения русских комментов.
 
-from sys import argv, exit
+# for args and exit
+import sys
 # for db connection
 from psycopg2 import connect
 #from os import os.listdir, os.rename, rmdir, os.path, os.makedirs
@@ -26,10 +27,10 @@ def usage():
 
 # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
 try:    
-    opts, args = getopt( argv[1:], 'n:t:h:' )
+    opts, args = getopt( sys.argv[1:], 'n:t:h:' )
 except:
     usage()
-    exit()
+    sys.exit()
 
 # Назначение переменныч n - patch_num, t - target.
 for opt, arg in opts:
@@ -41,7 +42,7 @@ for opt, arg in opts:
         usage()
     else:
         usage()
-        exit()
+        sys.exit()
 
 # Если параметры не переданы - запрашиваетя их ввод.
 # raw_input используется, для того, чтоб вводить без кавычек.
@@ -58,7 +59,7 @@ except:
 # Проверка правильного указания контура установки skpdi или demo.    
 if target not in [ 'skpdi', 'demo']:
     usage()
-    exit()
+    sys.exit()
 
 # В зависимости от контура назначаются остальные переменные.
     
@@ -102,7 +103,7 @@ elif target == 'skpdi':
     
 else:
     usage()
-    exit()
+    sys.exit()
 
 # Директория для временного хранения файлов установки
 stage_dir = 'd:\\tmp\\skpdi_patch'
@@ -126,7 +127,7 @@ ssh_port = 22
 tomcat_name = 'apache-tomcat-8.5.8'
 app_path = '/u01/' + tomcat_name + '/webapps'
 
-# Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного
+# Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
 dnull = open("NUL", "w")
 
 ''' Переменные. Конец.'''
@@ -165,33 +166,41 @@ def linux_put( linux_host, source_path, dest_path ):
     sftp.close()
     transport.close()
 
+def recreate_dir( dir_name ):
+    ''' Пересоздание директории(удалить/создать) Windows '''
+    
+    if os.path.exists( dir_name ):
+        shutil.rmtree( dir_name )
+    else:
+        os.makedirs( dir_name )
+
 ''' Внутренние функции. Конец. '''
     
 '''
 Блок подготовки.
 '''
 
+# Проверка наличия указанного патча на Sunny
+if os.path.isdir( sunny_patch ) != True:
+    print "ERROR: No such patch on Sunny!"
+    print "\tNo such directory " + sunny_patch
+    sys.exit()
+
 # Очистка временной директории.
-
-if os.path.exists( stage_dir ):
-    shutil.rmtree( stage_dir )
-else:
-    os.makedirs( stage_dir )
-
+recreate_dir( stage_dir )
 
 '''
 Блок установки патчей БД.
 '''
 
-#Подключение к БД и получение номеров уже устаноленных патей.
+#Подключение к БД для получения номеров уже устаноленных патей.
 conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
 try:
-    #redo it with variables
     conn = connect( conn_string )
 except:
     print '\nERROR: unable to connect to the database!'
-    # Exit if unable to connect.
-    exit()
+    # sys.exit if unable to connect.
+    sys.exit()
 cur = conn.cursor()
 cur.execute('''select name from parameter.fdc_patches_log order by id desc;''')
 rows = cur.fetchall()
@@ -228,7 +237,7 @@ elif max(patches_targ) > max(patches_curr):
         linux_exec( i, 'sudo systemctl stop tomcat' )
     # Установка патчей БД
     # Для выполенния по-порядку применен sort.
-    for i in sorted(patches_miss):	
+    for i in sorted(patches_miss):    
         print "Applying database patch " + i + "..."
         # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога
         subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
@@ -237,14 +246,14 @@ elif max(patches_targ) > max(patches_curr):
             logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
         except:
             print "\tUnable to read logfile. Somethnig wrong with installation.\n"
-            exit()
+            sys.exit()
         loglines = logfile.read()
         success_marker = loglines.find('finsih install patch ods objects')
         if success_marker != -1:
             print "\tDone.\n"
         else:
             print "\tError installing database patch.\n"
-            exit()
+            sys.exit()
         logfile.close()
     # Очистка панелей
     print "Purging panels: "
@@ -271,7 +280,12 @@ else:
 print "Checking java application version:"
 # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
 # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
+if glob( sunny_patch + '\\ods*.war') == []
+    print "ERROR: Unable to locate war file!"
+    sys.exit()
+
 war_path = glob( sunny_patch + '\\ods*.war')[0]
+
 
 # Получение md5 архива с приложением на Sunny.
 source_md5 = md5_check( war_path )
@@ -289,7 +303,7 @@ for i in application_host:
 # Завершить работу, если в hosts_to_update пусто.
 if hosts_to_update == []:
     print "\tAll application hosts alreasy up to date."
-    exit()   
+    sys.exit()   
 
 # Просто для форматирования.    
 print "\n"
