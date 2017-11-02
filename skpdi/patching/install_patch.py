@@ -23,7 +23,7 @@ import os
 # Получение номера патча и контура установки(прод/предпрод) из параметров.
 # Функция "Инструкция по пременению".
 def usage():
-    print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or demo'
+    print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
 
 # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
 try:    
@@ -54,30 +54,30 @@ except:
 try:
     target        
 except:
-    target = raw_input('skpdi or demo? ')
+    target = raw_input('skpdi or predprod? ')
 
-# Проверка правильного указания контура установки skpdi или demo.    
-if target not in [ 'skpdi', 'demo']:
+# Проверка правильного указания контура установки skpdi или predprod.    
+if target not in [ 'skpdi', 'predprod']:
     usage()
     sys.exit()
 
 # В зависимости от контура назначаются остальные переменные.
     
-if target == 'demo':
+if target == 'predprod':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-test-app' ]
     
-    # Имя файла приложения (demo.war/skpdi.war).
+    # Имя файла приложения (predprod.war/skpdi.war).
     war_name = target + '.war'
     
-    # Директория с распакованным приложением (demo/skpdi).
+    # Директория с распакованным приложением (predprod/skpdi).
     war_fldr = target
     
     # Батник для установки патчей БД.
-    db_patch_file = 'db_patch_demo.bat'
+    db_patch_file = 'db_patch_predprod.bat'
     
     # Имя БД.
-    db_name = 'ods_demo'
+    db_name = 'ods_predprod'
     
     # Сервер БД.
     db_host = 'gudhskpdi-db-test'
@@ -86,10 +86,10 @@ elif target == 'skpdi':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
     
-    # Имя файла приложения (demo.war/skpdi.war).
+    # Имя файла приложения (predprod.war/skpdi.war).
     war_name = target + '.war'
     
-    # Директория с распакованным приложением (demo/skpdi).
+    # Директория с распакованным приложением (predprod/skpdi).
     war_fldr = target
     
     # Батник для установки патчей БД.
@@ -114,8 +114,12 @@ sunny_path = '\\\sunny\\builds\\odsxp\\'
 sunny_patch = sunny_path + patch_num
 
 ''' Linux stuff '''
-# Путь к расположения ключа SSH.
+# Путь к расположения ключа SSH. Если такого нет - выход. Довавить возможность менять его?
 linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
+if os.path.isfile( linux_key_path ) != True:
+   print "ERROR: Linux ssh key " + linux_key_path + " not found!"
+   sys.exit()
+
 # Ключ SSH подготовленный для работы paramiko.
 linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
 # Пользователь SSH.
