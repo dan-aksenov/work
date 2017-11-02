@@ -190,18 +190,20 @@ def postgres_exec ( sql_query ):
         sys.exit()
     cur = conn.cursor()
     cur.execute( sql_query )
-    rows = cur.fetchall()
     query_results = []
-    # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
-    for row in rows:
-       query_results.append(row[0])
+	# Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
+    if cur.description != None:
+        rows = cur.fetchall()
+       # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
+        for row in rows:
+            query_results.append(row[0])
     # Количество обработанных строк. Для просчета delete.
     rowcnt = cur.rowcount
     conn.commit()
     # Закрытие курсора и коннекта не обязательно, просто для порядка.
     cur.close()
     conn.close()
-    return query_results,  rowcnt
+    return query_results, rowcnt
 
 ''' Внутренние функции. Конец. '''
     
@@ -222,22 +224,9 @@ recreate_dir( stage_dir )
 Блок установки патчей БД.
 '''
 
-#Подключение к БД для получения номеров уже устаноленных патей.
-#conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
-#try:
-#    conn = connect( conn_string )
-#except:
-#    print '\nERROR: unable to connect to the database!'
-    # sys.exit if unable to connect.
-#    sys.exit()
-#cur = conn.cursor()
-
-#cur.execute('''select name from parameter.fdc_patches_log order by id desc;''')
-#rows = cur.fetchall()
-
 # Получеине списка уже устаноленных патей.
 # [0] потомучто массив значений - на первой позиции.
-patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
+patches_curr = postgres_exec ( 'select system_build from parameter.fdc_patches_log order by id desc;' )[0]
 
 # Получение списка патчей БД из директории с патчами.
 patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
@@ -286,13 +275,13 @@ elif max(patches_targ) > max(patches_curr):
             sys.exit()
         logfile.close()
         # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
-        cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
-        is_db_patch_applied = cur.fetchall()
-        if is_db_patch_applied != []:
-            pass    
-        else:    
-            print "ERROR: Unable to confirm patch installation!"
-            exit()
+        #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
+        #is_db_patch_applied = cur.fetchall()
+        #if is_db_patch_applied != []:
+        #    pass    
+        #else:    
+        #    print "ERROR: Unable to confirm patch installation!"
+        #    exit()
     
 	# Очистка панелей
     print "Purging panels: "
@@ -333,7 +322,7 @@ source_md5 = md5_check( war_path )
 # Последовательное сравнение с md5 на серверах приложений.
 # По результатам формируется список hosts_to_update для установки обновления.
 for i in application_host:
-    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_namename )
+    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
     hosts_to_update = []
     if source_md5 != target_md5.split(" ")[0]: 
         print "\tJava application on " + i + " will be updated."
