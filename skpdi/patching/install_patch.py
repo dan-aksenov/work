@@ -178,6 +178,30 @@ def recreate_dir( dir_name ):
     else:
         os.makedirs( dir_name )
 
+def postgres_exec ( sql_query ):
+    ''' Выполенение произвольного sql в базе '''
+	
+	conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
+    try:
+        conn = connect( conn_string )
+    except:
+        print '\nERROR: unable to connect to the database!'
+        sys.exit()
+    cur = conn.cursor()
+    cur.execute( sql_query )
+    rows = cur.fetchall()
+	query_results = []
+	# В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
+	for row in rows:
+	   query_results.append(row[0])
+    # Количество обработанных строк. Для просчета delete.
+	rowcnt = cur.rowcount
+	conn.commit()
+    # Закрытие курсора и коннекта не обязательно, просто для порядка.
+    cur.close()
+    conn.close()
+    return query_results,  rowcnt
+
 ''' Внутренние функции. Конец. '''
     
 '''
@@ -198,21 +222,21 @@ recreate_dir( stage_dir )
 '''
 
 #Подключение к БД для получения номеров уже устаноленных патей.
-conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
-try:
-    conn = connect( conn_string )
-except:
-    print '\nERROR: unable to connect to the database!'
+#conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
+#try:
+#    conn = connect( conn_string )
+#except:
+#    print '\nERROR: unable to connect to the database!'
     # sys.exit if unable to connect.
-    sys.exit()
-cur = conn.cursor()
+#    sys.exit()
+#cur = conn.cursor()
 
-cur.execute('''select name from parameter.fdc_patches_log order by id desc;''')
-rows = cur.fetchall()
-patches_curr = []
-# Transform from tuples to strings to compare with patches_targ
-for row in rows:
-    patches_curr.append(row[0])
+#cur.execute('''select name from parameter.fdc_patches_log order by id desc;''')
+#rows = cur.fetchall()
+
+# Получеине списка уже устаноленных патей.
+# [0] потомучто массив значений - на первой позиции.
+patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
 
 # Получение списка патчей БД из директории с патчами.
 patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
@@ -244,8 +268,8 @@ elif max(patches_targ) > max(patches_curr):
     # Для выполенния по-порядку применен sort.
     for i in sorted(patches_miss):    
         print "Applying database patch " + i + "..."
-        # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога
-        subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i)
+        # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
+        subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
         # Просмотре лога на предмет фразы "finsih install patch ods objects"
         try:
             logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
@@ -260,6 +284,14 @@ elif max(patches_targ) > max(patches_curr):
             print "\tError installing database patch.\n"
             sys.exit()
         logfile.close()
+        # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
+        cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
+        is_db_patch_applied = cur.fetchall()
+        if is_db_patch_applied != []:
+            pass    
+        else:    
+            print "ERROR: Unable to confirm patch application!"
+            exit()
     # Очистка панелей
     print "Purging panels: "
     cur.execute('''DELETE FROM core.fdc_sys_class_impl_lnk;''')
@@ -299,7 +331,7 @@ source_md5 = md5_check( war_path )
 # Последовательное сравнение с md5 на серверах приложений.
 # По результатам формируется список hosts_to_update для установки обновления.
 for i in application_host:
-    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_namename )
     hosts_to_update = []
     if source_md5 != target_md5.split(" ")[0]: 
         print "\tJava application on " + i + " will be updated."
@@ -315,7 +347,7 @@ print "\n"
 
 for i in hosts_to_update:
     #/need separate function for war update?
-	# Удалить и пересоздать директорию для временного хранения war файла.
+    # Удалить и пересоздать директорию для временного хранения war файла.
     linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
     
     # Скопировать war файл на сервер приложений.
