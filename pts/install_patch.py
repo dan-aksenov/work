@@ -14,6 +14,9 @@ import paramiko
 # for file md5s
 import hashlib
 
+# для правильной сортировки 0.9.2 раньше 0.20.1
+from natsort import natsorted, ns
+
 import subprocess
 import shutil
 import os
@@ -63,7 +66,7 @@ if target not in [ 'skpdi', 'predprod']:
 
 # В зависимости от контура назначаются остальные переменные.
     
-if target == 'predprod':
+if target == 'sometarget':
     # Сервер приложения tomcat.
     application_host = [ 'gudhskpdi-test-app' ]
     
@@ -77,10 +80,10 @@ if target == 'predprod':
     db_patch_file = 'db_patch_predprod.bat'
     
     # Имя БД.
-    db_name = 'ods_predprod'
+    db_name = 'pts'
     
     # Сервер БД.
-    db_host = 'gudhskpdi-db-test'
+    db_host = '192.168.122.238'
     
 elif target == 'skpdi':
     # Сервер приложения tomcat.
@@ -230,7 +233,7 @@ patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order
 
 # Получение списка патчей БД из директории с патчами.
 # Переделать под птс
-patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
+patches_targ = [ name for name in os.listdir( sunny_pach ) ]
 
 # Сравненеие уже установленных патчей с патчами из директории.
 # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
