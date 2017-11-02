@@ -179,9 +179,10 @@ def recreate_dir( dir_name ):
         os.makedirs( dir_name )
 
 def postgres_exec ( sql_query ):
-    ''' Выполенение произвольного sql в базе '''
-	
-	conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
+    ''' Выполенение произвольного sql в базе
+    Для получения списка патчей и очистки панелей '''
+    
+    conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
     try:
         conn = connect( conn_string )
     except:
@@ -190,13 +191,13 @@ def postgres_exec ( sql_query ):
     cur = conn.cursor()
     cur.execute( sql_query )
     rows = cur.fetchall()
-	query_results = []
-	# В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
-	for row in rows:
-	   query_results.append(row[0])
+    query_results = []
+    # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
+    for row in rows:
+       query_results.append(row[0])
     # Количество обработанных строк. Для просчета delete.
-	rowcnt = cur.rowcount
-	conn.commit()
+    rowcnt = cur.rowcount
+    conn.commit()
     # Закрытие курсора и коннекта не обязательно, просто для порядка.
     cur.close()
     conn.close()
@@ -290,23 +291,24 @@ elif max(patches_targ) > max(patches_curr):
         if is_db_patch_applied != []:
             pass    
         else:    
-            print "ERROR: Unable to confirm patch application!"
+            print "ERROR: Unable to confirm patch installation!"
             exit()
-    # Очистка панелей
+    
+	# Очистка панелей
     print "Purging panels: "
-    cur.execute('''DELETE FROM core.fdc_sys_class_impl_lnk;''')
-    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl_lnk."
-    cur.execute('''DELETE FROM core.fdc_sys_class_impl;''')
-    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_impl."
-    cur.execute('''DELETE FROM core.fdc_sys_class_panel_lnk;''')
-    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel_lnk."
-    cur.execute('''DELETE FROM core.fdc_sys_class_panel;''')
-    print "\tDeleted " + str(cur.rowcount) + " rows from fdc_sys_class_panel.\n"
-    # Обязательно нужно делать commit, иначе сессия останется в idle in transaction.
-    conn.commit()
-    # Закрытие курсора и коннекта не обязательно, просто для порядка.
-    cur.close()
-    conn.close()
+    
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
+    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl_lnk."
+    
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
+    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl."
+    
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
+    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel_lnk."
+    
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
+    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel.\n"
+
 else:
     print "ERROR: Something wrong with database patching!\n"
     
