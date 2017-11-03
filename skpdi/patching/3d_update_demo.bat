@@ -1,1 +1,1 @@
-patch.bat gudhskpdi-test-app demo
+patch.bat gudhskpdi-test-app predprod

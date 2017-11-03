@@ -226,7 +226,7 @@ recreate_dir( stage_dir )
 
 # Получеине списка уже устаноленных патей.
 # [0] потомучто массив значений - на первой позиции.
-patches_curr = postgres_exec ( 'select system_build from parameter.fdc_patches_log order by id desc;' )[0]
+patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
 
 # Получение списка патчей БД из директории с патчами.
 patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
