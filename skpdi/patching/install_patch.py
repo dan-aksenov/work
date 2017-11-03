@@ -210,168 +210,171 @@ def postgres_exec ( sql_query ):
 '''
 Блок подготовки.
 '''
+def main():
+    # Проверка наличия указанного патча на Sunny
+    if os.path.isdir( sunny_patch ) != True:
+        print "ERROR: No such patch on Sunny!"
+        print "\tNo such directory " + sunny_patch
+        sys.exit()
 
-# Проверка наличия указанного патча на Sunny
-if os.path.isdir( sunny_patch ) != True:
-    print "ERROR: No such patch on Sunny!"
-    print "\tNo such directory " + sunny_patch
-    sys.exit()
-
-# Очистка временной директории.
-recreate_dir( stage_dir )
-
-'''
-Блок установки патчей БД.
-'''
-
-# Получеине списка уже устаноленных патей.
-# [0] потомучто массив значений - на первой позиции.
-patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
-
-# Получение списка патчей БД из директории с патчами.
-patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
-
-# Сравненеие уже установленных патчей с патчами из директории.
-# Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
-print "\nChecking database patch level:"
-if max(patches_targ) == max(patches_curr):
-    print "\tNo database patch required.\n"
-elif max(patches_targ) > max(patches_curr):
-    print "\tDatabase needs patching.\n"
-    patches_miss = []
-    for i in (set(patches_targ) - set(patches_curr)):
-        if i > max(patches_curr):
-            patches_miss.append(i)
-
-    print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
-    for i in patches_miss:
-        # Копирование только недостающих патчей с Sunny.
-        subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
-        # Копирование установщика патчей в директории с патчами.
-        subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
-
-    # Остановка tomcat.
+    # Очистка временной директории.
+    recreate_dir( stage_dir )
+    
+    '''
+    Блок установки патчей БД.
+    '''
+    
+    # Получеине списка уже устаноленных патей.
+    # [0] потомучто массив значений - на первой позиции.
+    patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
+    
+    # Получение списка патчей БД из директории с патчами.
+    patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
+    
+    # Сравненеие уже установленных патчей с патчами из директории.
+    # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
+    print "\nChecking database patch level:"
+    if max(patches_targ) == max(patches_curr):
+        print "\tNo database patch required.\n"
+    elif max(patches_targ) > max(patches_curr):
+        print "\tDatabase needs patching.\n"
+        patches_miss = []
+        for i in (set(patches_targ) - set(patches_curr)):
+            if i > max(patches_curr):
+                patches_miss.append(i)
+    
+        print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
+        for i in patches_miss:
+            # Копирование только недостающих патчей с Sunny.
+            subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
+            # Копирование установщика патчей в директории с патчами.
+            subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
+    
+        # Остановка tomcat.
+        for i in application_host:
+            print "Stopping application server " + i + "...\n"
+            linux_exec( i, 'sudo systemctl stop tomcat' )
+        # Установка патчей БД
+        # Для выполенния по-порядку применен sort.
+        for i in sorted(patches_miss):    
+            print "Applying database patch " + i + "..."
+            # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
+            subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
+            # Просмотре лога на предмет фразы "finsih install patch ods objects"
+            try:
+                logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
+            except:
+                print "\tUnable to read logfile. Somethnig wrong with installation.\n"
+                sys.exit()
+            loglines = logfile.read()
+            success_marker = loglines.find('finsih install patch ods objects')
+            if success_marker != -1:
+                print "\tDone.\n"
+            else:
+                print "\tError installing database patch.\n"
+                sys.exit()
+            logfile.close()
+            # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
+            #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
+            #is_db_patch_applied = cur.fetchall()
+            #if is_db_patch_applied != []:
+            #    pass    
+            #else:    
+            #    print "ERROR: Unable to confirm patch installation!"
+            #    exit()
+        
+    	# Очистка панелей
+        print "Purging panels: "
+        
+        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
+        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl_lnk."
+        
+        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
+        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl."
+        
+        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
+        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel_lnk."
+        
+        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
+        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel.\n"
+    
+    else:
+        print "ERROR: Something wrong with database patching!\n"
+        
+    '''
+    Блок обновления приложения.
+    '''
+    
+    print "Checking java application version:"
+    # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
+    # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
+    if glob( sunny_patch + '\\ods*.war') == []:
+        print "ERROR: Unable to locate war file!"
+        sys.exit()
+    
+    war_path = glob( sunny_patch + '\\ods*.war')[0]
+    
+    
+    # Получение md5 архива с приложением на Sunny.
+    source_md5 = md5_check( war_path )
+    
+    # Получение md5 архива с приложением на целевом сервере приложения.
+    # Последовательное сравнение с md5 на серверах приложений.
+    # По результатам формируется список hosts_to_update для установки обновления.
     for i in application_host:
-        print "Stopping application server " + i + "...\n"
+        target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+        hosts_to_update = []
+        if source_md5 != target_md5.split(" ")[0]: 
+            print "\tJava application on " + i + " will be updated."
+            hosts_to_update.append(i)
+    
+    # Завершить работу, если в hosts_to_update пусто.
+    if hosts_to_update == []:
+        print "\tAll application hosts alreasy up to date."
+        sys.exit()   
+    
+    # Просто для форматирования.    
+    print "\n"
+    
+    for i in hosts_to_update:
+        #/need separate function for war update?
+        # Удалить и пересоздать директорию для временного хранения war файла.
+        linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+        
+        # Скопировать war файл на сервер приложений.
+        print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
+        linux_put( i, war_path, '/tmp/webapps/' + war_name )
+        linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
+        
+        # Остановить сервер приложений.
+        print "Stopping application server " + i + "..."
         linux_exec( i, 'sudo systemctl stop tomcat' )
-    # Установка патчей БД
-    # Для выполенния по-порядку применен sort.
-    for i in sorted(patches_miss):    
-        print "Applying database patch " + i + "..."
-        # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
-        subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
-        # Просмотре лога на предмет фразы "finsih install patch ods objects"
-        try:
-            logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
-        except:
-            print "\tUnable to read logfile. Somethnig wrong with installation.\n"
-            sys.exit()
-        loglines = logfile.read()
-        success_marker = loglines.find('finsih install patch ods objects')
-        if success_marker != -1:
-            print "\tDone.\n"
+        
+        # Удалить старое приложение.
+        print "Applying application patch on " + i + "..."
+        linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
+        linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
+        
+        # Копировать war в целевую директорию на сервере приложений.
+        linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
+        print "Starting application server " + i + "..."
+        linux_exec( i, 'sudo systemctl start tomcat' )
+        
+        # Проверить работу сервера приложений после запуска.
+        tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
+        tcat_status = tcat_sctl.find( 'Active: active (running) since' )
+        if tcat_status != -1:
+            print "\tDone!\n"
         else:
-            print "\tError installing database patch.\n"
-            sys.exit()
-        logfile.close()
-        # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
-        #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
-        #is_db_patch_applied = cur.fetchall()
-        #if is_db_patch_applied != []:
-        #    pass    
-        #else:    
-        #    print "ERROR: Unable to confirm patch installation!"
-        #    exit()
+            print "\tFailed!\n"
     
-	# Очистка панелей
-    print "Purging panels: "
-    
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
-    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl_lnk."
-    
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
-    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl."
-    
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
-    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel_lnk."
-    
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
-    print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel.\n"
+    # Еще раз проверить md5. Пока только для первого хоста в массиве. Может перенести в предъидущий цикл?
+    for i in hosts_to_update:
+        target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+        if source_md5 == target_md5.split(" ")[0]: 
+            print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
+        else:
+            print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
 
-else:
-    print "ERROR: Something wrong with database patching!\n"
-    
-'''
-Блок обновления приложения.
-'''
-
-print "Checking java application version:"
-# glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
-# Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
-if glob( sunny_patch + '\\ods*.war') == []:
-    print "ERROR: Unable to locate war file!"
-    sys.exit()
-
-war_path = glob( sunny_patch + '\\ods*.war')[0]
-
-
-# Получение md5 архива с приложением на Sunny.
-source_md5 = md5_check( war_path )
-
-# Получение md5 архива с приложением на целевом сервере приложения.
-# Последовательное сравнение с md5 на серверах приложений.
-# По результатам формируется список hosts_to_update для установки обновления.
-for i in application_host:
-    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-    hosts_to_update = []
-    if source_md5 != target_md5.split(" ")[0]: 
-        print "\tJava application on " + i + " will be updated."
-        hosts_to_update.append(i)
-
-# Завершить работу, если в hosts_to_update пусто.
-if hosts_to_update == []:
-    print "\tAll application hosts alreasy up to date."
-    sys.exit()   
-
-# Просто для форматирования.    
-print "\n"
-
-for i in hosts_to_update:
-    #/need separate function for war update?
-    # Удалить и пересоздать директорию для временного хранения war файла.
-    linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
-    
-    # Скопировать war файл на сервер приложений.
-    print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
-    linux_put( i, war_path, '/tmp/webapps/' + war_name )
-    linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
-    
-    # Остановить сервер приложений.
-    print "Stopping application server " + i + "..."
-    linux_exec( i, 'sudo systemctl stop tomcat' )
-    
-    # Удалить старое приложение.
-    print "Applying application patch on " + i + "..."
-    linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
-    linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
-    
-    # Копировать war в целевую директорию на сервере приложений.
-    linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
-    print "Starting application server " + i + "..."
-    linux_exec( i, 'sudo systemctl start tomcat' )
-    
-    # Проверить работу сервера приложений после запуска.
-    tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
-    tcat_status = tcat_sctl.find( 'Active: active (running) since' )
-    if tcat_status != -1:
-        print "\tDone!\n"
-    else:
-        print "\tFailed!\n"
-
-# Еще раз проверить md5. Пока только для первого хоста в массиве. Может перенести в предъидущий цикл?
-for i in hosts_to_update:
-    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-    if source_md5 == target_md5.split(" ")[0]: 
-        print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
-    else:
-        print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
+if __name__ == "__main__":
+    main()
