@@ -287,16 +287,16 @@ def main():
         print "Purging panels: "
         
         rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
-        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl_lnk."
+        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
         
         rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
-        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_impl."
+        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl."
         
         rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
-        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel_lnk."
+        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel_lnk."
         
         rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
-        print "\tDeleted " + rows_deleted + " rows from fdc_sys_class_panel.\n"
+        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
     else:
         print "ERROR: Something wrong with database patching!\n"
