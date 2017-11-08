@@ -229,6 +229,7 @@ def main():
     '''
     Блок подготовки.
     '''
+    
     # Проверка наличия указанного патча на Sunny
     if os.path.isdir( sunny_patch ) != True:
         print "ERROR: No such patch on Sunny!"
@@ -247,7 +248,7 @@ def main():
     '''
     # Блок нужно переработать. слишком много вложений.
     # Получеине списка уже устаноленных патей.
-    # [0] потому что возвращает массив значений - нужна первая позиция.
+    # [0] потому что возвращает массив: кортежи + rowcount - нужны кортежи
     patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
     
     # Получение списка патчей БД из директории с патчами.
@@ -301,15 +302,13 @@ def main():
                 logfile.close()
             # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
             #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
-            #is_db_patch_applied = cur.fetchall()
+            #is_db_patch_applied = postgres_exec ( "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
             #if is_db_patch_applied != []:
             #    pass    
             #else:    
             #    print "ERROR: Unable to confirm patch installation!"
             #    exit()
-        
-    # Очистка панелей перенесена в блок приложения.
-    
+   
         else:
             print "ERROR: Something wrong with database patching!\n"
         
