@@ -178,7 +178,7 @@ def recreate_dir( dir_name ):
     else:
         os.makedirs( dir_name )
 
-def postgres_exec ( sql_query ):
+def postgres_exec( sql_query ):
     ''' Выполенение произвольного sql в базе
     Для получения списка патчей и очистки панелей '''
     
@@ -191,7 +191,7 @@ def postgres_exec ( sql_query ):
     cur = conn.cursor()
     cur.execute( sql_query )
     query_results = []
-	# Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
+    # Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
     if cur.description != None:
         rows = cur.fetchall()
        # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
@@ -204,80 +204,106 @@ def postgres_exec ( sql_query ):
     cur.close()
     conn.close()
     return query_results, rowcnt
-
+    
+def purge_panels():
+    ''' Очистка панелей. Необходима перед при обновлении ПО, даже при отстутствии патчей БД '''
+    
+    # Предврительно остаровить сервера приложений.
+    for i in application_host:
+            print "Stopping application server " + i + "...\n"
+            linux_exec( i, 'sudo systemctl stop tomcat' )
+    
+    print "Purging panels: "
+    
+    # Завершить сессии приложения в БД если есть. Решить вопрос с юзером БД. Сейчас отрубает сам себя.
+    #sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods'" )[1]
+    #print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
+    
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
+    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
+    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl."
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
+    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel_lnk."
+    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
+    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
+    
 ''' Внутренние функции. Конец. '''
     
-'''
-Блок подготовки.
-'''
 def main():
+    '''
+    Блок подготовки.
+    '''
     # Проверка наличия указанного патча на Sunny
     if os.path.isdir( sunny_patch ) != True:
         print "ERROR: No such patch on Sunny!"
         print "\tNo such directory " + sunny_patch
         sys.exit()
 
-    # Очистка временной директории.
-    recreate_dir( stage_dir )
+    # Очистка временной директории. В Win, если "сидеть" в этой директории - будет ошибка
+    try:
+        recreate_dir( stage_dir )
+    except:
+        print "ERROR: Unable to recreate patch staging directory."
+        sys.exit()
     
     '''
     Блок установки патчей БД.
     '''
-    
+    # Блок нужно переработать. слишком много вложений.
     # Получеине списка уже устаноленных патей.
-    # [0] потомучто массив значений - на первой позиции.
+    # [0] потому что возвращает массив значений - нужна первая позиция.
     patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
     
     # Получение списка патчей БД из директории с патчами.
-    patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
-    
-	# Если на sunny нет патчей БД пропустить этот шаг.
-	if os.path.isdir( patches_targ ) != True:
+    if os.path.isdir( sunny_patch + '\\patches' ) != True:
         print "NOTICE: No database patch found in build. Assume database patches not required."
-	
-    # Сравненеие уже установленных патчей с патчами из директории.
-    # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
-    print "\nChecking database patch level:"
-    if max(patches_targ) == max(patches_curr):
-        print "\tNo database patch required.\n"
-    elif max(patches_targ) > max(patches_curr):
-        print "\tDatabase needs patching.\n"
-        patches_miss = []
-        for i in (set(patches_targ) - set(patches_curr)):
-            if i > max(patches_curr):
-                patches_miss.append(i)
+    else:
+        patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
+       
+        # Сравненеие уже установленных патчей с патчами из директории.
+        # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
+        print "\nChecking database patch level:"
+        if max(patches_targ) == max(patches_curr):
+            print "\tNo database patch required.\n"
+        elif max(patches_targ) > max(patches_curr):
+            print "\tDatabase needs patching.\n"
+            patches_miss = []
+            for i in (set(patches_targ) - set(patches_curr)):
+                if i > max(patches_curr):
+                    patches_miss.append(i)
     
-        print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
-        for i in patches_miss:
-            # Копирование только недостающих патчей с Sunny.
-            subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
-            # Копирование установщика патчей в директории с патчами.
-            subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
+            print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
+            for i in patches_miss:
+                # Копирование только недостающих патчей с Sunny.
+                subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
+                # Копирование установщика патчей в директории с патчами.
+                subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
     
-        # Остановка tomcat.
-        for i in application_host:
-            print "Stopping application server " + i + "...\n"
-            linux_exec( i, 'sudo systemctl stop tomcat' )
-        # Установка патчей БД
-        # Для выполенния по-порядку применен sort.
-        for i in sorted(patches_miss):    
-            print "Applying database patch " + i + "..."
-            # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
-            subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
-            # Просмотре лога на предмет фразы "finsih install patch ods objects"
-            try:
-                logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
-            except:
-                print "\tUnable to read logfile. Somethnig wrong with installation.\n"
-                sys.exit()
-            loglines = logfile.read()
-            success_marker = loglines.find('finsih install patch ods objects')
-            if success_marker != -1:
-                print "\tDone.\n"
-            else:
-                print "\tError installing database patch.\n"
-                sys.exit()
-            logfile.close()
+            # Остановка tomcat.
+            for i in application_host:
+                print "Stopping application server " + i + "...\n"
+                linux_exec( i, 'sudo systemctl stop tomcat' )
+            # Установка патчей БД
+            # Для выполенния по-порядку применен sort.
+            for i in sorted(patches_miss):    
+                print "Applying database patch " + i + "..."
+                # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
+                subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
+                # Просмотре лога на предмет фразы "finsih install patch ods objects"
+                try:
+                    logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
+                except:
+                    print "\tUnable to read logfile. Somethnig wrong with installation.\n"
+                    sys.exit()
+                loglines = logfile.read()
+                success_marker = loglines.find('finsih install patch ods objects')
+                if success_marker != -1:
+                    print "\tDone.\n"
+                else:
+                    print "\tError installing database patch.\n"
+                    sys.exit()
+                logfile.close()
             # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
             #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
             #is_db_patch_applied = cur.fetchall()
@@ -287,27 +313,18 @@ def main():
             #    print "ERROR: Unable to confirm patch installation!"
             #    exit()
         
-    	# Очистка панелей
-        print "Purging panels: "
-        
-        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
-        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
-        
-        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
-        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl."
-        
-        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
-        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel_lnk."
-        
-        rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
-        print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
+    # Очистка панелей перенесена в блок приложения.
     
-    else:
-        print "ERROR: Something wrong with database patching!\n"
+        else:
+            print "ERROR: Something wrong with database patching!\n"
         
     '''
     Блок обновления приложения.
     '''
+    
+    # Очистка панелей. Тут же останавливается сервера приложений.
+	# Сейчас чистит панели полюбому. А нужно что бы только при установке патча
+    purge_panels()
     
     print "Checking java application version:"
     # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
@@ -350,8 +367,7 @@ def main():
         linux_put( i, war_path, '/tmp/webapps/' + war_name )
         linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
         
-        # Остановить сервер приложений.
-        print "Stopping application server " + i + "..."
+        # Остановить сервер приложений. Еще раз, для верности.
         linux_exec( i, 'sudo systemctl stop tomcat' )
         
         # Удалить старое приложение.
@@ -364,7 +380,7 @@ def main():
         print "Starting application server " + i + "..."
         linux_exec( i, 'sudo systemctl start tomcat' )
         
-        # Проверить работу сервера приложений после запуска.
+        # Проверить состояние сервера приложений после запуска.
         tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
         tcat_status = tcat_sctl.find( 'Active: active (running) since' )
         if tcat_status != -1:
