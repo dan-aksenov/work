@@ -207,12 +207,7 @@ def postgres_exec( sql_query ):
     
 def purge_panels():
     ''' Очистка панелей. Необходима перед при обновлении ПО, даже при отстутствии патчей БД '''
-    
-    # Предврительно остаровить сервера приложений.
-    for i in application_host:
-            print "Stopping application server " + i + "...\n"
-            linux_exec( i, 'sudo systemctl stop tomcat' )
-    
+  
     print "Purging panels: "
     
     # Завершить сессии приложения в БД если есть. Решить вопрос с юзером БД. Сейчас отрубает сам себя.
@@ -321,11 +316,7 @@ def main():
     '''
     Блок обновления приложения.
     '''
-    
-    # Очистка панелей. Тут же останавливается сервера приложений.
-	# Сейчас чистит панели полюбому. А нужно что бы только при установке патча
-    purge_panels()
-    
+          
     print "Checking java application version:"
     # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
     # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
@@ -351,7 +342,7 @@ def main():
     
     # Завершить работу, если в hosts_to_update пусто.
     if hosts_to_update == []:
-        print "\tAll application hosts alreasy up to date."
+        print "\tAll application hosts already up to date."
         sys.exit()   
     
     # Просто для форматирования.    
@@ -367,8 +358,13 @@ def main():
         linux_put( i, war_path, '/tmp/webapps/' + war_name )
         linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
         
-        # Остановить сервер приложений. Еще раз, для верности.
+        # Остановить сервер приложений.
+        print "Stopping application server " + i + "..."
         linux_exec( i, 'sudo systemctl stop tomcat' )
+        
+        # Очистка панелей. Тут же останавливается сервера приложений.
+        # Сделать очистку только один раз. В целом не критично.
+        purge_panels()
         
         # Удалить старое приложение.
         print "Applying application patch on " + i + "..."
