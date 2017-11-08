@@ -231,6 +231,10 @@ def main():
     # Получение списка патчей БД из директории с патчами.
     patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
     
+	# Если на sunny нет патчей БД пропустить этот шаг.
+	if os.path.isdir( patches_targ ) != True:
+        print "NOTICE: No database patch found in build. Assume database patches not required."
+	
     # Сравненеие уже установленных патчей с патчами из директории.
     # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
     print "\nChecking database patch level:"
