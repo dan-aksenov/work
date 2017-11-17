@@ -200,7 +200,6 @@ def postgres_exec( sql_query ):
     # Количество обработанных строк. Для просчета delete.
     rowcnt = cur.rowcount
     conn.commit()
-    # Закрытие курсора и коннекта не обязательно, просто для порядка.
     cur.close()
     conn.close()
     return query_results, rowcnt
@@ -257,7 +256,7 @@ def main():
         print "NOTICE: No database patch found in build. Assume database patches not required."
     else:
         patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
-       
+		
         # Сравненеие уже установленных патчей с патчами из директории.
         # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
         print "\nChecking database patch level:"
@@ -312,6 +311,11 @@ def main():
    
         else:
             print "ERROR: Something wrong with database patching!\n"
+            # Запуск tomcat в случае, если не удалось обновить базу.
+            for i in application_host:
+                print "Starting application server " + i + "...\n"
+                linux_exec( i, 'sudo systemctl start tomcat' )
+            sys.exit()
         
     '''
     Блок обновления приложения.
