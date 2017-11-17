@@ -17,6 +17,7 @@ import hashlib
 import subprocess
 import shutil
 import os
+import re
 
 ''' Переменные. '''
 
@@ -256,13 +257,20 @@ def main():
         print "NOTICE: No database patch found in build. Assume database patches not required."
     else:
         patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
-		
+        
         # Сравненеие уже установленных патчей с патчами из директории.
         # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
         print "\nChecking database patch level:"
-        if max(patches_targ) == max(patches_curr):
+        # для отсечения суффиксов имен директорий с патчами (db_0190_20171113_v2.19) объявляетс отдельная переменная для патч max(patches_targ), иначе не удастся сравнить с тем что записано в БД.
+        last_patch_targ = max(patches_targ)
+        last_patch_targ_strip = re.sub('_v.*$','', last_patch_targ)
+        if last_patch_targ_strip == max(patches_curr):
+            print "\tDatabase patch level: " + max(patches_curr) 
+            print "\tLatest patch on Sunny: " + last_patch_targ_strip
             print "\tNo database patch required.\n"
-        elif max(patches_targ) > max(patches_curr):
+        elif last_patch_targ_strip > max(patches_curr):
+            print "\tDatabase patch level: " + max(patches_curr)
+            print "\t Latest patch on Sunny: " + last_patch_targ_strip
             print "\tDatabase needs patching.\n"
             patches_miss = []
             for i in (set(patches_targ) - set(patches_curr)):
@@ -310,6 +318,8 @@ def main():
             #    exit()
    
         else:
+            print "\tDatabase patch level: " + max(patches_curr)
+            print "\t Latest patch on Sunny: " + last_patch_targ_strip
             print "ERROR: Something wrong with database patching!\n"
             # Запуск tomcat в случае, если не удалось обновить базу.
             for i in application_host:
