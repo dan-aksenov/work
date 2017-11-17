@@ -253,7 +253,7 @@ def main():
     
     # Получение списка патчей БД из директории с патчами.
     # Добавить еще одну проверку чтение номера патча из файла define_version.sql на случай, если директорию назовут по другому.
-	if os.path.isdir( sunny_patch + '\\patches' ) != True:
+    if os.path.isdir( sunny_patch + '\\patches' ) != True:
         print "NOTICE: No database patch found in build. Assume database patches not required."
     else:
         patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
