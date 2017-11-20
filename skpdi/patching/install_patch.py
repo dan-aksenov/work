@@ -347,6 +347,9 @@ def main():
     # Получение md5 архива с приложением на целевом сервере приложения.
     # Последовательное сравнение с md5 на серверах приложений.
     # По результатам формируется список hosts_to_update для установки обновления.
+    
+    #debugging
+    print application_host
     for i in application_host:
         target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         hosts_to_update = []
@@ -355,6 +358,8 @@ def main():
             hosts_to_update.append(i)
     
     # Завершить работу, если в hosts_to_update пусто.
+    #debugging
+    print hosts_to_update
     if hosts_to_update == []:
         print "\tAll application hosts already up to date."
         sys.exit()   
@@ -376,12 +381,12 @@ def main():
         print "Stopping application server " + i + "..."
         linux_exec( i, 'sudo systemctl stop tomcat' )
         
-        # Очистка панелей. Тут же останавливается сервера приложений.
-        # Сделать очистку только один раз. В целом не критично.
-        purge_panels()
+    # Очистка панелей. Вынесена в отдельный блок тк нужна только один раз.
+    purge_panels()
         
-        # Удалить старое приложение.
+    for i in hosts_to_update:
         print "Applying application patch on " + i + "..."
+        # Удалить старое приложение. war-файл и папку.
         linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
         linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
         
