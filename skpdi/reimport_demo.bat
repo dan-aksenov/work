@@ -7,7 +7,7 @@ REM create temprorry database
 psql %db_dest% -c "create database %dbname%_tmp with owner ods" postgres
 
 REM Direct network import database. Exclude event log and parameters data.
-pg_dump %db_src% -Fp --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod -v | psql %db_dest% %dbname%_tmp
+pg_dump %db_src% -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod | psql %db_dest% %dbname%_tmp
 
 REM Reimport parameter_md.
 pg_dump %db_dest% -Fp -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp

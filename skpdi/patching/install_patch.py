@@ -348,18 +348,14 @@ def main():
     # Последовательное сравнение с md5 на серверах приложений.
     # По результатам формируется список hosts_to_update для установки обновления.
     
-    #debugging
-    print application_host
+    hosts_to_update = []
     for i in application_host:
         target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-        hosts_to_update = []
         if source_md5 != target_md5.split(" ")[0]: 
             print "\tJava application on " + i + " will be updated."
             hosts_to_update.append(i)
     
     # Завершить работу, если в hosts_to_update пусто.
-    #debugging
-    print hosts_to_update
     if hosts_to_update == []:
         print "\tAll application hosts already up to date."
         sys.exit()   
