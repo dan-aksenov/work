@@ -13,12 +13,17 @@ REM Reimport parameter_md.
 pg_dump %db_dest% -Fp -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
 
 REM Rename database.
+psql %db_dest% -c "update pg_database set datallowconn = false where datname = '%dbname%'"
 psql %db_dest% -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = '%dbname%'"
 psql %db_dest% -c "alter database %dbname% rename to %dbname%_old"
 
+psql %db_dest% -c "update pg_database set datallowconn = false where datname = '%dbname%_tmp'"
 psql %db_dest% -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = '%dbname%_tmp'"
-psql %db_dest% -c "alter database %dbname%_tmp rename to %dbname%
+psql %db_dest% -c "alter database %dbname%_tmp rename to '%dbname%'"
 
 REM Drop old database
+psql %db_dest% -c "update pg_database set datallowconn = false where datname = '%dbname%_old"
 psql %db_dest% -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = '%dbname%_old'"
 psql %db_dest% -c "drop database %dbname%_old"
+
+psql %db_dest% -c "update pg_database set datallowconn = true where datname = '%dbname%'"
