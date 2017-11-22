@@ -26,4 +26,5 @@ psql %db_dest% -c "update pg_database set datallowconn = false where datname = '
 psql %db_dest% -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = '%dbname%_old'"
 psql %db_dest% -c "drop database %dbname%_old"
 
+REM Allow connections.
 psql %db_dest% -c "update pg_database set datallowconn = true where datname = '%dbname%'"
