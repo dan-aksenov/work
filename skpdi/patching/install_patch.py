@@ -19,123 +19,10 @@ import shutil
 import os
 import re
 
-''' Переменные. '''
-
 # Получение номера патча и контура установки(прод/предпрод) из параметров.
 # Функция "Инструкция по пременению".
 def usage():
     print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
-
-# Прием параметров n и t, с дополнительной проверкой, что введены именно они.
-try:    
-    opts, args = getopt( sys.argv[1:], 'n:t:h:' )
-except:
-    usage()
-    sys.exit()
-
-# Назначение переменныч n - patch_num, t - target.
-for opt, arg in opts:
-    if opt in ( '-n' ):
-        patch_num = arg
-    elif opt in ( '-t' ):
-        target = arg
-    elif opt in ( '-h' ):
-        usage()
-    else:
-        usage()
-        sys.exit()
-
-# Если параметры не переданы - запрашиваетя их ввод.
-# raw_input используется, для того, чтоб вводить без кавычек.
-try:
-    patch_num
-except:
-    patch_num = raw_input('Enter patch number: ')
-
-try:
-    target        
-except:
-    target = raw_input('skpdi or predprod? ')
-
-# Проверка правильного указания контура установки skpdi или predprod.    
-if target not in [ 'skpdi', 'predprod']:
-    usage()
-    sys.exit()
-
-# В зависимости от контура назначаются остальные переменные.
-    
-if target == 'predprod':
-    # Сервер приложения tomcat.
-    application_host = [ 'gudhskpdi-test-app' ]
-    
-    # Имя файла приложения (predprod.war/skpdi.war).
-    war_name = target + '.war'
-    
-    # Директория с распакованным приложением (predprod/skpdi).
-    war_fldr = target
-    
-    # Батник для установки патчей БД.
-    db_patch_file = 'db_patch_predprod.bat'
-    
-    # Имя БД.
-    db_name = 'ods_predprod'
-    
-    # Сервер БД.
-    db_host = 'gudhskpdi-db-test'
-    
-elif target == 'skpdi':
-    # Сервер приложения tomcat.
-    application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
-    
-    # Имя файла приложения (predprod.war/skpdi.war).
-    war_name = target + '.war'
-    
-    # Директория с распакованным приложением (predprod/skpdi).
-    war_fldr = target
-    
-    # Батник для установки патчей БД.
-    db_patch_file = 'db_patch_skpdi.bat'
-    
-    # Имя БД.
-    db_name = 'ods_prod'
-    
-    # Сервер БД.
-    db_host = 'gudhskpdi-db-01'
-    
-else:
-    usage()
-    sys.exit()
-
-# Директория для временного хранения файлов установки
-stage_dir = 'd:\\tmp\\skpdi_patch'
-
-# Адрес хранилища SUNNY.
-sunny_path = '\\\sunny\\builds\\odsxp\\'
-# Путь к директории с конкретным патчем.
-sunny_patch = sunny_path + patch_num
-
-''' Linux stuff '''
-# Путь к расположения ключа SSH. Если такого нет - выход. Довавить возможность менять его?
-linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
-if os.path.isfile( linux_key_path ) != True:
-   print "ERROR: Linux ssh key " + linux_key_path + " not found!"
-   sys.exit()
-
-# Ключ SSH подготовленный для работы paramiko.
-linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
-# Пользователь SSH.
-ssh_user = 'ansible'
-# Порт SSH.
-ssh_port = 22
-
-# Версия и расположение приложений Tomcat.
-tomcat_name = 'apache-tomcat-8.5.8'
-app_path = '/u01/' + tomcat_name + '/webapps'
-
-# Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
-dnull = open("NUL", "w")
-
-''' Переменные. Конец.'''
 
 ''' Внутренние функции. ''' 
 
@@ -208,7 +95,7 @@ def postgres_exec( sql_query ):
 def purge_panels():
     ''' Очистка панелей. Необходима перед при обновлении ПО, даже при отстутствии патчей БД '''
   
-    print "Purging panels: "
+    print "Purging panels on " + db_name + "@" + db_host + ": "
     
     # Завершить сессии приложения в БД если есть. Решить вопрос с юзером БД. Сейчас отрубает сам себя.
     #sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods'" )[1]
@@ -408,4 +295,114 @@ def main():
             print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
 
 if __name__ == "__main__":
+    ''' Переменные. '''
+    # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
+    try:    
+        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
+    except:
+        usage()
+        sys.exit()
+
+    # Назначение переменныч n - patch_num, t - target.
+    for opt, arg in opts:
+        if opt in ( '-n' ):
+            patch_num = arg
+        elif opt in ( '-t' ):
+            target = arg
+        elif opt in ( '-h' ):
+            usage()
+        else:
+            usage()
+            sys.exit()
+
+# Если параметры не переданы - запрашиваетя их ввод.
+# raw_input используется, для того, чтоб вводить без кавычек.
+    try:
+        patch_num
+    except:
+        patch_num = raw_input('Enter patch number: ')
+
+    try:
+        target        
+    except:
+        target = raw_input('skpdi or predprod? ')
+
+    # Проверка правильного указания контура установки skpdi или predprod.    
+    if target not in [ 'skpdi', 'predprod']:
+        usage()
+        sys.exit()
+
+    # В зависимости от контура назначаются остальные переменные.
+    if target == 'predprod':
+        # Сервер приложения tomcat.
+        application_host = [ 'gudhskpdi-test-app' ]
+    
+        # Имя файла приложения (predprod.war/skpdi.war).
+        war_name = target + '.war'
+    
+        # Директория с распакованным приложением (predprod/skpdi).
+        war_fldr = target
+    
+        # Батник для установки патчей БД.
+        db_patch_file = 'db_patch_predprod.bat'
+    
+        # Имя БД.
+        db_name = 'ods_predprod'
+    
+        # Сервер БД.
+        db_host = 'gudhskpdi-db-test'
+    
+    elif target == 'skpdi':
+        # Сервер приложения tomcat.
+        application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
+    
+        # Имя файла приложения (predprod.war/skpdi.war).
+        war_name = target + '.war'
+    
+        # Директория с распакованным приложением (predprod/skpdi).
+        war_fldr = target
+    
+        # Батник для установки патчей БД.
+        db_patch_file = 'db_patch_skpdi.bat'
+    
+        # Имя БД.
+        db_name = 'ods_prod'
+    
+        # Сервер БД.
+        db_host = 'gudhskpdi-db-01'
+    
+    else:
+        usage()
+        sys.exit()
+
+    # Директория для временного хранения файлов установки
+    stage_dir = 'd:\\tmp\\skpdi_patch'
+
+    # Адрес хранилища SUNNY.
+    sunny_path = '\\\sunny\\builds\\odsxp\\'
+    # Путь к директории с конкретным патчем.
+    sunny_patch = sunny_path + patch_num
+
+    ''' Linux stuff '''
+    # Путь к расположения ключа SSH. Если такого нет - выход. Довавить возможность менять его?
+    linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
+    if os.path.isfile( linux_key_path ) != True:
+       print "ERROR: Linux ssh key " + linux_key_path + " not found!"
+       sys.exit()
+
+    # Ключ SSH подготовленный для работы paramiko.
+    linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
+    # Пользователь SSH.
+    ssh_user = 'ansible'
+    # Порт SSH.
+    ssh_port = 22
+
+    # Версия и расположение приложений Tomcat.
+    tomcat_name = 'apache-tomcat-8.5.8'
+    app_path = '/u01/' + tomcat_name + '/webapps'
+
+    # Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
+    dnull = open("NUL", "w")
+
+    ''' Переменные. Конец.'''
     main()
