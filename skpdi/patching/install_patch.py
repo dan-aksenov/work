@@ -19,12 +19,11 @@ import shutil
 import os
 import re
 
-# Получение номера патча и контура установки(прод/предпрод) из параметров.
-# Функция "Инструкция по пременению".
-def usage():
-    print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
-
 ''' Внутренние функции. ''' 
+
+def usage():
+    '''Функция "Инструкция по пременению'''
+    print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
 
 def md5_check( checked_file ):
     ''' Проверка md5 для war файлов '''
@@ -98,8 +97,8 @@ def purge_panels():
     print "Purging panels on " + db_name + "@" + db_host + ": "
     
     # Завершить сессии приложения в БД если есть. Решить вопрос с юзером БД. Сейчас отрубает сам себя.
-    #sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods'" )[1]
-    #print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
+    sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
+    print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
     
     rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
@@ -296,6 +295,7 @@ def main():
 
 if __name__ == "__main__":
     ''' Переменные. '''
+    # Получение номера патча и контура установки(прод/предпрод) из параметров.
     # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
     try:    
         opts, args = getopt( sys.argv[1:], 'n:t:h:' )
