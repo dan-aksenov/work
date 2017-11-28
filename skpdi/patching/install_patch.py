@@ -18,6 +18,7 @@ import subprocess
 import shutil
 import os
 import re
+import requests
 
 ''' Внутренние функции. ''' 
 
@@ -109,6 +110,25 @@ def purge_panels():
     rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
+def check_webpage():
+    '''Поиск номера патча в коде страницы'''
+    
+    # Пока без авторизации. Мб она и не нужна, рас версию можно с первой страницы получить.
+    proxies = {
+      'http': 'http://cache.fors.ru:3128',
+      'https': 'http://cache.fors.ru:3128'
+    }
+    
+    page = requests.get('http://skpdi.mosreg.ru/' + target, proxies=proxies)
+    if page.status_code <> 200:
+       print "WARNING: Application webpage unnaccesseble!"
+    elif 'ver-' + patch_num in page.text:
+        print "Application webpages matches " + patch_num
+    elif 'ver-' + patch_num not in page.text:
+        print "Application webpages not matches " + patch_num
+    else:
+        print "WARING: Problem determining application version"
+
 ''' Внутренние функции. Конец. '''
     
 def main():
@@ -244,7 +264,7 @@ def main():
     # Завершить работу, если в hosts_to_update пусто.
     if hosts_to_update == []:
         print "\tAll application hosts already up to date."
-        sys.exit()   
+        sys.exit()  
     
     # Просто для форматирования.    
     print "\n"
@@ -406,3 +426,4 @@ if __name__ == "__main__":
 
     ''' Переменные. Конец.'''
     main()
+    check_webpage()
