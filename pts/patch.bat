@@ -12,9 +12,7 @@ cd /d %stage_dir%
 ren pts-integration-*.war integration.war
 ren pts-public-*.war portal.war;
 ren pts-restricted-*.war pts.war
-
-rem Check tomcat befoure stoppig.
-%plink_cmd% "sudo systemctl status tomcat%2"
+ren pts-portal*.war portal2.war
 
 rem Stop tomcat.
 %plink_cmd% "sudo systemctl stop tomcat%2"
@@ -23,9 +21,12 @@ rem Remove old app files and dirs
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/integration.war -f"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal.war -f"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/pts.war -f"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/portal2.war"
+
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/integration -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/pts -rf"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/portal2 -rf"
 
 rem Copy files to nix machine.
 %plink_cmd% "rm -rf /tmp/webapps && mkdir /tmp/webapps"
@@ -40,6 +41,8 @@ md5sum portal.war
 %plink_cmd% "sudo md5sum /opt/%app_name%/webapps/portal.war"
 md5sum pts.war
 %plink_cmd% "sudo md5sum /opt/%app_name%/webapps/pts.war"
+md5sum portal2.war
+%plink_cmd% "sudo md5sum /opt/%app_name%/webapps/portal2.war"
 
 rem Start tomcat.
 %plink_cmd% "sudo systemctl start tomcat%2"
