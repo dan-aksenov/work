@@ -143,7 +143,7 @@ def main():
         print "\tNo such directory " + sunny_patch
         sys.exit()
 
-    # Очистка временной директории. В Win, если "сидеть" в этой директории - будет ошибка
+    # Очистка временной директории. В Win, если "сидеть" в этой директории - будет ошибка.
     try:
         recreate_dir( stage_dir )
     except:
@@ -168,7 +168,7 @@ def main():
         # Сравненеие уже установленных патчей с патчами из директории.
         # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
         print "\nChecking database patch level:"
-        # для отсечения суффиксов имен директорий с патчами (db_0190_20171113_v2.19) объявляетс отдельная переменная для патч max(patches_targ), иначе не удастся сравнить с тем что записано в БД.
+        # для отсечения суффиксов имен директорий с патчами (db_0190_20171113_v2.19) объявляетс отдельная переменная для патч max(patches_targ), иначе не удастся сравнить с тем что записано в БД. Возможно вместо sum надо использовать re.findall('db_.*_\d{8}',a), чтобы гарантированно получать номер патча.
         last_patch_targ = max(patches_targ)
         last_patch_targ_strip = re.sub('_v.*$','', last_patch_targ)
         if last_patch_targ_strip == max(patches_curr):
@@ -177,7 +177,7 @@ def main():
             print "\tNo database patch required.\n"
         elif last_patch_targ_strip > max(patches_curr):
             print "\tDatabase patch level: " + max(patches_curr)
-            print "\t Latest patch on Sunny: " + last_patch_targ_strip
+            print "\tLatest patch on Sunny: " + last_patch_targ_strip
             print "\tDatabase needs patching.\n"
             patches_miss = []
             for i in (set(patches_targ) - set(patches_curr)):
@@ -201,7 +201,7 @@ def main():
                 print "Applying database patch " + i + "..."
                 # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
                 subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
-                # Просмотре лога на предмет фразы "finsih install patch ods objects"
+                # Просмотре лога на предмет фразы "finsih install patch ods objects
                 try:
                     logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
                 except:
@@ -212,10 +212,10 @@ def main():
                 if success_marker != -1:
                     print "\tDone.\n"
                 else:
-                    print "\tError installing database patch.\n"
+                    print "\tError installing database patch. Examine logfile " + stage_dir + '\\patches\\' + i + '\\install_db_log.log' + "\n"
                     sys.exit()
                 logfile.close()
-            # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
+            #Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
             #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
             #is_db_patch_applied = postgres_exec ( "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
             #if is_db_patch_applied != []:
@@ -236,8 +236,8 @@ def main():
         
     '''
     Блок обновления приложения.
-    TODO: Планы переписки. 1. Копироание файла на хост mon, c предварительной проверкой md5. 
-    2. Копирование с mon на сервера приложений стандартным способом с проверкой md5. возможно с помощью ansible(тк для него есть ключи и права root)
+    TODO: План переписки. 1. Копироание файла на хост mon, c предварительной проверкой md5. 
+    2. Копирование с mon на сервера приложений стандартным способом с проверкой md5. Возможно с помощью ansible(тк для него есть ключи и права root)
     Таким образом - копирование от нас с ЦОД будет проводиться только один раз, а не каждый раз, как сейчас.
     '''
           
@@ -245,7 +245,7 @@ def main():
     # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
     # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
     if glob( sunny_patch + '\\ods*.war') == []:
-        print "ERROR: Unable to locate war file!"
+        print "ERROR: Unable to locate war file on Sunny!"
         sys.exit()
     
     war_path = glob( sunny_patch + '\\ods*.war')[0]
@@ -274,7 +274,7 @@ def main():
     print "\n"
     
     for i in hosts_to_update:
-        #/need separate function for war update?
+        # need separate function for war update?
         # Удалить и пересоздать директорию для временного хранения war файла.
         linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
         
@@ -298,6 +298,7 @@ def main():
         
         # Копировать war в целевую директорию на сервере приложений.
         linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
+        
         print "Starting application server " + i + "..."
         linux_exec( i, 'sudo systemctl start tomcat' )
         
@@ -309,7 +310,7 @@ def main():
         else:
             print "\tFailed!\n"
     
-    # Еще раз проверить md5. Пока только для первого хоста в массиве. Может перенести в предъидущий цикл?
+    # Еще раз проверить md5
     for i in hosts_to_update:
         target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
@@ -429,5 +430,8 @@ if __name__ == "__main__":
     dnull = open("NUL", "w")
 
     ''' Переменные. Конец.'''
-    main()
-    check_webpage()
+    
+	main()
+    
+	# Дополнительный поиск номера патча на веб странице
+	check_webpage()
