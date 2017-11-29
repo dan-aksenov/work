@@ -23,7 +23,8 @@ import requests
 ''' Внутренние функции. ''' 
 
 def usage():
-    '''Функция "Инструкция по пременению'''
+    '''Функция "Инструкция по пременению" '''
+    
     print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
 
 def md5_check( checked_file ):
@@ -82,7 +83,7 @@ def postgres_exec( sql_query ):
     # Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
     if cur.description != None:
         rows = cur.fetchall()
-       # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
+       # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массив строк.
         for row in rows:
             query_results.append(row[0])
     # Количество обработанных строк. Для просчета delete.
@@ -93,11 +94,11 @@ def postgres_exec( sql_query ):
     return query_results, rowcnt
     
 def purge_panels():
-    ''' Очистка панелей. Необходима перед при обновлении ПО, даже при отстутствии патчей БД '''
+    ''' Очистка панелей. Необходима перед при обновлении ПО, иногда даже при отстутствии патчей БД '''
   
     print "Purging panels on " + db_name + "@" + db_host + ": "
     
-    # Завершить сессии приложения в БД если есть. Решить вопрос с юзером БД. Сейчас отрубает сам себя.
+    # Завершить сессии приложения в БД если есть. Условие pid <> pg_backend_pid() для того чтобы не отрубал 
     sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
     print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
     
@@ -111,7 +112,7 @@ def purge_panels():
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
 def check_webpage():
-    '''Поиск номера патча в коде страницы'''
+    ''' Поиск номера патча в коде страницы '''
     
     # Пока без авторизации. Мб она и не нужна, рас версию можно с первой страницы получить.
     proxies = {
@@ -235,6 +236,9 @@ def main():
         
     '''
     Блок обновления приложения.
+    TODO: Планы переписки. 1. Копироание файла на хост mon, c предварительной проверкой md5. 
+    2. Копирование с mon на сервера приложений стандартным способом с проверкой md5. возможно с помощью ansible(тк для него есть ключи и права root)
+    Таким образом - копирование от нас с ЦОД будет проводиться только один раз, а не каждый раз, как сейчас.
     '''
           
     print "Checking java application version:"
