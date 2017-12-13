@@ -113,13 +113,12 @@ def purge_panels():
     
 def check_webpage():
     ''' Поиск номера патча в коде страницы '''
-    
-    # Пока без авторизации. Мб она и не нужна, рас версию можно с первой страницы получить.
+
     proxies = {
       'http': 'http://cache.fors.ru:3128',
       'https': 'http://cache.fors.ru:3128'
     }
-    
+
     page = requests.get('http://skpdi.mosreg.ru/' + target, proxies=proxies)
     if page.status_code <> 200:
        print "WARNING: Application webpage unnaccesseble!"
@@ -128,7 +127,7 @@ def check_webpage():
     elif 'ver-' + patch_num not in page.text:
         print "Application webpages not matches " + patch_num
     else:
-        print "WARING: Problem determining application version"
+        print "WARING: Problem determining application version."
 
 ''' Внутренние функции. Конец. '''
     
@@ -430,7 +429,7 @@ if __name__ == "__main__":
     dnull = open("NUL", "w")
 
     ''' Переменные. Конец.'''
-    
+
     main()
     
     # Дополнительный поиск номера патча на веб странице
