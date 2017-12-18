@@ -97,7 +97,8 @@ def purge_panels():
     ''' Очистка панелей. Необходима перед при обновлении ПО, иногда даже при отстутствии патчей БД '''
   
     print "Purging panels on " + db_name + "@" + db_host + ": "
-    
+    print postgres_exec ( 'select current_database();')[0]
+	
     # Завершить сессии приложения в БД если есть. Условие pid <> pg_backend_pid() для того чтобы не отрубал 
     sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
     print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
