@@ -38,8 +38,11 @@ def linux_exec( linux_host, shell_command ):
        
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect( hostname = linux_host, username = ssh_user, port = ssh_port, pkey = linux_key )
-    
+    try:
+        client.connect( hostname = linux_host, username = ssh_user, port = ssh_port, pkey = linux_key )
+    except:
+        print '\nERROR: unable to connect to Linux machine!'
+        sys.exit()
     stdin, stdout, stderr = client.exec_command( shell_command )
     data = stdout.read() + stderr.read()
     client.close()
@@ -49,7 +52,11 @@ def linux_put( linux_host, source_path, dest_path ):
     ''' Копирование файлов на удаленный Linux '''
            
     transport = paramiko.Transport(( linux_host, ssh_port ))
-    transport.connect( username = ssh_user, pkey = linux_key )
+    try:
+        transport.connect( username = ssh_user, pkey = linux_key )
+    except:
+        print '\nERROR: unable to connect to Linux machine!'
+        sys.exit()
     sftp = paramiko.SFTPClient.from_transport( transport )
     
     localpath = source_path
@@ -98,7 +105,7 @@ def purge_panels():
   
     print "Purging panels on " + db_name + "@" + db_host + ": "
     print postgres_exec ( 'select current_database();')[0]
-	
+    
     # Завершить сессии приложения в БД если есть. Условие pid <> pg_backend_pid() для того чтобы не отрубал 
     sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
     print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
