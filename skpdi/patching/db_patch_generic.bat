@@ -2,14 +2,14 @@
 setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 REM UPDATE Skpdi server.
 REM Set database's host from first parameter.
-SET PGHOST=172.19.1.138
+SET PGHOST=%1
 
 set PGPORT=5432
 set PGUSER=ods
 set PGPASSWORD=ods
 
 REM Set database name from second parameter
-set PGDATABASE=ods_test
+set PGDATABASE=%2
 
 set script_name=install_db
 rem set width=120 Removed to prevent far resizing

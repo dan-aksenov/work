@@ -160,7 +160,7 @@ def main():
     '''
     Блок установки патчей БД.
     '''
-    # Блок нужно переработать. слишком много вложений.
+    # Блок нужно переработать. Слишком много вложений.
     # Получеине списка уже устаноленных патей.
     # [0] потому что возвращает массив: кортежи + rowcount - нужны кортежи
     patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
@@ -243,7 +243,7 @@ def main():
         
     '''
     Блок обновления приложения.
-    TODO: План переписки. 1. Копироание файла на хост mon, c предварительной проверкой md5. 
+    TODO: План переработки. 1. Копироание файла на хост mon, c предварительной проверкой md5. 
     2. Копирование с mon на сервера приложений стандартным способом с проверкой md5. Возможно с помощью ansible(тк для него есть ключи и права root)
     Таким образом - копирование от нас с ЦОД будет проводиться только один раз, а не каждый раз, как сейчас.
     '''
@@ -335,7 +335,7 @@ if __name__ == "__main__":
         usage()
         sys.exit()
 
-    # Назначение переменныч n - patch_num, t - target.
+    # Назначение переменных n - patch_num, t - target.
     for opt, arg in opts:
         if opt in ( '-n' ):
             patch_num = arg
@@ -355,9 +355,9 @@ if __name__ == "__main__":
         patch_num = raw_input('Enter patch number: ')
 
     try:
-        target        
+        target 
     except:
-        target = raw_input('skpdi or predprod? ')
+        target = raw_input('skpdi, predprod: ')
 
     # Проверка правильного указания контура установки skpdi или predprod.    
     if target not in [ 'skpdi', 'predprod']:
@@ -402,6 +402,25 @@ if __name__ == "__main__":
     
         # Сервер БД.
         db_host = 'gudhskpdi-db-01'
+
+    #elif target == 'manual':
+        # Сервер приложения tomcat.
+        # application_host = raw_input('Enter application host: ')
+    
+        # Имя файла приложения (predprod.war/skpdi.war).
+        # war_name = target + '.war'
+    
+        # Директория с распакованным приложением (predprod/skpdi).
+        # war_fldr = target
+    
+        # Батник для установки патчей БД.
+        #db_patch_file = 'db_patch_generic.bat'
+    
+        # Имя БД.
+        #db_name = raw_input('Enter database name: ')
+    
+        # Сервер БД.
+        #db_host = raw_input('Enter database server hostname: ')
     
     else:
         usage()
