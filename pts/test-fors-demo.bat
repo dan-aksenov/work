@@ -1,0 +1,1 @@
+patch.bat pts-tst-as1 -test > log/pts-tst-as1.log
