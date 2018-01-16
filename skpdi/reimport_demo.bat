@@ -1,6 +1,6 @@
 set dbname=%1
 
-set db_dest=-U postgres -h mo-ghkh-dev
+set db_dest=-U postgres -p 54320 -h mo-ghkh-dev
 set db_src=-U postgres -h gudhskpdi-db-01
 
 REM CREATE TEMPRORRY DATABASE
@@ -8,7 +8,8 @@ psql %db_dest% -c "create database %dbname%_tmp with owner ods" postgres
 pause
 
 REM DIRECT NETWORK IMPORT DATABASE. EXCLUDE EVENT LOG AND PARAMETERS DATA.
-pg_dump %db_src% -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod | psql %db_dest% %dbname%_tmp
+pg_dump %db_src% -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod > d:/tmp/%dbname%.sql
+psql %db_dest% %dbname%_tmp -f d:/tmp/%dbname%.sql 2>d:/temp/%dbname%_import.log
 pause
 
 REM REIMPORT PARAMETER_MD FROM OLD DB.
