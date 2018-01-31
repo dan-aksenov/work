@@ -41,16 +41,16 @@ def main():
     
     '''
     Каждый найденный xml запивать в файл вида original_message_id_status.xml
-	'''
+    '''
     for i in range(0, len(xmls)):
         # Создаем имя файла
         out_file = xmls[i][5] + "_" + xmls[i][0] +  ".xml"
         f = open(result_xml_dir + out_file, 'w')
         # Проверка sent_response,
-		# если ненулевой то записать и его тоже,
-		# если нулевой - записать только content
-		if type ( xmls[i][7] ) == str:
+        # если ненулевой то записать и его тоже
+        if type ( xmls[i][7] ) == str:
             f.write(xmls[i][6] + '\n' + xmls[i][7])
+        # если нулевой - записать только content
         else:
             f.write(xmls[i][6])
         f.close()
@@ -58,9 +58,9 @@ def main():
 if __name__ == "__main__":
     ''' Переменные. '''
     
-	'''
-	# Параметры остались от другого скрпипта - пока не удалаю, может потому нужно будет.
-	try:   
+    '''
+    # Параметры остались от другого скрпипта - пока не удалаю, может потому нужно будет.
+    try:   
         opts, args = getopt( sys.argv[1:], 'n:t:h:' )
     except:
         usage()
