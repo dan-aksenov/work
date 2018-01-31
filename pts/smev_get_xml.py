@@ -7,10 +7,6 @@ import sys
 from psycopg2 import connect
 from getopt import getopt
 
-import subprocess
-import shutil
-import os
-
 ''' Внутренние функции. ''' 
 
 def usage():
