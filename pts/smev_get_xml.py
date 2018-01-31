@@ -14,7 +14,6 @@ def usage():
     
     print 'Usage: stuff...'
 
-
 def postgres_exec( sql_query ):
     ''' Выполенение произвольного sql в базе '''
     
@@ -36,18 +35,21 @@ def postgres_exec( sql_query ):
 def main():
    
     '''
-    Поиск и отбор xml.
+    Поиск и отбор xml
     '''
     xmls = postgres_exec ( "select t.status, t.operation, t.send_date, t.error, t.message_id, t.original_message_id, t.content,t.sent_response from EXCHANGE_ENDPOINT_LOG t where endpoint_code = 'TEST_SMEV_SUPPLIER' and status in ('ACK_OK','RECEIVED','SENT') order by t.send_date" )
     
-    #для каждого из найденных xml - записать в файл с именем вида status_original_message_id.xml
-
+    '''
+    Каждый найденный xml запивать в файл вида original_message_id_status.xml
+	'''
     for i in range(0, len(xmls)):
-        # make filename
+        # Создаем имя файла
         out_file = xmls[i][5] + "_" + xmls[i][0] +  ".xml"
         f = open(result_xml_dir + out_file, 'w')
-        # Тут нужна обработка null для седьмой позиции
-        if type ( xmls[i][7] ) == str:
+        # Проверка sent_response,
+		# если ненулевой то записать и его тоже,
+		# если нулевой - записать только content
+		if type ( xmls[i][7] ) == str:
             f.write(xmls[i][6] + '\n' + xmls[i][7])
         else:
             f.write(xmls[i][6])
@@ -55,13 +57,15 @@ def main():
     
 if __name__ == "__main__":
     ''' Переменные. '''
-    '''try:    
+    
+	'''
+	# Параметры остались от другого скрпипта - пока не удалаю, может потому нужно будет.
+	try:   
         opts, args = getopt( sys.argv[1:], 'n:t:h:' )
     except:
         usage()
         sys.exit()
 
-    # Назначение переменных n - patch_num, t - target.
     for opt, arg in opts:
         if opt in ( '-n' ):
             patch_num = arg
