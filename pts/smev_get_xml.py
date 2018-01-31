@@ -6,6 +6,9 @@ import sys
 # for db connection
 from psycopg2 import connect
 from getopt import getopt
+# Для поиска сегоднешних файлов
+from datetime import datetime, date
+import os
 
 ''' Внутренние функции. ''' 
 
@@ -44,8 +47,13 @@ def main():
     '''
     for i in range(0, len(xmls)):
         # Создаем имя файла
-        out_file = xmls[i][5] + "_" + xmls[i][0] +  ".xml"
-        f = open(result_xml_dir + out_file, 'w')
+        #print (xmls[i][2].date() == datetime.today().date()) 
+        # Директории для разбивки по датам
+        dir = ( result_xml_dir + str(xmls[i][2].date()) )
+        if not os.path.exists( dir ):
+            os.makedirs( dir )
+        out_file = ( xmls[i][5] + "_" + xmls[i][0] +  ".xml" )
+        f = open( dir + "\\" + out_file, 'w' )
         # Проверка sent_response,
         # если ненулевой то записать и его тоже
         if type ( xmls[i][7] ) == str:
