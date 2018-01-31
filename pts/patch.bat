@@ -13,6 +13,7 @@ ren pts-integration-*.war integration.war
 ren pts-public-*.war portal.war;
 ren pts-restricted-*.war pts.war
 ren pts-portal*.war portal2.war
+ren pts-jointstorage*.war jointstorage.war
 
 rem Stop tomcat.
 %plink_cmd% "sudo systemctl stop tomcat%2"
@@ -22,11 +23,13 @@ rem Remove old app files and dirs
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal.war -f"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/pts.war -f"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal2.war"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/jointstorage.war"
 
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/integration -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/pts -rf"
 %plink_cmd% "sudo rm /opt/%app_name%/webapps/portal2 -rf"
+%plink_cmd% "sudo rm /opt/%app_name%/webapps/jointstorage -rf"
 
 rem Copy files to nix machine.
 %plink_cmd% "rm -rf /tmp/webapps && mkdir /tmp/webapps"
