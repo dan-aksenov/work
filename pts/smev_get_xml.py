@@ -44,10 +44,13 @@ def main():
 
     for i in range(0, len(xmls)):
         # make filename
-        out_file = xmls[i][0] + "_"  + xmls[i][5] + ".xml"
+        out_file = xmls[i][5] + "_" + xmls[i][0] +  ".xml"
         f = open(result_xml_dir + out_file, 'w')
         # Тут нужна обработка null для седьмой позиции
-        f.write(xmls[i][6] + '\n' + str(xmls[i][7]))
+        if type ( xmls[i][7] ) == str:
+            f.write(xmls[i][6] + '\n' + xmls[i][7])
+        else:
+            f.write(xmls[i][6])
         f.close()
     
 if __name__ == "__main__":
