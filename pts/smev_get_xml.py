@@ -15,7 +15,9 @@ import os
 def usage():
     '''Функция "Инструкция по пременению" '''
     
-    print 'Usage: stuff...'
+    print "Usage: -d database name, -h database host, -x directory to save xmls, -? display this message"
+    print "Example: smev_get_xml.py -d smev -h 172.19.1.127 -x d:/tmp/smev_xml/"
+    
 
 def postgres_exec( sql_query ):
     ''' Выполенение произвольного sql в базе '''
@@ -37,6 +39,9 @@ def postgres_exec( sql_query ):
     
 def main():
    
+    if not os.path.exists( result_xml_dir ):
+            os.makedirs( result_xml_dir )
+
     '''
     Поиск и отбор xml
     '''
@@ -65,33 +70,42 @@ def main():
     
 if __name__ == "__main__":
     ''' Переменные. '''
-    
-    '''
-    # Параметры остались от другого скрпипта - пока не удалаю, может потому нужно будет.
+
     try:   
-        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
+        opts, args = getopt( sys.argv[1:], 'd:h:x:?:' )
     except:
         usage()
         sys.exit()
 
     for opt, arg in opts:
-        if opt in ( '-n' ):
-            patch_num = arg
-        elif opt in ( '-t' ):
-            target = arg
+        if opt in ( '-d' ):
+            db_name = arg
         elif opt in ( '-h' ):
+            db_host = arg
+        elif opt in ( '-x' ):
+            result_xml_dir = arg
+        elif opt in ( '-?' ):
             usage()
         else:
             usage()
             sys.exit()
-   '''
+    
+    ''' Переменные поумолчанию '''
+    try:
+        db_name
+    except:
+        db_name = 'smev'
 
-    # Имя БД.
-    db_name = 'smev'
-    # Сервер БД.
-    db_host = '172.19.1.127'
-    # Директория для временного хранения файлов установки
-    result_xml_dir = 'd:\\tmp\\smev_xml\\'
+    try:
+        db_host
+    except:
+        db_host = '172.19.1.127'
+        
+    try:
+        result_xml_dir
+    except:
+       result_xml_dir = 'd:\\tmp\\smev_xml\\'
+      
     ''' Переменные. Конец.'''
 
     main()
