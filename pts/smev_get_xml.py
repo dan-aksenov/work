@@ -38,9 +38,6 @@ def postgres_exec( sql_query ):
 ''' Внутренние функции. Конец. '''
     
 def main():
-   
-    if not os.path.exists( result_xml_dir ):
-            os.makedirs( result_xml_dir )
 
     '''
     Поиск и отбор xml
@@ -51,16 +48,16 @@ def main():
     Каждый найденный xml запивать в файл вида original_message_id_status.xml
     '''
     for i in range(0, len(xmls)):
-        # Создаем имя файла
-        #print (xmls[i][2].date() == datetime.today().date()) 
         # Директории для разбивки по датам
         dir = ( result_xml_dir + str(xmls[i][2].date()) )
+        # Создать их, если не существует
         if not os.path.exists( dir ):
             os.makedirs( dir )
+        # Задать имя файла
         out_file = ( xmls[i][5] + "_" + xmls[i][0] +  ".xml" )
         f = open( dir + "\\" + out_file, 'w' )
-        # Проверка sent_response,
-        # если ненулевой то записать и его тоже
+        # Проверка sent_response:
+        # если ненулевой то записать в файл и его тоже
         if type ( xmls[i][7] ) == str:
             f.write(xmls[i][6] + '\n' + xmls[i][7])
         # если нулевой - записать только content
