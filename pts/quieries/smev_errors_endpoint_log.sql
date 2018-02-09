@@ -1,1 +1,1 @@
-select t.error from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') order by t.send_date limit 10;
+select to_char(t.send_date, 'dd.mm.yyyy hh:mi'), t.error from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') and error is not null order by t.send_date limit 10;
