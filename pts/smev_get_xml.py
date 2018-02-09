@@ -42,27 +42,27 @@ def main():
     '''
     Поиск и отбор xml
     '''
-    xmls = postgres_exec ( "select t.status, t.operation, t.send_date, t.error, t.message_id, t.original_message_id, t.content,t.sent_response,t.id from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') and status in ('ACK_OK','RECEIVED','SENT','RESPONSE_RECEIVED') order by t.send_date" )
+    xmls = postgres_exec ( "select t.status, t.send_date, t.message_id, t.original_message_id, t.content,t.sent_response,t.id from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') and status in ('ACK_OK','RECEIVED','SENT','RESPONSE_RECEIVED') order by t.send_date" )
     
     '''
     Каждый найденный xml запивать в файл вида original_message_id_status.xml
     '''
     for i in range(0, len(xmls)):
         # Директории для разбивки по датам
-        dir = ( result_xml_dir + str(xmls[i][2].date()) + "\\" + xmls[i][5] )
+        dir = ( result_xml_dir + str(xmls[i][1].date()) + "\\" + xmls[i][3] )
         # Создать их, если не существует
         if not os.path.exists( dir ):
             os.makedirs( dir )
         # Задать имя файла
-        out_file = ( xmls[i][4] + "_" + xmls[i][0] +  ".xml" )
+        out_file = ( xmls[i][2] + "_" + xmls[i][0] +  ".xml" )
         f = open( dir + "\\" + out_file, 'w' )
         # Проверка sent_response:
         # если ненулевой то записать в файл и его тоже
-        if type ( xmls[i][7] ) == str:
-            f.write(xmls[i][6] + '\n' + xmls[i][7])
+        if type ( xmls[i][5] ) == str:
+            f.write(xmls[i][4] + '\n' + xmls[i][5])
         # если нулевой - записать только content
         else:
-            f.write(xmls[i][6])
+            f.write(xmls[i][4])
         f.close()
     
 if __name__ == "__main__":
