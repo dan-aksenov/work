@@ -5,18 +5,21 @@
 import sys
 # for db connection
 from psycopg2 import connect
+# to get options
 from getopt import getopt
 # Для поиска сегоднешних файлов
 from datetime import datetime, date
+# Для работы с директориями
 import os
 
 ''' Внутренние функции. ''' 
 
 def usage():
-    '''Функция "Инструкция по пременению" '''
+    ''' Инструкция по пременению '''
     
-    print "Usage: -d database name, -h database host, -x directory to save xmls, -? display this message"
-    print "Example: smev_get_xml.py -d smev -h 172.19.1.127 -x d:/tmp/smev_xml/"
+    print "Usage:    -d database name, -h database host, -x directory to save xmls, -? display this message"
+    print "Example:  smev_get_xml.py -d smev -h 172.19.1.127 -x d:/tmp/smev_xml/"
+    print "Note:     Last slash in path is a must!"
     
 
 def postgres_exec( sql_query ):
@@ -45,16 +48,17 @@ def main():
     xmls = postgres_exec ( "select t.status, t.send_date, t.message_id, t.original_message_id, t.content,t.sent_response,t.id from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') and status in ('ACK_OK','RECEIVED','SENT','RESPONSE_RECEIVED') order by t.send_date" )
     
     '''
-    Каждый найденный xml запивать в файл вида original_message_id_status.xml
+    Каждый найденный xml запивать в файл вида message_id_status.xml и положить в директорию вида ./send_date/original_message_id
     '''
     for i in range(0, len(xmls)):
-        # Директории для разбивки по датам
+        # Директории для разбивки по датам и original_message_id
         dir = ( result_xml_dir + str(xmls[i][1].date()) + "\\" + xmls[i][3] )
         # Создать их, если не существует
         if not os.path.exists( dir ):
             os.makedirs( dir )
         # Задать имя файла
         out_file = ( xmls[i][2] + "_" + xmls[i][0] +  ".xml" )
+        # Открыть файла на запись
         f = open( dir + "\\" + out_file, 'w' )
         # Проверка sent_response:
         # если ненулевой то записать в файл и его тоже
@@ -63,6 +67,7 @@ def main():
         # если нулевой - записать только content
         else:
             f.write(xmls[i][4])
+        # Закрыть файл
         f.close()
     
 if __name__ == "__main__":
