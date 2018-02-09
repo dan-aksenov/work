@@ -42,7 +42,7 @@ def main():
     '''
     Поиск и отбор xml
     '''
-    xmls = postgres_exec ( "select t.status, t.operation, t.send_date, t.error, t.message_id, t.original_message_id, t.content,t.sent_response from EXCHANGE_ENDPOINT_LOG t where endpoint_code = 'TEST_SMEV_SUPPLIER' and status in ('ACK_OK','RECEIVED','SENT') order by t.send_date" )
+    xmls = postgres_exec ( "select t.status, t.operation, t.send_date, t.error, t.message_id, t.original_message_id, t.content,t.sent_response from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') and status in ('ACK_OK','RECEIVED','SENT','RESPONSE_RECEIVED') order by t.send_date" )
     
     '''
     Каждый найденный xml запивать в файл вида original_message_id_status.xml
