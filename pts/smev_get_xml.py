@@ -49,12 +49,12 @@ def main():
     '''
     for i in range(0, len(xmls)):
         # Директории для разбивки по датам
-        dir = ( result_xml_dir + str(xmls[i][2].date()) )
+        dir = ( result_xml_dir + str(xmls[i][2].date()) + "\\" + xmls[i][5] )
         # Создать их, если не существует
         if not os.path.exists( dir ):
             os.makedirs( dir )
         # Задать имя файла
-        out_file = ( xmls[i][5] + "_" + xmls[i][0] + "_" + xmls[i][8] +  ".xml" )
+        out_file = ( xmls[i][4] + "_" + xmls[i][0] +  ".xml" )
         f = open( dir + "\\" + out_file, 'w' )
         # Проверка sent_response:
         # если ненулевой то записать в файл и его тоже
