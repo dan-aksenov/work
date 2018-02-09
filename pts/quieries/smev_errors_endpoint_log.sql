@@ -1,1 +1,1 @@
-select t.status, t.send_date, t.original_message_id, t.endpoint_code from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') order by t.send_date desc limit 10;
+select t.send_date, t.error from EXCHANGE_ENDPOINT_LOG t where endpoint_code in ('TEST_SMEV_SUPPLIER','TEST_SMEV_CONSUMER') order by t.send_date limit 10;
