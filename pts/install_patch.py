@@ -26,7 +26,7 @@ import os
 # Получение номера патча и контура установки(прод/предпрод) из параметров.
 # Функция "Инструкция по пременению".
 def usage():
-    print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
+    print 'Usage: -n for patch number(i.e. 2.10.1), -t for masger or branch'
 
 # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
 try:    
@@ -35,7 +35,7 @@ except:
     usage()
     sys.exit()
 
-# Назначение переменныч n - patch_num, t - target.
+# Назначение переменных n - patch_num, t - target.
 for opt, arg in opts:
     if opt in ( '-n' ):
         patch_num = arg
@@ -57,64 +57,70 @@ except:
 try:
     target        
 except:
-    target = raw_input('skpdi or predprod? ')
+    target = raw_input('master or branch?')
 
 # Проверка правильного указания контура установки skpdi или predprod.    
-if target not in [ 'skpdi', 'predprod']:
+if target not in [ 'master', 'branch' ]:
     usage()
     sys.exit()
 
 # В зависимости от контура назначаются остальные переменные.
     
-if target == 'sometarget':
+if target == 'master':
     # Сервер приложения tomcat.
-    application_host = [ 'gudhskpdi-test-app' ]
+    application_host = [ 'pts-tst-as1.fors.ru' ]
     
     # Имя файла приложения (predprod.war/skpdi.war).
-    war_name = target + '.war'
-    
+    # war_name = target + '.war'
     # Директория с распакованным приложением (predprod/skpdi).
-    war_fldr = target
-    
+    # war_fldr = target
     # Батник для установки патчей БД.
-    db_patch_file = 'db_patch_predprod.bat'
+    # db_patch_file = 'db_patch_predprod.bat'
     
     # Имя БД.
     db_name = 'pts'
     
     # Сервер БД.
-    db_host = '192.168.122.238'
+    db_host = '172.19.1.127'
     
-elif target == 'skpdi':
+elif target == 'branch':
     # Сервер приложения tomcat.
-    application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
+    application_host = [ 'pts-tst-as2.fors.ru' ]
     
     # Имя файла приложения (predprod.war/skpdi.war).
-    war_name = target + '.war'
-    
+    # war_name = target + '.war'
     # Директория с распакованным приложением (predprod/skpdi).
-    war_fldr = target
-    
+    # war_fldr = target
     # Батник для установки патчей БД.
     db_patch_file = 'db_patch_skpdi.bat'
     
     # Имя БД.
-    db_name = 'ods_prod'
+    db_name = 'pts_branch'
     
     # Сервер БД.
-    db_host = 'gudhskpdi-db-01'
+    db_host = '172.19.1.127'
     
 else:
     usage()
     sys.exit()
 
-# Директория для временного хранения файлов установки
+# Temporary storage
 stage_dir = 'd:\\tmp\\pts'
 
-# Адрес хранилища SUNNY.
+# Sunny builds address
 sunny_path = '\\\sunny\\builds\\pts\\'
-# Путь к директории с конкретным патчем.
+# Current patch directory
 sunny_patch = sunny_path + patch_num
+
+'''
+war files mappings.
+'''
+war_integration = [ 'pts-integration-*.war', 'integration.war' ]
+war_portal = [ 'pts-public-*.war', 'portal.war' ]
+war_pts = [ 'pts-restricted-*.war', 'pts.war' ]
+war_portal2 = [ 'pts-portal*.war', 'portal2.war' ]
+war_jointstorate = [ 'pts-jointstorage*.war', 'jointstorage.war' ]
+
 
 ''' Linux stuff '''
 # Путь к расположения ключа SSH. Если такого нет - выход. Довавить возможность менять его?
@@ -131,8 +137,8 @@ ssh_user = 'ansible'
 ssh_port = 22
 
 # Версия и расположение приложений Tomcat.
-#tomcat_name = 'apache-tomcat-8.5.8'
-#app_path = '/u01/' + tomcat_name + '/webapps'
+tomcat_name = 'apache-tomcat-8.5.4'
+app_path = '/opt/' + tomcat_name + '/webapps'
 
 # Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
 dnull = open("NUL", "w")
@@ -292,18 +298,17 @@ else:
 '''
 Блок обновления приложения.
 '''
-'''
+
 print "Checking java application version:"
-# glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
-# Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
-if glob( sunny_patch + '\\ods*.war') == []:
-    print "ERROR: Unable to locate war file!"
+# glob returns array, using first [0] element to use in in md5_check.
+# Search war file on in target directory on sunny. TODO: what if more then one candidate?
+if glob( (sunny_patch + '\\' + war_portal[0]) == []:
+    print "ERROR: Unable to locate war file for " + war_portal[1] + "!"
     sys.exit()
 
 war_path = glob( sunny_patch + '\\ods*.war')[0]
 
-
-# Получение md5 архива с приложением на Sunny.
+# Get war's md5 from sunny.
 source_md5 = md5_check( war_path )
 
 # Получение md5 архива с приложением на целевом сервере приложения.
@@ -363,4 +368,3 @@ for i in hosts_to_update:
         print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
     else:
         print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
-'''
