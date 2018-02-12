@@ -321,14 +321,15 @@ else:
 Application patches install.
 '''
 
-#/
 # print "Checking java application version:"
-# Moved functions 
+# Moved to functions 
+
 
 # Просто для форматирования.    
 print "\n"
 
-# to be replaced with function
+
+# to be replaced with function ...
 for i in hosts_to_update:
     #/need separate function for war update?
     # Удалить и пересоздать директорию для временного хранения war файла.
