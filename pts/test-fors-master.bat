@@ -1,1 +1,1 @@
-patch.bat pts-tst-as1 > log/pts-tst-as1.log
+patch.bat pts-tst-as1 > D:\pts_patch\log\master.log

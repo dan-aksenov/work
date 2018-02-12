@@ -1,1 +1,1 @@
-patch.bat pts-tst-as1 -test > log/pts-tst-as1.log
+patch.bat pts-tst-as1 -test > D:\pts_patch\log\demo.log
