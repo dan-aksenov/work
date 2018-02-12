@@ -239,7 +239,7 @@ def war_update( war_name, hosts_to_update ):
 ''' Internal functions. End '''
     
 '''
-Блок подготовки.
+Preparations
 '''
 
 # Проверка наличия указанного патча на Sunny
@@ -252,7 +252,7 @@ if os.path.isdir( sunny_patch ) != True:
 recreate_dir( stage_dir )
 
 '''
-Блок установки патчей БД.
+DB patches install
 '''
 
 # Получеине списка уже устаноленных патей.
@@ -318,40 +318,17 @@ else:
     print "ERROR: Something wrong with database patching!\n"
     
 '''
-Блок обновления приложения.
+Application patches install.
 '''
 
 #/
-print "Checking java application version:"
-# glob returns array, using first [0] element to use in in md5_check.
-# Search war file on in target directory on sunny. TODO: what if more then one candidate?
-if glob(sunny_patch + '\\' + war_portal[0]) == []:
-    print "ERROR: Unable to locate war file for " + war_portal[1] + "!"
-    sys.exit()
-
-war_path = glob( sunny_patch + '\\' + war_portal[0])[0]
-
-# Get war's md5 from sunny.
-source_md5 = md5_check( war_path )
-
-# Получение md5 архива с приложением на целевом сервере приложения.
-# Последовательное сравнение с md5 на серверах приложений.
-# По результатам формируется список hosts_to_update для установки обновления.
-for i in application_host:
-    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-    hosts_to_update = []
-    if source_md5 != target_md5.split(" ")[0]: 
-        print "\tJava application on " + i + " will be updated."
-        hosts_to_update.append(i)
-
-# Завершить работу, если в hosts_to_update пусто.
-if hosts_to_update == []:
-    print "\tAll application hosts alreasy up to date."
-    sys.exit()   
+# print "Checking java application version:"
+# Moved functions 
 
 # Просто для форматирования.    
 print "\n"
 
+# to be replaced with function
 for i in hosts_to_update:
     #/need separate function for war update?
     # Удалить и пересоздать директорию для временного хранения war файла.
@@ -384,7 +361,7 @@ for i in hosts_to_update:
     else:
         print "\tFailed!\n"
 
-# Еще раз проверить md5. Пока только для первого хоста в массиве. Может перенести в предъидущий цикл?
+# Final md5 check. To be replaced with function.
 for i in hosts_to_update:
     target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
     if source_md5 == target_md5.split(" ")[0]: 
