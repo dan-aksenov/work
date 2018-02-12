@@ -32,6 +32,7 @@ read -p "Restore completed. Press [Enter] to proceed"
 
 psql -p 54320 ods_prod -c "select a.datetime from event.fdc_app_log a order by datetime desc limit 1"
 
+DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
 cp $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log /tmp/restore.log
 
 read -p "Press [Enter] to stop test server and delete stage data"
