@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-# Для чтения русских комментов.
-
 # for args and exit
 import sys
 # for db connection
 from psycopg2 import connect
-#from os import os.listdir, os.rename, rmdir, os.path, os.makedirs
 # for war file search
 from glob import glob
 from getopt import getopt
@@ -14,28 +10,27 @@ import paramiko
 # for file md5s
 import hashlib
 
-# для правильной сортировки 0.9.2 раньше 0.20.1
+# for correct patch number sorting 0.9.2 mast be before 0.20.1
 from natsort import natsorted, ns
 
 import subprocess
 import shutil
 import os
 
-''' Переменные. '''
+''' VARS '''
 
-# Получение номера патча и контура установки(прод/предпрод) из параметров.
-# Функция "Инструкция по пременению".
+# Get patch number and target server
 def usage():
     print 'Usage: -n for patch number(i.e. 2.10.1), -t for masger or branch'
 
-# Прием параметров n и t, с дополнительной проверкой, что введены именно они.
+# Get n and t parameters
 try:    
     opts, args = getopt( sys.argv[1:], 'n:t:h:' )
 except:
     usage()
     sys.exit()
 
-# Назначение переменных n - patch_num, t - target.
+# Assign n - patch_num, t - target
 for opt, arg in opts:
     if opt in ( '-n' ):
         patch_num = arg
@@ -47,8 +42,8 @@ for opt, arg in opts:
         usage()
         sys.exit()
 
-# Если параметры не переданы - запрашиваетя их ввод.
-# raw_input используется, для того, чтоб вводить без кавычек.
+# If params not supplied prompt for them
+# raw_input used, so no need for additional quotes
 try:
     patch_num
 except:
@@ -59,15 +54,15 @@ try:
 except:
     target = raw_input('master or branch?')
 
-# Проверка правильного указания контура установки skpdi или predprod.    
+# Correct target server or quit
 if target not in [ 'master', 'branch' ]:
     usage()
     sys.exit()
 
-# В зависимости от контура назначаются остальные переменные.
+# Assign variables, depending on target
     
 if target == 'master':
-    # Сервер приложения tomcat.
+    # Tomcat application server
     application_host = [ 'pts-tst-as1.fors.ru' ]
     
     # Имя файла приложения (predprod.war/skpdi.war).
@@ -77,10 +72,10 @@ if target == 'master':
     # Батник для установки патчей БД.
     # db_patch_file = 'db_patch_predprod.bat'
     
-    # Имя БД.
+    # Database name
     db_name = 'pts'
     
-    # Сервер БД.
+    # Database server
     db_host = '172.19.1.127'
     
 elif target == 'branch':
