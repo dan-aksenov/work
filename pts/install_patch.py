@@ -108,7 +108,7 @@ sunny_path = '\\\sunny\\builds\\pts\\'
 sunny_patch = sunny_path + patch_num
 
 '''
-war files mappings.
+war files mappings. Format: [ 'name on sunny', 'desired application name']
 '''
 war_integration = [ 'pts-integration-*.war', 'integration.war' ]
 war_portal = [ 'pts-public-*.war', 'portal.war' ]
@@ -138,9 +138,9 @@ app_path = '/opt/' + tomcat_name + '/webapps'
 # Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
 dnull = open("NUL", "w")
 
-''' Переменные. Конец.'''
+''' VARS. End '''
 
-''' Внутренние функции. ''' 
+''' Internal functions ''' 
 
 def md5_check( checked_file ):
     ''' Проверка md5 для war файлов '''
@@ -175,7 +175,7 @@ def linux_put( linux_host, source_path, dest_path ):
     transport.close()
 
 def recreate_dir( dir_name ):
-    ''' Пересоздание директории(удалить/создать) Windows '''
+    ''' Recreate Windows directory '''
     
     if os.path.exists( dir_name ):
         shutil.rmtree( dir_name )
@@ -183,8 +183,7 @@ def recreate_dir( dir_name ):
         os.makedirs( dir_name )
 
 def postgres_exec ( sql_query ):
-    ''' Выполенение произвольного sql в базе
-    Для получения списка патчей и очистки панелей '''
+    ''' Execute query in database '''
     
     conn_string = 'dbname= ' + db_name + ' user=''pts'' password=''pts'' host=' + db_host
     try:
@@ -195,7 +194,7 @@ def postgres_exec ( sql_query ):
     cur = conn.cursor()
     cur.execute( sql_query )
     query_results = []
-	# Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
+    # Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
     if cur.description != None:
         rows = cur.fetchall()
        # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
@@ -209,7 +208,35 @@ def postgres_exec ( sql_query ):
     conn.close()
     return query_results, rowcnt
 
-''' Внутренние функции. Конец. '''
+def war_compare( war_name ):
+    print "Checking java application version:"
+    # glob returns array, using first [0] element to use in in md5_check.
+    # Search war file on in target directory on sunny. TODO: what if more then one candidate?
+    if glob(sunny_patch + '\\' + war_name[0]) == []:
+        print "ERROR: Unable to locate war file for " + war_portal[1] + "!"
+        sys.exit()
+
+    war_path = glob( sunny_patch + '\\' + war_name[0])[0]
+
+    # Get war's md5 from sunny.
+    source_md5 = md5_check( war_path )
+
+    # Get war's md5 from target applicaton server.
+    # Compare Sunny's war whit target server's war.
+    # По результатам формируется список hosts_to_update для установки обновления.
+    for i in application_host:
+        target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name[1] + '.war' )
+        hosts_to_update = []
+        if source_md5 != target_md5.split(" ")[0]: 
+            print "\t Applicatoin " + war_name[1] + " on " + i + " will be updated."
+            hosts_to_update.append(i)
+        return hosts_to_update
+
+def war_update( war_name, hosts_to_update ):
+    # to be here
+    return result
+        
+''' Internal functions. End '''
     
 '''
 Блок подготовки.
@@ -294,14 +321,15 @@ else:
 Блок обновления приложения.
 '''
 
+#/
 print "Checking java application version:"
 # glob returns array, using first [0] element to use in in md5_check.
 # Search war file on in target directory on sunny. TODO: what if more then one candidate?
-if glob( (sunny_patch + '\\' + war_portal[0]) == []:
+if glob(sunny_patch + '\\' + war_portal[0]) == []:
     print "ERROR: Unable to locate war file for " + war_portal[1] + "!"
     sys.exit()
 
-war_path = glob( sunny_patch + '\\ods*.war')[0]
+war_path = glob( sunny_patch + '\\' + war_portal[0])[0]
 
 # Get war's md5 from sunny.
 source_md5 = md5_check( war_path )
