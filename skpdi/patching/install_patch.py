@@ -129,7 +129,7 @@ def check_webpage():
 
     page = requests.get('http://skpdi.mosreg.ru/' + target, proxies=proxies)
     if page.status_code <> 200:
-       print "WARNING: Application webpage unnaccesseble!"
+       print "WARNING: Application webpage unnaccesseble: " + page.status_code
     elif 'ver-' + patch_num in page.text:
         print "SUCCESS: Application webpages matches " + patch_num
     elif 'ver-' + patch_num not in page.text:
