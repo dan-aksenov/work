@@ -119,7 +119,8 @@ def purge_panels():
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
 def check_webpage():
-    ''' Поиск номера патча в коде страницы '''
+    # todo redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
+	''' Seek version name in web page's come. '''
 
     proxies = {
       'http': 'http://cache.fors.ru:3128',
