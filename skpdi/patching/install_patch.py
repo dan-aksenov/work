@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Для чтения русских комментов.
+# Ru comment read. to be removed
 
 # for args and exit
 import sys
@@ -20,21 +20,21 @@ import os
 import re
 import requests
 
-''' Внутренние функции. ''' 
+''' Internal functions ''' 
 
 def usage():
-    '''Функция "Инструкция по пременению" '''
+    ''' Usage '''
     
     print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
 
 def md5_check( checked_file ):
-    ''' Проверка md5 для war файлов '''
+    ''' *.war file md5 check '''
     
     md5sum = hashlib.md5(open(checked_file,'rb').read()).hexdigest()
     return md5sum
 
 def linux_exec( linux_host, shell_command ):
-    ''' Удаленное выполение команд на Linux '''
+    ''' Linux remote execution '''
        
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -49,7 +49,7 @@ def linux_exec( linux_host, shell_command ):
     return data
 
 def linux_put( linux_host, source_path, dest_path ):
-    ''' Копирование файлов на удаленный Linux '''
+    ''' Copy to remote Linux '''
            
     transport = paramiko.Transport(( linux_host, ssh_port ))
     try:
@@ -67,7 +67,7 @@ def linux_put( linux_host, source_path, dest_path ):
     transport.close()
 
 def recreate_dir( dir_name ):
-    ''' Пересоздание директории(удалить/создать) Windows '''
+    ''' Recreate Windows directory '''
     
     if os.path.exists( dir_name ):
         shutil.rmtree( dir_name )
@@ -75,8 +75,7 @@ def recreate_dir( dir_name ):
         os.makedirs( dir_name )
 
 def postgres_exec( sql_query ):
-    ''' Выполенение произвольного sql в базе
-    Для получения списка патчей и очистки панелей '''
+    ''' SQL execution '''
     
     conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
     try:
@@ -87,13 +86,12 @@ def postgres_exec( sql_query ):
     cur = conn.cursor()
     cur.execute( sql_query )
     query_results = []
-    # Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
+    # This check needed, because delete doesn't return cursor
     if cur.description != None:
         rows = cur.fetchall()
-       # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массив строк.
+       # Need list of stings instead of tuples for future manipulation.
         for row in rows:
             query_results.append(row[0])
-    # Количество обработанных строк. Для просчета delete.
     rowcnt = cur.rowcount
     conn.commit()
     cur.close()
@@ -101,11 +99,11 @@ def postgres_exec( sql_query ):
     return query_results, rowcnt
     
 def purge_panels():
-    ''' Очистка панелей. Необходима перед при обновлении ПО, иногда даже при отстутствии патчей БД '''
+    ''' Purge application panels. Sometimes necessary even when no database patches applied '''
   
     print "Purging panels on " + db_name + "@" + db_host + ": "
         
-    # Завершить сессии приложения в БД если есть. Условие pid <> pg_backend_pid() для того чтобы не отрубал себя
+    # Kill existing session. pid <> pg_backend_pid() so it won't kill self
     sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
     print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
     
@@ -137,20 +135,20 @@ def check_webpage():
     else:
         print "WARING: Problem determining application version."
 
-''' Внутренние функции. Конец. '''
+''' Internal functions. End '''
     
 def main():
     '''
-    Блок подготовки.
+    Preparation
     '''
     
-    # Проверка наличия указанного патча на Sunny
+    # Check if patch exists on Sunny
     if os.path.isdir( sunny_patch ) != True:
         print "ERROR: No such patch on Sunny!"
         print "\tNo such directory " + sunny_patch
         sys.exit()
 
-    # Очистка временной директории. В Win, если "сидеть" в этой директории - будет ошибка.
+    # Clear temporary directory. May fall if somebody is "sitting" in it.
     try:
         recreate_dir( stage_dir )
     except:
@@ -158,14 +156,14 @@ def main():
         sys.exit()
     
     '''
-    Блок установки патчей БД.
+    Database patching
     '''
-    # Блок нужно переработать. Слишком много вложений.
-    # Получеине списка уже устаноленных патей.
-    # [0] потому что возвращает массив: кортежи + rowcount - нужны кортежи
+    # TODO: decrease number of "nests"
+    # Get list of alredy applied patches
+    # Function returns list tuples + row count, right now need only tuples, so [0]
     patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
     
-    # Получение списка патчей БД из директории с патчами.
+    # Get list of patches from from Sunny
     # Добавить еще одну проверку чтение номера патча из файла define_version.sql на случай, если директорию назовут по другому.
     if os.path.isdir( sunny_patch + '\\patches' ) != True:
         print "NOTICE: No database patch found in build. Assume database patches not required."
