@@ -118,7 +118,7 @@ def purge_panels():
     
 def check_webpage():
     # todo redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
-	''' Seek version name in web page's come. '''
+    ''' Seek version name in web page's come. '''
 
     proxies = {
       'http': 'http://cache.fors.ru:3128',
@@ -159,21 +159,22 @@ def main():
     Database patching
     '''
     # TODO: decrease number of "nests"
-    # Get list of alredy applied patches
+    # Get list of already applied patches
     # Function returns list tuples + row count, right now need only tuples, so [0]
     patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
     
     # Get list of patches from from Sunny
-    # Добавить еще одну проверку чтение номера патча из файла define_version.sql на случай, если директорию назовут по другому.
+    # Add one more check for patch version based on define_version.sql.
     if os.path.isdir( sunny_patch + '\\patches' ) != True:
         print "NOTICE: No database patch found in build. Assume database patches not required."
     else:
         patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
         
-        # Сравненеие уже установленных патчей с патчами из директории.
-        # Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
+        # Compare installed patches with patches from Sunny.
+        # If latest database patch version lower then on Sunny - install missing patches.
         print "\nChecking database patch level:"
-        # для отсечения суффиксов имен директорий с патчами (db_0190_20171113_v2.19) объявляетс отдельная переменная для патч max(patches_targ), иначе не удастся сравнить с тем что записано в БД. Возможно вместо sum надо использовать re.findall('db_.*_\d{8}',a), чтобы гарантированно получать номер патча.
+        # To handle file name suffixes for directories like "db_0190_20171113_v2.19" additional variable declared to hold max(patches_targ)
+        # Or else unable to compare with database. Maybe need to use re.findall('db_.*_\d{8}',a).
         last_patch_targ = max(patches_targ)
         last_patch_targ_strip = re.sub('_v.*$','', last_patch_targ)
         if last_patch_targ_strip == max(patches_curr):
@@ -191,22 +192,22 @@ def main():
     
             print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
             for i in patches_miss:
-                # Копирование только недостающих патчей с Sunny.
+                # Copy needed patches from Sunny.
                 subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
-                # Копирование установщика патчей в директории с патчами.
+                # Place patch installer to patch subdirectories.
                 subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
     
-            # Остановка tomcat.
+            # Stop tomcat.
             for i in application_host:
                 print "Stopping application server " + i + "...\n"
                 linux_exec( i, 'sudo systemctl stop tomcat' )
-            # Установка патчей БД
-            # Для выполенния по-порядку применен sort.
+            # Apply database patches
+            # Using sort to execute patches in right order.
             for i in sorted(patches_miss):    
                 print "Applying database patch " + i + "..."
-                # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
+                # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
                 subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
-                # Просмотре лога на предмет фразы "finsih install patch ods objects
+                # Search logfile for "finish install patch ods objects
                 try:
                     logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
                 except:
@@ -220,7 +221,7 @@ def main():
                     print "\tError installing database patch. Examine logfile " + stage_dir + '\\patches\\' + i + '\\install_db_log.log' + "\n"
                     sys.exit()
                 logfile.close()
-            #Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
+            # Additional check from database fdc_patches_log...
             #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
             #is_db_patch_applied = postgres_exec ( "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
             #if is_db_patch_applied != []:
@@ -233,17 +234,16 @@ def main():
             print "\tDatabase patch level: " + max(patches_curr)
             print "\t Latest patch on Sunny: " + last_patch_targ_strip
             print "ERROR: Something wrong with database patching!\n"
-            # Запуск tomcat в случае, если не удалось обновить базу.
+            # Start tomcat if base was not patched.
             for i in application_host:
                 print "Starting application server " + i + "...\n"
                 linux_exec( i, 'sudo systemctl start tomcat' )
             sys.exit()
         
     '''
-    Блок обновления приложения.
-    TODO: План переработки. 1. Копироание файла на хост mon, c предварительной проверкой md5. 
-    2. Копирование с mon на сервера приложений стандартным способом с проверкой md5. Возможно с помощью ansible(тк для него есть ключи и права root)
-    Таким образом - копирование от нас с ЦОД будет проводиться только один раз, а не каждый раз, как сейчас.
+    Application update
+    TODO: 1. copy war to gudhskpdi-mon, with md5 check. 
+    2. copy from gudhskpdi-mon to app server with md5 check. Use ansible user (cos already has keys and root priveleges)
     '''
           
     print "Checking java application version:"
