@@ -206,7 +206,7 @@ def main():
             for i in sorted(patches_miss):    
                 print "Applying database patch " + i + "..."
                 # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
-                subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file, db_host, db_name  ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
+                subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file, db_host, db_name ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
                 # Search logfile for "finish install patch ods objects
                 try:
                     logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
@@ -355,10 +355,10 @@ if __name__ == "__main__":
     try:
         target 
     except:
-        target = raw_input('skpdi, predprod: ')
+        target = raw_input('skpdi, predprod of manual: ')
 
     # Проверка правильного указания контура установки skpdi или predprod.    
-    if target not in [ 'skpdi', 'predprod']:
+    if target not in [ 'skpdi', 'predprod', 'manual']:
         usage()
         sys.exit()
 
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     
         # Батник для установки патчей БД.
         db_patch_file = 'db_patch_generic.bat'
-    
+		
         # Имя БД.
         db_name = 'ods_predprod'
     
@@ -401,24 +401,24 @@ if __name__ == "__main__":
         # Сервер БД.
         db_host = 'gudhskpdi-db-01'
 
-    #elif target == 'manual':
+    elif target == 'manual':
         # Сервер приложения tomcat.
-        # application_host = raw_input('Enter application host: ')
-    
-        # Имя файла приложения (predprod.war/skpdi.war).
-        # war_name = target + '.war'
+        application_host = raw_input('Enter application host: ')
     
         # Директория с распакованным приложением (predprod/skpdi).
-        # war_fldr = target
-    
+        war_fldr = raw_input('Enter applicaton name (warfile name): ')    
+
+        # Имя файла приложения (predprod.war/skpdi.war).
+        war_name = war_fldr + '.war'
+               
         # Батник для установки патчей БД.
-        #db_patch_file = 'db_patch_generic.bat'
+        db_patch_file = 'db_patch_generic.bat'
     
         # Имя БД.
-        #db_name = raw_input('Enter database name: ')
+        db_name = raw_input('Enter database name: ')
     
         # Сервер БД.
-        #db_host = raw_input('Enter database server hostname: ')
+        db_host = raw_input('Enter database server hostname: ')
     
     else:
         usage()
