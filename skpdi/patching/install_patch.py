@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# Ru comment read. to be removed
-
 # for args and exit
 import sys
 # for db connection
@@ -116,7 +113,7 @@ def purge_panels():
     rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
-def check_webpage():
+def check_webpage(patch_num, target):
     # todo redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
     ''' Seek version name in web page's come. '''
 
@@ -131,7 +128,7 @@ def check_webpage():
     elif 'ver-' + patch_num in page.text:
         print "SUCCESS: Application webpages matches " + patch_num
     elif 'ver-' + patch_num not in page.text:
-        print "WARNING: Application webpages not matches! " + patch_num
+        print "WARNING: Application webpages not matches " + patch_num
     else:
         print "WARING: Problem determining application version."
 
@@ -247,8 +244,8 @@ def main():
     '''
           
     print "Checking java application version:"
-    # glob возвращает массив, поэтому для подстановки в md5_check изпользуется первый его элемент ([0]).
-    # Поиск файла ods*war в директории с патчем на sunny. Нужно добавить обработку если их вдруг будет больше одного.
+    # glob returns an array, need its first([0]) element to user in md5_check.
+    # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
     if glob( sunny_patch + '\\ods*.war') == []:
         print "ERROR: Unable to locate war file on Sunny!"
         sys.exit()
@@ -256,12 +253,12 @@ def main():
     war_path = glob( sunny_patch + '\\ods*.war')[0]
     
     
-    # Получение md5 архива с приложением на Sunny.
+    # Get application md5 from Sunny.
     source_md5 = md5_check( war_path )
     
-    # Получение md5 архива с приложением на целевом сервере приложения.
-    # Последовательное сравнение с md5 на серверах приложений.
-    # По результатам формируется список hosts_to_update для установки обновления.
+    # Get application md5 from target server.
+    # One by one comare of targets with source.
+    # Get hosts_to_update list as result.
     
     hosts_to_update = []
     for i in application_host:
@@ -270,44 +267,43 @@ def main():
             print "\tJava application on " + i + " will be updated."
             hosts_to_update.append(i)
     
-    # Завершить работу, если в hosts_to_update пусто.
+    # Finish if hosts_to_update empty.
     if hosts_to_update == []:
         print "\tAll application hosts already up to date."
         sys.exit()  
     
-    # Просто для форматирования.    
     print "\n"
     
     for i in hosts_to_update:
         # need separate function for war update?
-        # Удалить и пересоздать директорию для временного хранения war файла.
+        # Delete and recreate temporary directory for war file.
         linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
         
-        # Скопировать war файл на сервер приложений.
+        # Copy war to target server.
         print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
         linux_put( i, war_path, '/tmp/webapps/' + war_name )
         linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
         
-        # Остановить сервер приложений.
+        # Stop tomcat server.
         print "Stopping application server " + i + "..."
         linux_exec( i, 'sudo systemctl stop tomcat' )
         
-    # Очистка панелей. Вынесена в отдельный блок тк нужна только один раз.
+    # Purge panels.
     purge_panels()
         
     for i in hosts_to_update:
         print "Applying application patch on " + i + "..."
-        # Удалить старое приложение. war-файл и папку.
+        # Delete old application. Both warfile and directory.
         linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
         linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
         
-        # Копировать war в целевую директорию на сервере приложений.
+        # Copy war to webapps folder.
         linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
         
         print "Starting application server " + i + "..."
         linux_exec( i, 'sudo systemctl start tomcat' )
         
-        # Проверить состояние сервера приложений после запуска.
+        # Check if server really started.
         tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
         tcat_status = tcat_sctl.find( 'Active: active (running) since' )
         if tcat_status != -1:
@@ -315,7 +311,7 @@ def main():
         else:
             print "\tFailed!\n"
     
-    # Еще раз проверить md5
+    # Doublecheck md5.
     for i in hosts_to_update:
         target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
@@ -324,16 +320,15 @@ def main():
             print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
 
 if __name__ == "__main__":
-    ''' Переменные. '''
-    # Получение номера патча и контура установки(прод/предпрод) из параметров.
-    # Прием параметров n и t, с дополнительной проверкой, что введены именно они.
+    ''' Variables '''
+    # Get patch number and target environment from parameters n and t
     try:    
         opts, args = getopt( sys.argv[1:], 'n:t:h:' )
     except:
         usage()
         sys.exit()
 
-    # Назначение переменных n - patch_num, t - target.
+    # Assibn variables n - patch_num, t - target.
     for opt, arg in opts:
         if opt in ( '-n' ):
             patch_num = arg
@@ -345,8 +340,7 @@ if __name__ == "__main__":
             usage()
             sys.exit()
 
-# Если параметры не переданы - запрашиваетя их ввод.
-# raw_input используется, для того, чтоб вводить без кавычек.
+# If no parameter supplied prompt for them
     try:
         patch_num
     except:
@@ -357,48 +351,27 @@ if __name__ == "__main__":
     except:
         target = raw_input('skpdi, predprod of manual: ')
 
-    # Проверка правильного указания контура установки skpdi или predprod.    
+    # Check for valid target name.    
     if target not in [ 'skpdi', 'predprod', 'manual']:
         usage()
         sys.exit()
 
-    # В зависимости от контура назначаются остальные переменные.
+    # Assign variables depending on target
+	# Full variable explanation in 'manual' section
     if target == 'predprod':
-        # Сервер приложения tomcat.
         application_host = [ 'gudhskpdi-test-app' ]
-    
-        # Имя файла приложения (predprod.war/skpdi.war).
         war_name = target + '.war'
-    
-        # Директория с распакованным приложением (predprod/skpdi).
         war_fldr = target
-    
-        # Батник для установки патчей БД.
         db_patch_file = 'db_patch_generic.bat'
-        
-        # Имя БД.
         db_name = 'ods_predprod'
-    
-        # Сервер БД.
         db_host = 'gudhskpdi-db-test'
     
     elif target == 'skpdi':
-        # Сервер приложения tomcat.
         application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
-    
-        # Имя файла приложения (predprod.war/skpdi.war).
         war_name = target + '.war'
-    
-        # Директория с распакованным приложением (predprod/skpdi).
         war_fldr = target
-    
-        # Батник для установки патчей БД.
         db_patch_file = 'db_patch_generic.bat'
-    
-        # Имя БД.
         db_name = 'ods_prod'
-    
-        # Сервер БД.
         db_host = 'gudhskpdi-db-01'
 
     elif target == 'manual':
@@ -409,13 +382,13 @@ if __name__ == "__main__":
             host_name = raw_input("Application server " + str(i) + ": ")
             application_host.append( host_name )
 
-        # Директория с распакованным приложением (predprod/skpdi).
+        # Directory with deployed application (predprod/skpdi)
         war_fldr = raw_input('Enter applicaton name (warfile name): ')    
 
-        # Имя файла приложения (predprod.war/skpdi.war).
+        # warfile name (predprod.war/skpdi.war)
         war_name = war_fldr + '.war'
                
-        # batfile for database patching.
+        # batfile for database patching
         db_patch_file = 'db_patch_generic.bat'
        
         # database server
@@ -428,38 +401,38 @@ if __name__ == "__main__":
         usage()
         sys.exit()
 
-    # Директория для временного хранения файлов установки
+    # Patchfile temporary directory
     stage_dir = 'd:\\tmp\\skpdi_patch'
 
-    # Адрес хранилища SUNNY.
+    # Patch address on SUNNY
     sunny_path = '\\\sunny\\builds\\odsxp\\'
-    # Путь к директории с конкретным патчем.
+    # Exact directory path
     sunny_patch = sunny_path + patch_num
 
     ''' Linux stuff '''
-    # Путь к расположения ключа SSH. Если такого нет - выход. Довавить возможность менять его?
+    # Local ssh key path. Exit if none.
     linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
     if os.path.isfile( linux_key_path ) != True:
        print "ERROR: Linux ssh key " + linux_key_path + " not found!"
        sys.exit()
 
-    # Ключ SSH подготовленный для работы paramiko.
+    # Prepare key for paramiko.
     linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
-    # Пользователь SSH.
+    # SSH user
     ssh_user = 'ansible'
-    # Порт SSH.
+    # SSH port
     ssh_port = 22
 
-    # Версия и расположение приложений Tomcat.
+    # Tomcat webapps location on target server(s)
     tomcat_name = 'apache-tomcat-8.5.8'
     app_path = '/u01/' + tomcat_name + '/webapps'
 
-    # Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
+    # Send subprocess for database patching to null. Nothing interesting there anyway.
     dnull = open("NUL", "w")
 
-    ''' Переменные. Конец.'''
+    ''' Variables. End.'''
 
     main()
     
-    # Дополнительный поиск номера патча на веб странице
-    check_webpage()
+    # Check webpage for application number. Do we need it?
+    # check_webpage()
