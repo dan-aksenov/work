@@ -41,7 +41,7 @@ def linux_exec( linux_host, shell_command ):
     try:
         client.connect( hostname = linux_host, username = ssh_user, port = ssh_port, pkey = linux_key )
     except:
-        print '\nERROR: unable to connect to Linux machine!'
+        print '\nERROR: unable to execute on Linux machine!'
         sys.exit()
     stdin, stdout, stderr = client.exec_command( shell_command )
     data = stdout.read() + stderr.read()
@@ -55,7 +55,7 @@ def linux_put( linux_host, source_path, dest_path ):
     try:
         transport.connect( username = ssh_user, pkey = linux_key )
     except:
-        print '\nERROR: unable to connect to Linux machine!'
+        print '\nERROR: unable to copy to Linux machine!'
         sys.exit()
     sftp = paramiko.SFTPClient.from_transport( transport )
     
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     
         # Батник для установки патчей БД.
         db_patch_file = 'db_patch_generic.bat'
-		
+        
         # Имя БД.
         db_name = 'ods_predprod'
     
@@ -402,23 +402,27 @@ if __name__ == "__main__":
         db_host = 'gudhskpdi-db-01'
 
     elif target == 'manual':
-        # Сервер приложения tomcat.
-        application_host = raw_input('Enter application host: ')
-    
+        # Input application hosts to array.
+        application_host = list()
+        num = raw_input("How many application servers? ")
+        for i in range(int(num)):
+            host_name = raw_input("Application server " + str(i) + ": ")
+            application_host.append( host_name )
+
         # Директория с распакованным приложением (predprod/skpdi).
         war_fldr = raw_input('Enter applicaton name (warfile name): ')    
 
         # Имя файла приложения (predprod.war/skpdi.war).
         war_name = war_fldr + '.war'
                
-        # Батник для установки патчей БД.
+        # batfile for database patching.
         db_patch_file = 'db_patch_generic.bat'
-    
-        # Имя БД.
-        db_name = raw_input('Enter database name: ')
-    
-        # Сервер БД.
+       
+        # database server
         db_host = raw_input('Enter database server hostname: ')
+        
+        # database name
+        db_name = raw_input('Enter database name: ')
     
     else:
         usage()
