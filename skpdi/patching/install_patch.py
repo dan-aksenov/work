@@ -206,7 +206,7 @@ def main():
             for i in sorted(patches_miss):    
                 print "Applying database patch " + i + "..."
                 # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
-                subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
+                subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file, db_host, db_name  ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
                 # Search logfile for "finish install patch ods objects
                 try:
                     logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
@@ -374,7 +374,7 @@ if __name__ == "__main__":
         war_fldr = target
     
         # Батник для установки патчей БД.
-        db_patch_file = 'db_patch_predprod.bat'
+        db_patch_file = 'db_patch_generic.bat'
     
         # Имя БД.
         db_name = 'ods_predprod'
@@ -393,7 +393,7 @@ if __name__ == "__main__":
         war_fldr = target
     
         # Батник для установки патчей БД.
-        db_patch_file = 'db_patch_skpdi.bat'
+        db_patch_file = 'db_patch_generic.bat'
     
         # Имя БД.
         db_name = 'ods_prod'
