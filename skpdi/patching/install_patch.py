@@ -10,6 +10,8 @@ from getopt import getopt
 import paramiko
 # for file md5s
 import hashlib
+# for waiting
+from time import sleep
 
 import subprocess
 import shutil
@@ -113,16 +115,11 @@ def purge_panels():
     rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
-def check_webpage(patch_num, target):
+def check_webpage(patch_num, application_host, target):
     # todo redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
     ''' Seek version name in web page's code. '''
 
-    proxies = {
-      'http': 'http://cache.fors.ru:3128',
-      'https': 'http://cache.fors.ru:3128'
-    }
-
-    page = requests.get('http://skpdi.mosreg.ru/' + target, proxies=proxies)
+    page = requests.get('http://' + application_host + ":8080/" + target)
     if page.status_code <> 200:
        print "WARNING: Application webpage unnaccesseble: " + page.status_code
     elif 'ver-' + patch_num in page.text:
@@ -310,6 +307,9 @@ def main():
             print "\tDone!\n"
         else:
             print "\tFailed!\n"
+        print "Waiting 60 seconds for application to (re)deploy..."
+        sleep(60)
+        check_webpage(patch_num, i, target)
     
     # Doublecheck md5.
     for i in hosts_to_update:
@@ -357,7 +357,7 @@ if __name__ == "__main__":
         sys.exit()
 
     # Assign variables depending on target
-	# Full variable explanation in 'manual' section
+    # Full variable explanation in 'manual' section
     if target == 'predprod':
         application_host = [ 'gudhskpdi-test-app' ]
         war_name = target + '.war'
