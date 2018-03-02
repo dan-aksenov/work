@@ -165,7 +165,7 @@ def main():
         # Compare installed patches with patches from Sunny.
         # If latest database patch version lower then on Sunny - install missing patches.
         print "\nChecking database patch level:"
-        # Suffixed directories like "db_0190_20171113_v2.19" considered "special cases" and to be applied manually.
+        # Suffixed directories like "db_0190_20171113_v2.19" considered "special cases" to be applied manually.
         last_patch_targ = max(patches_targ)
         if last_patch_targ == max(patches_curr):
             print "\tDatabase patch level: " + max(patches_curr) 
@@ -224,10 +224,6 @@ def main():
             print "\tDatabase patch level: " + max(patches_curr)
             print "\t Latest patch on Sunny: " + last_patch_targ
             print "ERROR: Something wrong with database patching!\n"
-            # Start tomcat if base was not patched.
-            for i in application_host:
-                print "Starting application server " + i + "...\n"
-                linux_exec( i, 'sudo systemctl start tomcat' )
             sys.exit()
         
     '''
@@ -239,11 +235,11 @@ def main():
     print "Checking java application version:"
     # glob returns an array, need its first([0]) element to user in md5_check.
     # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
-    if glob( sunny_patch + '\\ods*.war') == []:
+    if glob( sunny_patch + '\\ods*.war' ) == []:
         print "ERROR: Unable to locate war file on Sunny!"
         sys.exit()
     
-    war_path = glob( sunny_patch + '\\ods*.war')[0]
+    war_path = glob( sunny_patch + '\\ods*.war' )[0]
     
     
     # Get application md5 from Sunny.
@@ -264,11 +260,10 @@ def main():
     if hosts_to_update == []:
         print "\tAll application hosts already up to date."
         sys.exit()  
-    
+ 
     print "\n"
     
     for i in hosts_to_update:
-        # need separate function for war update?
         # Delete and recreate temporary directory for war file.
         linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
         
