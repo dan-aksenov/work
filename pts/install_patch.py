@@ -21,7 +21,7 @@ import os
 
 # Get patch number and target server
 def usage():
-    print 'Usage: -n for patch number(i.e. 2.10.1), -t for masger or branch'
+    print 'Usage: -n for patch number(i.e. 2.10.1), -t for master or branch'
 
 # Get n and t parameters
 try:    
