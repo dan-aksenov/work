@@ -152,32 +152,28 @@ def main():
     '''
     Database patching
     '''
-    # TODO: decrease number of "nests"
     # Get list of already applied patches
     # Function returns list tuples + row count, right now need only tuples, so [0]
     patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
     
     # Get list of patches from from Sunny
-    # Add one more check for patch version based on define_version.sql.
     if os.path.isdir( sunny_patch + '\\patches' ) != True:
-        print "NOTICE: No database patch found in build. Assume database patches not required."
+        print "NOTICE: No database patch found in build. Assume database patching not required."
     else:
         patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
         
         # Compare installed patches with patches from Sunny.
         # If latest database patch version lower then on Sunny - install missing patches.
         print "\nChecking database patch level:"
-        # To handle file name suffixes for directories like "db_0190_20171113_v2.19" additional variable declared to hold max(patches_targ)
-        # Or else unable to compare with database. Maybe need to use re.findall('db_.*_\d{8}',a).
+        # Suffixed directories like "db_0190_20171113_v2.19" considered "special cases" and to be applied manually.
         last_patch_targ = max(patches_targ)
-        last_patch_targ_strip = re.sub('_v.*$','', last_patch_targ)
-        if last_patch_targ_strip == max(patches_curr):
+        if last_patch_targ == max(patches_curr):
             print "\tDatabase patch level: " + max(patches_curr) 
-            print "\tLatest patch on Sunny: " + last_patch_targ_strip
+            print "\tLatest patch on Sunny: " + last_patch_targ
             print "\tNo database patch required.\n"
-        elif last_patch_targ_strip > max(patches_curr):
+        elif last_patch_targ > max(patches_curr):
             print "\tDatabase patch level: " + max(patches_curr)
-            print "\tLatest patch on Sunny: " + last_patch_targ_strip
+            print "\tLatest patch on Sunny: " + last_patch_targ
             print "\tDatabase needs patching.\n"
             patches_miss = []
             for i in (set(patches_targ) - set(patches_curr)):
@@ -226,7 +222,7 @@ def main():
    
         else:
             print "\tDatabase patch level: " + max(patches_curr)
-            print "\t Latest patch on Sunny: " + last_patch_targ_strip
+            print "\t Latest patch on Sunny: " + last_patch_targ
             print "ERROR: Something wrong with database patching!\n"
             # Start tomcat if base was not patched.
             for i in application_host:
@@ -433,6 +429,3 @@ if __name__ == "__main__":
     ''' Variables. End.'''
 
     main()
-    
-    # Check webpage for application number. Do we need it?
-    # check_webpage()
