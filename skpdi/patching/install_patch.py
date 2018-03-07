@@ -121,13 +121,13 @@ def check_webpage(patch_num, application_host, target):
 
     page = requests.get('http://' + application_host + ":8080/" + target)
     if page.status_code <> 200:
-       print "WARNING: Application webpage unnaccesseble: " + page.status_code
+       print "WARNING: Application webpage unnaccesseble: " + page.status_code + "\n"
     elif 'ver-' + patch_num in page.text:
-        print "SUCCESS: Application webpages matches " + patch_num
+        print "SUCCESS: Application webpages matches " + patch_num + "\n"
     elif 'ver-' + patch_num not in page.text:
-        print "WARNING: Application webpages not matches " + patch_num
+        print "WARNING: Application webpages not matches " + patch_num + "\n"
     else:
-        print "WARING: Problem determining application version."
+        print "WARING: Problem determining application version.\n"
 
 ''' Internal functions. End '''
     
@@ -307,9 +307,9 @@ def main():
     for i in hosts_to_update:
         target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
-            print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
+            print "DONE: Application version on " + i + " now matches " + patch_num + "."
         else:
-            print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
+            print "ERROR: Application version on " + i + " still not matches " + patch_num + "!"
 
 if __name__ == "__main__":
     ''' Variables '''
