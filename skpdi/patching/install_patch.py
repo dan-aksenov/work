@@ -123,9 +123,9 @@ def check_webpage(patch_num, application_host, target):
     if page.status_code <> 200:
        print "WARNING: Application webpage unnaccesseble: " + page.status_code + "\n"
     elif 'ver-' + patch_num in page.text:
-        print "SUCCESS: Application webpages matches " + patch_num + "\n"
+        print "SUCCESS: Application webpage matches " + patch_num + "\n"
     elif 'ver-' + patch_num not in page.text:
-        print "WARNING: Application webpages not matches " + patch_num + "\n"
+        print "WARNING: Application webpage not matches " + patch_num + "\n"
     else:
         print "WARING: Problem determining application version.\n"
 
