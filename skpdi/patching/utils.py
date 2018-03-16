@@ -68,10 +68,9 @@ def recreate_dir( dir_name ):
     else:
         os.makedirs( dir_name )
 
-def postgres_exec( sql_query ):
+def postgres_exec( sql_query, conn_string ):
     ''' SQL execution '''
     
-    conn_string = 'dbname= ' + db_name + ' user=''ods'' password=''ods'' host=' + db_host
     try:
         conn = connect( conn_string )
     except:
