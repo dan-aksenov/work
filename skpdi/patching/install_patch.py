@@ -12,6 +12,8 @@ import paramiko
 import hashlib
 # for waiting
 from time import sleep
+# for coloured output
+from termcolor import colored
 
 import subprocess
 import shutil
@@ -307,9 +309,9 @@ def main():
     for i in hosts_to_update:
         target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
-            print "DONE: Application version on " + i + " now matches " + patch_num + "."
+            print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
         else:
-            print "ERROR: Application version on " + i + " still not matches " + patch_num + "!"
+            print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
 
 if __name__ == "__main__":
     ''' Variables '''
