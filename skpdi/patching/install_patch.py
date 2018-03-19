@@ -125,7 +125,7 @@ def check_webpage(patch_num, application_host, target):
     if page.status_code <> 200:
        print "WARNING: Application webpage unnaccesseble: " + page.status_code + "\n"
     elif 'ver-' + patch_num in page.text:
-        print colored( "SUCCESS: Application webpage matches " + patch_num + "\n", 'white', 'on_green' )
+        print colored( "SUCCESS: Application webpage matches " + patch_num, 'white', 'on_green' ) + "\n"
     elif 'ver-' + patch_num not in page.text:
         print "WARNING: Application webpage not matches " + patch_num + "\n"
     else:
