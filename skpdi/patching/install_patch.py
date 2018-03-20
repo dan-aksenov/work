@@ -20,7 +20,7 @@ import os
 import re
 import requests
 
-from utils import md5_check, linux_put, linux_exec, recreate_dir
+from utils import md5_check, recreate_dir, Deal_with_linux
 
 ''' Internal functions ''' 
 
@@ -92,6 +92,8 @@ def main():
     Preparation
     '''
     
+	linux = Deal_with_linux()
+	
     # Check if patch exists on Sunny
     if os.path.isdir( sunny_patch ) != True:
         print "ERROR: No such patch on Sunny!"
@@ -147,7 +149,7 @@ def main():
             # Stop tomcat.
             for i in application_host:
                 print "Stopping application server " + i + "...\n"
-                linux_exec( i, 'sudo systemctl stop tomcat' )
+                linux.linux_exec( i, 'sudo systemctl stop tomcat' )
             # Apply database patches
             # Using sort to execute patches in right order.
             for i in sorted(patches_miss):    
@@ -208,7 +210,7 @@ def main():
     
     hosts_to_update = []
     for i in application_host:
-        target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 != target_md5.split(" ")[0]: 
             print "\tJava application on " + i + " will be updated."
             hosts_to_update.append(i)
@@ -222,16 +224,16 @@ def main():
     
     for i in hosts_to_update:
         # Delete and recreate temporary directory for war file.
-        linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+        linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
         
         # Copy war to target server.
         print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
-        linux_put( i, war_path, '/tmp/webapps/' + war_name )
-        linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
+        linux.linux_put( i, war_path, '/tmp/webapps/' + war_name )
+        linux.linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
         
         # Stop tomcat server.
         print "Stopping application server " + i + "..."
-        linux_exec( i, 'sudo systemctl stop tomcat' )
+        linux.linux_exec( i, 'sudo systemctl stop tomcat' )
         
     # Purge panels.
     purge_panels()
@@ -239,17 +241,17 @@ def main():
     for i in hosts_to_update:
         print "Applying application patch on " + i + "..."
         # Delete old application. Both warfile and directory.
-        linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
-        linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
+        linux.linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
+        linux.linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
         
         # Copy war to webapps folder.
-        linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
+        linux.linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
         
         print "Starting application server " + i + "..."
-        linux_exec( i, 'sudo systemctl start tomcat' )
+        linux.linux_exec( i, 'sudo systemctl start tomcat' )
         
         # Check if server really started.
-        tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
+        tcat_sctl = linux.linux_exec( i, 'sudo systemctl status tomcat' )
         tcat_status = tcat_sctl.find( 'Active: active (running) since' )
         if tcat_status != -1:
             print "\tDone!\n"
@@ -261,7 +263,7 @@ def main():
     
     # Doublecheck md5.
     for i in hosts_to_update:
-        target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
             print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
         else:
