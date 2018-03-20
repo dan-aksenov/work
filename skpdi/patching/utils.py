@@ -21,7 +21,17 @@ import os
 import re
 import requests
 
-''' Internal functions ''' 
+linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
+if os.path.isfile( linux_key_path ) != True:
+    print "ERROR: Linux ssh key " + linux_key_path + " not found!"
+    sys.exit()
+
+# Prepare key for paramiko.
+linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
+# SSH user
+ssh_user = 'ansible'
+# SSH port
+ssh_port = 22
 
 def usage():
     ''' Usage '''

@@ -357,7 +357,7 @@ if __name__ == "__main__":
     # Exact directory path
     sunny_patch = sunny_path + patch_num
 
-    ''' Linux stuff '''
+    ''' Linux stuff
     # Local ssh key path. Exit if none.
     linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
     if os.path.isfile( linux_key_path ) != True:
@@ -369,7 +369,7 @@ if __name__ == "__main__":
     # SSH user
     ssh_user = 'ansible'
     # SSH port
-    ssh_port = 22
+    ssh_port = 22'''
 
     # Tomcat webapps location on target server(s)
     tomcat_name = 'apache-tomcat-8.5.8'
