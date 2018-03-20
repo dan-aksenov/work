@@ -12,7 +12,7 @@ import os
 
 class Deal_with_linux:
     def __init__(self):
-	    self.linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
+        self.linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
         if os.path.isfile( self.linux_key_path ) != True:
             print "ERROR: Linux ssh key " + self.linux_key_path + " not found!"
             sys.exit()

@@ -92,8 +92,8 @@ def main():
     Preparation
     '''
     
-	linux = Deal_with_linux()
-	
+    linux = Deal_with_linux()
+    
     # Check if patch exists on Sunny
     if os.path.isdir( sunny_patch ) != True:
         print "ERROR: No such patch on Sunny!"
