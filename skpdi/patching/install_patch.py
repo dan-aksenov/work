@@ -77,7 +77,7 @@ def check_webpage(patch_num, application_host, target):
 
     page = requests.get('http://' + application_host + ":8080/" + target)
     if page.status_code <> 200:
-       print "WARNING: Application webpage unnaccesseble: " + page.status_code + "\n"
+       print "WARNING: Application webpage unnaccesseble: " + str(page.status_code) + "\n"
     elif 'ver-' + patch_num in page.text:
         print colored( "SUCCESS: Application webpage matches " + patch_num, 'white', 'on_green' ) + "\n"
     elif 'ver-' + patch_num not in page.text:
