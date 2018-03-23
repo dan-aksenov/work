@@ -178,6 +178,9 @@ def main():
             #else:    
             #    print "ERROR: Unable to confirm patch installation!"
             #    exit()
+            
+            # Purge panels.
+            purge_panels()
    
         else:
             print "\tDatabase patch level: " + max(patches_curr)
@@ -235,10 +238,7 @@ def main():
         print "Stopping application server " + i + "..."
         linux.linux_exec( i, 'sudo systemctl stop tomcat' )
         
-    # Purge panels.
-    purge_panels()
-        
-    for i in hosts_to_update:
+    #for i in hosts_to_update:
         print "Applying application patch on " + i + "..."
         # Delete old application. Both warfile and directory.
         linux.linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
