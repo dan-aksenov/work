@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # for args and exit
 import sys
 # for db connection
