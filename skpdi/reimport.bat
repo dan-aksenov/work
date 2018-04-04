@@ -39,7 +39,7 @@ psql %db_dest% -c "select datallowconn from pg_database where datname = '%dbname
 echo ###################################################################################
 echo Drop old database %dbname%_old? Or CTRL+C to exit batch
 pause
-psql %db_dest% -c "update pg_database set datallowconn = false where datname = '%dbname%_old"
+psql %db_dest% -c "update pg_database set datallowconn = false where datname = '%dbname%_old'"
 psql %db_dest% -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = '%dbname%_old'"
 psql %db_dest% -c "drop database %dbname%_old"
 pause
