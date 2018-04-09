@@ -15,6 +15,9 @@ sed -i 's/listen_addresses/#listen_addresses/g' $STAGE_DIR/$CURRENT_BACKUP/postg
 sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 # Archive command not needed.
 sed -i 's/archive_command/#archive_command/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
+#remove shared buffer and hugepages settings
+sed -i 's/shared_buffers = .*/shared_buffers = 128MB/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
+sed -i 's/huge_pages = .*/huge_pages = off/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 
 # Add restore arhivelogs from backup.
 cat >> $STAGE_DIR/$CURRENT_BACKUP/recovery.conf <<EOF
