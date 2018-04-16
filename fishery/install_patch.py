@@ -31,8 +31,9 @@ def usage():
 
 def postgres_exec( sql_query ):
     ''' SQL execution '''
-    
-    conn_string = 'dbname= ' + db_name + ' user=''fishery'' password=''fishery'' host=' + db_host
+
+    # pgpass should be used insead of password    
+    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host
     try:
         conn = connect( conn_string )
     except:

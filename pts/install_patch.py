@@ -185,8 +185,8 @@ def recreate_dir( dir_name ):
 
 def postgres_exec ( sql_query ):
     ''' Execute query in database '''
-    
-    conn_string = 'dbname= ' + db_name + ' user=''pts'' password=''pts'' host=' + db_host
+    # pgpass should be used insead of password    
+    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host
     try:
         conn = connect( conn_string )
     except:
