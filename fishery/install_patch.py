@@ -54,7 +54,7 @@ def postgres_exec( sql_query ):
     conn.close()
     return query_results, rowcnt
     
-def war_compare( war_name ):
+def war_compare( target_host,war_name ):
     print "Checking java application version for " + war_name[1] + ":"
     # glob returns array, using first [0] element to use in in md5_check.
     # Search war file on in target directory on sunny.
@@ -71,13 +71,15 @@ def war_compare( war_name ):
     # Compare Sunny's war whit target server's war.
 
     # hosts_to_upate needs to be removed or set as global...
-    hosts_to_update = []
-    for i in application_host:
-        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name[1])
-        if source_md5 != target_md5.split(" ")[0]: 
-            print "\t Applicatoin " + war_name[1] + " on " + i + " will be updated."
-            hosts_to_update.append(i)
-    return hosts_to_update
+    target_md5 = linux.linux_exec( target_host, 'sudo md5sum ' + app_path + '/' + war_name[1])
+    war_to_update = 0
+    if source_md5 != target_md5.split(" ")[0]: 
+        print "\t Applicatoin " + war_name[1] + " on " + target_host + " will be updated."
+		war_to_upate = 1
+    else:
+        print "\t Applicatoin " + war_name[1] + " on " + target_host + " will not be updated."
+		war_to_upate = 0
+    return war_to_upate
                                                                 
 ''' Internal functions. End '''
     
