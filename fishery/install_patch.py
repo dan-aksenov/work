@@ -52,36 +52,7 @@ def postgres_exec( sql_query ):
     cur.close()
     conn.close()
     return query_results, rowcnt
-
-''' Not needed for fishery    
-def purge_panels():
-    print "Purging panels on " + db_name + "@" + db_host + ": "
-    # Kill existing session. pid <> pg_backend_pid() so it won't kill self
-    sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
-    print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
-    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
-    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
-    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel_lnk."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
-    print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
-'''    
-def check_webpage(patch_num, application_host, target):
-    # todo redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
-    ''' Seek version name in web page's code. '''
-
-    page = requests.get('http://' + application_host + ":8080/" + target)
-    if page.status_code <> 200:
-       print "WARNING: Application webpage unnaccesseble: " + str(page.status_code) + "\n"
-    elif 'ver-' + patch_num in page.text:
-        print colored( "SUCCESS: Application webpage matches " + patch_num, 'white', 'on_green' ) + "\n"
-    elif 'ver-' + patch_num not in page.text:
-        print "WARNING: Application webpage not matches " + patch_num + "\n"
-    else:
-        print "WARING: Problem determining application version.\n"
-
+                                                                
 ''' Internal functions. End '''
     
 def main():
@@ -109,7 +80,7 @@ def main():
     '''
     # Get list of already applied patches
     # Function returns list tuples + row count, right now need only tuples, so [0]
-    patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
+    patches_curr = postgres_exec ( 'select name from parameter.patches_log order by id desc;' )[0]
     
     # Get list of patches from from Sunny
     if os.path.isdir( sunny_patch + '\\patches' ) != True:
@@ -296,30 +267,22 @@ if __name__ == "__main__":
     try:
         target 
     except:
-        target = raw_input('fishery, predprod of manual: ')
+        target = raw_input('master or manual: ')
 
     # Check for valid target name.    
-    if target not in [ 'fishery', 'predprod', 'manual']:
+    if target not in [ 'master', 'manual']:
         usage()
         sys.exit()
 
     # Assign variables depending on target
     # Full variable explanation in 'manual' section
-    '''if target == 'master':
-        application_host = [ 'gudhskpdi-test-app' ]
+    if target == 'master':
+        application_host = [ 'fishery-test-app' ]
         war_name = target + '.war'
         war_fldr = target
         db_patch_file = 'db_patch_test.bat'
-        db_name = 'ods_predprod'
-        db_host = 'gudhskpdi-db-test'
-    
-    elif target == 'skpdi':
-        application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
-        war_name = target + '.war'
-        war_fldr = target
-        db_patch_file = 'db_patch_generic.bat'
-        db_name = 'ods_prod'
-        db_host = 'gudhskpdi-db-01' '''
+        db_name = 'fishery'
+        db_host = 'fishery-test-db'
     
     elif target == 'manual':
         # Input application hosts to array.
