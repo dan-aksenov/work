@@ -166,11 +166,11 @@ def main():
     print "Checking java application version:"
     # glob returns an array, need its first([0]) element to user in md5_check.
     # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
-    if glob( sunny_patch + '\\ods*.war' ) == []:
+    if glob( sunny_patch + '\\fishery-restricted*.war' ) == []:
         print "ERROR: Unable to locate war file on Sunny!"
         sys.exit()
     
-    war_path = glob( sunny_patch + '\\ods*.war' )[0]
+    war_path = glob( sunny_patch + '\\fishery-restricted*.war' )[0]
     
     
     # Get application md5 from Sunny.
