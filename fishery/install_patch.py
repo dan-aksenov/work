@@ -53,6 +53,30 @@ def postgres_exec( sql_query ):
     cur.close()
     conn.close()
     return query_results, rowcnt
+    
+def war_compare( war_name ):
+    print "Checking java application version for " + war_name[1] + ":"
+    # glob returns array, using first [0] element to use in in md5_check.
+    # Search war file on in target directory on sunny.
+    if glob(sunny_patch + '\\' + war_name[0]) == []:
+        print "ERROR: Unable to locate war file for " + war_name[0] + "!"
+        sys.exit()
+
+    war_path = glob( sunny_patch + '\\' + war_name[0])[0]
+
+    # Get war's md5 from sunny.
+    source_md5 = md5_check( war_path )
+
+    # Get war's md5 from target applicaton server.
+    # Compare Sunny's war whit target server's war.
+    # hosts_to_upate needs to be removed or set as global...
+	hosts_to_update = []
+    for i in application_host:
+        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name[1])
+        if source_md5 != target_md5.split(" ")[0]: 
+            print "\t Applicatoin " + war_name[1] + " on " + i + " will be updated."
+            hosts_to_update.append(i)
+    return hosts_to_update
                                                                 
 ''' Internal functions. End '''
     
@@ -162,7 +186,10 @@ def main():
     TODO: 1. copy war to gudhskpdi-mon, with md5 check. 
     2. copy from gudhskpdi-mon to app server with md5 check. Use ansible user (cos already has keys and root priveleges)
     '''
-          
+    
+    for war in wars:
+        war_compare(war)
+    	
     print "Checking java application version:"
     # glob returns an array, need its first([0]) element to user in md5_check.
     # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
@@ -326,6 +353,15 @@ if __name__ == "__main__":
 
     # Send subprocess for database patching to null. Nothing interesting there anyway.
     dnull = open("NUL", "w")
+    
+    '''
+    war files mappings. Format: [ 'name on sunny', 'desired application name']
+    '''
+	wars = [
+	[ 'fishery-integration-' + patch_num + '.war', 'integration.war' ],
+    [ 'fishery-public-' + patch_num + '.war', 'portal.war' ],
+    [ 'fishery-restricted-' + patch_num + '.war', 'fishery.war' ]
+	]
 
     ''' Variables. End.'''
 

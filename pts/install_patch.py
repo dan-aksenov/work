@@ -214,7 +214,7 @@ def war_compare( war_name ):
     # glob returns array, using first [0] element to use in in md5_check.
     # Search war file on in target directory on sunny. TODO: what if more then one candidate?
     if glob(sunny_patch + '\\' + war_name[0]) == []:
-        print "ERROR: Unable to locate war file for " + war_portal[1] + "!"
+        print "ERROR: Unable to locate war file for " + war_name[1] + "!"
         sys.exit()
 
     war_path = glob( sunny_patch + '\\' + war_name[0])[0]
