@@ -69,8 +69,9 @@ def war_compare( war_name ):
 
     # Get war's md5 from target applicaton server.
     # Compare Sunny's war whit target server's war.
+
     # hosts_to_upate needs to be removed or set as global...
-	hosts_to_update = []
+    hosts_to_update = []
     for i in application_host:
         target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name[1])
         if source_md5 != target_md5.split(" ")[0]: 
@@ -189,7 +190,7 @@ def main():
     
     for war in wars:
         war_compare(war)
-    	
+        
     print "Checking java application version:"
     # glob returns an array, need its first([0]) element to user in md5_check.
     # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
@@ -357,11 +358,11 @@ if __name__ == "__main__":
     '''
     war files mappings. Format: [ 'name on sunny', 'desired application name']
     '''
-	wars = [
-	[ 'fishery-integration-' + patch_num + '.war', 'integration.war' ],
+    wars = [
+    [ 'fishery-integration-' + patch_num + '.war', 'integration.war' ],
     [ 'fishery-public-' + patch_num + '.war', 'portal.war' ],
     [ 'fishery-restricted-' + patch_num + '.war', 'fishery.war' ]
-	]
+    ]
 
     ''' Variables. End.'''
 
