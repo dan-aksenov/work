@@ -72,14 +72,12 @@ def war_compare( target_host,war_name ):
 
     # hosts_to_upate needs to be removed or set as global...
     target_md5 = linux.linux_exec( target_host, 'sudo md5sum ' + app_path + '/' + war_name[1])
-    war_to_update = 0
     if source_md5 != target_md5.split(" ")[0]: 
         print "\t Applicatoin " + war_name[1] + " on " + target_host + " will be updated."
-		war_to_upate = 1
+        #where hosts_to_update to be initialized?
+        hosts_to_update.append( target_host )
     else:
         print "\t Applicatoin " + war_name[1] + " on " + target_host + " will not be updated."
-		war_to_upate = 0
-    return war_to_upate
                                                                 
 ''' Internal functions. End '''
     
@@ -189,33 +187,11 @@ def main():
     TODO: 1. copy war to gudhskpdi-mon, with md5 check. 
     2. copy from gudhskpdi-mon to app server with md5 check. Use ansible user (cos already has keys and root priveleges)
     '''
-    
-    for war in wars:
-        war_compare(war)
-        
-    print "Checking java application version:"
-    # glob returns an array, need its first([0]) element to user in md5_check.
-    # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
-    if glob( sunny_patch + '\\fishery-restricted*.war' ) == []:
-        print "ERROR: Unable to locate war file on Sunny!"
-        sys.exit()
-    
-    war_path = glob( sunny_patch + '\\fishery-restricted*.war' )[0]
-    
-    
-    # Get application md5 from Sunny.
-    source_md5 = md5_check( war_path )
-    
-    # Get application md5 from target server.
-    # One by one comare of targets with source.
-    # Get hosts_to_update list as result.
-    
-    hosts_to_update = []
-    for i in application_host:
-        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-        if source_md5 != target_md5.split(" ")[0]: 
-            print "\tJava application on " + i + " will be updated."
-            hosts_to_update.append(i)
+    #where to initialize?
+    hosts_to_update == []    
+    for host in application_host:
+        for war in wars:
+            war_compare( host, war )
     
     # Finish if hosts_to_update empty.
     if hosts_to_update == []:
@@ -224,6 +200,9 @@ def main():
  
     print "\n"
     
+	# Distinct hosts to update
+	hosts_to_update = list( set( hosts_to_update ) )
+	
     for i in hosts_to_update:
         # Delete and recreate temporary directory for war file.
         linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
