@@ -9,11 +9,9 @@ set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
 rem Rename war files to desired names.
 cd /d %stage_dir%
-ren pts-integration-*.war integration.war
-ren pts-public-*.war portal.war;
-ren pts-restricted-*.war pts.war
-ren pts-portal*.war portal2.war
-ren pts-jointstorage*.war jointstorage.war
+ren fishery-integration-*.war integration.war
+ren fishery-public-*.war portal.war;
+ren fishery-restricted-*.war fishery.war
 
 rem Stop tomcat.
 %plink_cmd% "sudo systemctl stop tomcat%2"
