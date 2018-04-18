@@ -1,14 +1,9 @@
 # for args and exit
 import sys
-# for db connection
-from psycopg2 import connect
-#from os import os.listdir, os.rename, rmdir, os.path, os.makedirs
+import os
 # for war file search
 from glob import glob
 from getopt import getopt
-# moved to utils
-#import paramiko
-#import hashlib
 # for waiting
 from time import sleep
 # for coloured output
@@ -20,7 +15,7 @@ import os
 import re
 import requests
 
-from utils import md5_check, recreate_dir, Deal_with_linux
+from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec
 
 ''' Internal functions ''' 
 
@@ -28,31 +23,6 @@ def usage():
     ''' Usage '''
     
     print 'Usage: -n for patch number(i.e. 2.10.1), -t for skpdi or predprod'
-
-def postgres_exec( sql_query ):
-    ''' SQL execution '''
-    
-    # pgpass shoule be used insead of password
-    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host
-    try:
-        conn = connect( conn_string )
-    except:
-        print '\nERROR: unable to connect to the database!'
-        sys.exit()
-    cur = conn.cursor()
-    cur.execute( sql_query )
-    query_results = []
-    # This check needed, because delete doesn't return cursor
-    if cur.description != None:
-        rows = cur.fetchall()
-       # Need list of stings instead of tuples for future manipulation.
-        for row in rows:
-            query_results.append(row[0])
-    rowcnt = cur.rowcount
-    conn.commit()
-    cur.close()
-    conn.close()
-    return query_results, rowcnt
     
 def purge_panels():
     ''' Purge application panels. Sometimes necessary even when no database patches applied '''
@@ -60,16 +30,16 @@ def purge_panels():
     print "Purging panels on " + db_name + "@" + db_host + ": "
         
     # Kill existing session. pid <> pg_backend_pid() so it won't kill self
-    sess_killed = postgres_exec ( "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
+    sess_killed = postgres_exec ( db_host, db_name,  "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
     print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
     
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
+    rows_deleted = postgres_exec ( db_host, db_name,  'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_impl' )[1]
+    rows_deleted = postgres_exec ( db_host, db_name,  'DELETE FROM core.fdc_sys_class_impl' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
+    rows_deleted = postgres_exec ( db_host, db_name,  'DELETE FROM core.fdc_sys_class_panel_lnk;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel_lnk."
-    rows_deleted = postgres_exec ( 'DELETE FROM core.fdc_sys_class_panel;' )[1]
+    rows_deleted = postgres_exec ( db_host, db_name,  'DELETE FROM core.fdc_sys_class_panel;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
 def check_webpage(patch_num, application_host, target):
@@ -113,7 +83,7 @@ def main():
     '''
     # Get list of already applied patches
     # Function returns list tuples + row count, right now need only tuples, so [0]
-    patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
+    patches_curr = postgres_exec ( db_host, db_name,  'select name from parameter.fdc_patches_log order by id desc;' )[0]
     
     # Get list of patches from from Sunny
     if os.path.isdir( sunny_patch + '\\patches' ) != True:
@@ -173,7 +143,7 @@ def main():
                 logfile.close()
             # Additional check from database fdc_patches_log...
             #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
-            #is_db_patch_applied = postgres_exec ( "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
+            #is_db_patch_applied = postgres_exec ( db_host, db_name,  "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
             #if is_db_patch_applied != []:
             #    pass    
             #else:    
@@ -359,20 +329,6 @@ if __name__ == "__main__":
     sunny_path = '\\\sunny\\builds\\odsxp\\'
     # Exact directory path
     sunny_patch = sunny_path + patch_num
-
-    ''' Linux stuff
-    # Local ssh key path. Exit if none.
-    linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
-    if os.path.isfile( linux_key_path ) != True:
-       print "ERROR: Linux ssh key " + linux_key_path + " not found!"
-       sys.exit()
-
-    # Prepare key for paramiko.
-    linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
-    # SSH user
-    ssh_user = 'ansible'
-    # SSH port
-    ssh_port = 22'''
 
     # Tomcat webapps location on target server(s)
     tomcat_name = 'apache-tomcat-8.5.8'
