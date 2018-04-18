@@ -27,8 +27,3 @@ set "run_file=%run_path%%script_name%.sql"
 
 rem Запуск
 psql <%run_file% >%spool_file% 2>&1
-
-psql -c "DELETE FROM core.fdc_sys_class_impl_lnk;"
-psql -c "DELETE FROM core.fdc_sys_class_impl;"
-psql -c "DELETE FROM core.fdc_sys_class_panel_lnk;"
-psql -c "DELETE FROM core.fdc_sys_class_panel;"

@@ -186,7 +186,7 @@ def main():
     Application update
     TODO: 1. copy war to gudhskpdi-mon, with md5 check. 
     2. copy from gudhskpdi-mon to app server with md5 check. Use ansible user (cos already has keys and root priveleges)
-    '''
+    
     #where to initialize?
     hosts_to_update == []    
     for host in application_host:
@@ -246,6 +246,7 @@ def main():
             print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
         else:
             print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
+'''
 
 if __name__ == "__main__":
     ''' Variables '''
