@@ -59,25 +59,8 @@ def check_webpage(patch_num, application_host, target):
 ''' Internal functions. End '''
     
 def main():
-    # Get patch number and target environment from parameters n and t
-    try:    
-        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
-    except:
-        usage()
-        sys.exit()
-    # Assign variables n - patch_num, t - target.
-    for opt, arg in opts:
-        if opt in ( '-n' ):
-            patch_num = arg
-        elif opt in ( '-t' ):
-            target = arg
-        elif opt in ( '-h' ):
-            usage()
-        else:
-            usage()
-            sys.exit()
-	
-	'''
+    
+    '''
     Preparation
     '''
     
@@ -259,8 +242,28 @@ def main():
             print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
 
 if __name__ == "__main__":
+    
+    # Get patch number and target environment from parameters n and t
+    try:    
+        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
+    except:
+        usage()
+        sys.exit()
+    # Assign variables n - patch_num, t - target.
+    for opt, arg in opts:
+        if opt in ( '-n' ):
+            patch_num = arg
+        elif opt in ( '-t' ):
+            target = arg
+        elif opt in ( '-h' ):
+            usage()
+        else:
+            usage()
+            sys.exit()
+	    
     ''' Variables '''
-    # If no parameter supplied prompt for them
+    
+	# If no parameter supplied prompt for them
     try:
         patch_num
     except:
