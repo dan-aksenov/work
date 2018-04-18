@@ -15,6 +15,7 @@ import os
 import re
 import requests
 
+#Custom utilities
 from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec
 
 ''' Internal functions ''' 
@@ -32,7 +33,6 @@ def purge_panels():
     # Kill existing session. pid <> pg_backend_pid() so it won't kill self
     sess_killed = postgres_exec ( db_host, db_name,  "select pg_terminate_backend(pid) from pg_stat_activity where usename = 'ods' and pid <> pg_backend_pid()" )[1]
     print "\tKilled " + str(sess_killed) + " sessions of user ods in " + db_name + " database."
-    
     rows_deleted = postgres_exec ( db_host, db_name,  'DELETE FROM core.fdc_sys_class_impl_lnk;' )[1]
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_impl_lnk."
     rows_deleted = postgres_exec ( db_host, db_name,  'DELETE FROM core.fdc_sys_class_impl' )[1]
@@ -59,7 +59,25 @@ def check_webpage(patch_num, application_host, target):
 ''' Internal functions. End '''
     
 def main():
-    '''
+    # Get patch number and target environment from parameters n and t
+    try:    
+        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
+    except:
+        usage()
+        sys.exit()
+    # Assign variables n - patch_num, t - target.
+    for opt, arg in opts:
+        if opt in ( '-n' ):
+            patch_num = arg
+        elif opt in ( '-t' ):
+            target = arg
+        elif opt in ( '-h' ):
+            usage()
+        else:
+            usage()
+            sys.exit()
+	
+	'''
     Preparation
     '''
     
@@ -242,31 +260,11 @@ def main():
 
 if __name__ == "__main__":
     ''' Variables '''
-    # Get patch number and target environment from parameters n and t
-    try:    
-        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
-    except:
-        usage()
-        sys.exit()
-
-    # Assibn variables n - patch_num, t - target.
-    for opt, arg in opts:
-        if opt in ( '-n' ):
-            patch_num = arg
-        elif opt in ( '-t' ):
-            target = arg
-        elif opt in ( '-h' ):
-            usage()
-        else:
-            usage()
-            sys.exit()
-
-# If no parameter supplied prompt for them
+    # If no parameter supplied prompt for them
     try:
         patch_num
     except:
         patch_num = raw_input('Enter patch number: ')
-
     try:
         target 
     except:
@@ -305,16 +303,12 @@ if __name__ == "__main__":
 
         # Directory with deployed application (predprod/skpdi)
         war_fldr = raw_input('Enter applicaton name (warfile name): ')    
-
         # warfile name (predprod.war/skpdi.war)
         war_name = war_fldr + '.war'
-               
         # batfile for database patching
         db_patch_file = 'db_patch_generic.bat'
-       
         # database server
         db_host = raw_input('Enter database server hostname: ')
-        
         # database name
         db_name = raw_input('Enter database name: ')
     
@@ -324,12 +318,10 @@ if __name__ == "__main__":
 
     # Patchfile temporary directory
     stage_dir = 'd:\\tmp\\skpdi_patch'
-
     # Patch address on SUNNY
     sunny_path = '\\\sunny\\builds\\odsxp\\'
     # Exact directory path
     sunny_patch = sunny_path + patch_num
-
     # Tomcat webapps location on target server(s)
     tomcat_name = 'apache-tomcat-8.5.8'
     app_path = '/u01/' + tomcat_name + '/webapps'
