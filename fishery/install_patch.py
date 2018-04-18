@@ -20,7 +20,7 @@ import os
 import re
 import requests
 
-from utils import md5_check, recreate_dir, Deal_with_linux
+from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec
 
 ''' Internal functions ''' 
 
@@ -29,32 +29,9 @@ def usage():
     
     print 'Usage: -n for patch number(i.e. 2.10.1), -t for fishery or predprod'
 
-def postgres_exec( sql_query ):
-    ''' SQL execution '''
-
-    # pgpass should be used insead of password    
-    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host
-    try:
-        conn = connect( conn_string )
-    except:
-        print '\nERROR: unable to connect to the database!'
-        sys.exit()
-    cur = conn.cursor()
-    cur.execute( sql_query )
-    query_results = []
-    # This check needed, because delete doesn't return cursor
-    if cur.description != None:
-        rows = cur.fetchall()
-       # Need list of stings instead of tuples for future manipulation.
-        for row in rows:
-            query_results.append(row[0])
-    rowcnt = cur.rowcount
-    conn.commit()
-    cur.close()
-    conn.close()
-    return query_results, rowcnt
+linux = Deal_with_linux()
     
-def war_compare( target_host,war_name ):
+def war_compare( target_host, war_name ):
     print "Checking java application version for " + war_name[1] + ":"
     # glob returns array, using first [0] element to use in in md5_check.
     # Search war file on in target directory on sunny.
@@ -77,7 +54,7 @@ def war_compare( target_host,war_name ):
         #where hosts_to_update to be initialized?
         hosts_to_update.append( target_host )
     else:
-        print "\t Applicatoin " + war_name[1] + " on " + target_host + " will not be updated."
+        print "\t Applicatoin " + war_name[1] + " on " + target_host + " matches target."
                                                                 
 ''' Internal functions. End '''
     
@@ -86,7 +63,7 @@ def main():
     Preparation
     '''
     
-    linux = Deal_with_linux()
+    #linux = Deal_with_linux()
     
     # Check if patch exists on Sunny
     if os.path.isdir( sunny_patch ) != True:
@@ -106,7 +83,7 @@ def main():
     '''
     # Get list of already applied patches
     # Function returns list tuples + row count, right now need only tuples, so [0]
-    patches_curr = postgres_exec ( 'select name from parameter.patches_log order by id desc;' )[0]
+    patches_curr = postgres_exec ( db_host, db_name,  'select name from parameter.patches_log order by id desc;' )[0]
     
     # Get list of patches from from Sunny
     if os.path.isdir( sunny_patch + '\\patches' ) != True:
@@ -164,17 +141,6 @@ def main():
                     print "\tError installing database patch. Examine logfile " + stage_dir + '\\patches\\' + i + '\\install_db_log.log' + "\n"
                     sys.exit()
                 logfile.close()
-            # Additional check from database fdc_patches_log...
-            #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
-            #is_db_patch_applied = postgres_exec ( "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
-            #if is_db_patch_applied != []:
-            #    pass    
-            #else:    
-            #    print "ERROR: Unable to confirm patch installation!"
-            #    exit()
-            
-            # Purge panels.
-            purge_panels()
    
         else:
             print "\tDatabase patch level: " + max(patches_curr)
@@ -184,11 +150,9 @@ def main():
         
     '''
     Application update
-    TODO: 1. copy war to gudhskpdi-mon, with md5 check. 
-    2. copy from gudhskpdi-mon to app server with md5 check. Use ansible user (cos already has keys and root priveleges)
+    '''
     
-    #where to initialize?
-    hosts_to_update == []    
+    hosts_to_update = []    
     for host in application_host:
         for war in wars:
             war_compare( host, war )
@@ -196,37 +160,37 @@ def main():
     # Finish if hosts_to_update empty.
     if hosts_to_update == []:
         print "\tAll application hosts already up to date."
-        sys.exit()  
+        sys.exit()
  
     print "\n"
     
 	# Distinct hosts to update
-	hosts_to_update = list( set( hosts_to_update ) )
-	
+    hosts_to_update = list( set( hosts_to_update ) )
+
     for i in hosts_to_update:
         # Delete and recreate temporary directory for war file.
-        linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+#        linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
         
         # Copy war to target server.
         print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
-        linux.linux_put( i, war_path, '/tmp/webapps/' + war_name )
-        linux.linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
+#        linux.linux_put( i, war_path, '/tmp/webapps/' + war_name )
+#        linux.linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
         
         # Stop tomcat server.
         print "Stopping application server " + i + "..."
-        linux.linux_exec( i, 'sudo systemctl stop tomcat' )
+#        linux.linux_exec( i, 'sudo systemctl stop tomcat' )
         
     #for i in hosts_to_update:
         print "Applying application patch on " + i + "..."
         # Delete old application. Both warfile and directory.
-        linux.linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
-        linux.linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
+#        linux.linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
+#        linux.linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
         
         # Copy war to webapps folder.
-        linux.linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
+#        linux.linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
         
         print "Starting application server " + i + "..."
-        linux.linux_exec( i, 'sudo systemctl start tomcat' )
+#        linux.linux_exec( i, 'sudo systemctl start tomcat' )
         
         # Check if server really started.
         tcat_sctl = linux.linux_exec( i, 'sudo systemctl status tomcat' )
@@ -236,9 +200,9 @@ def main():
         else:
             print "\tFailed!\n"
         print "Waiting 60 seconds for application to (re)deploy..."
-        sleep(60)
-        check_webpage(patch_num, i, target)
-    
+#        sleep(60)
+#        check_webpage(patch_num, i, target)
+
     # Doublecheck md5.
     for i in hosts_to_update:
         target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
@@ -246,7 +210,6 @@ def main():
             print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
         else:
             print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
-'''
 
 if __name__ == "__main__":
     ''' Variables '''

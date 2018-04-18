@@ -1,14 +1,7 @@
 ﻿@chcp 65001
 setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
-rem DEV:
-REM set PGHOST=fishery-dev-db.fors.ru
-
-rem TEST:
-set PGHOST=fishery-test-db.fors.ru
-
-rem TEST ЦОД:
-rem set PGHOST=62.61.18.14
+set PGHOST=%1
 
 set PGPORT=5432
 set PGUSER=fishery
@@ -31,5 +24,3 @@ set "run_file=%run_path%%script_name%.sql"
 set "load_file=%run_path%/load/test_csv_file.csv"
 rem Запуск
 psql <%run_file% >%spool_file% 2>&1
-
-exit
