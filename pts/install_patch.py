@@ -31,8 +31,6 @@ def usage():
 
 linux = Deal_with_linux()
 
-hosts_to_update = []
-    
 def war_compare( target_host, war_name ):
     print "Checking java application version for " + war_name[1] + ":"
     # glob returns array, using first [0] element to use in in md5_check.
@@ -54,9 +52,11 @@ def war_compare( target_host, war_name ):
     if source_md5 != target_md5.split(" ")[0]: 
         print "\t Applicatoin " + war_name[1] + " on " + target_host + " will be updated."
         #where hosts_to_update to be initialized?
-        hosts_to_update.append( target_host )
+        host_to_update = target_host
     else:
         print "\t Applicatoin " + war_name[1] + " on " + target_host + " matches target."
+        host_to_update = ''
+    return host_to_update
                                                                 
 ''' Internal functions. End '''
     
@@ -153,11 +153,12 @@ def main():
 
     Application update
     '''
-    
-    hosts_to_update = []    
+
+    hosts_to_update = []
     for host in application_host:
         for war in wars:
-            war_compare( host, war )
+            host_to_update = war_compare( host, war )
+            hosts_to_update.append( host_to_update )
     
     # Finish if hosts_to_update empty.
     if hosts_to_update == []:
@@ -166,7 +167,7 @@ def main():
  
     print "\n"
     
-	# Distinct hosts to update
+    # Distinct hosts to update
     hosts_to_update = list( set( hosts_to_update ) )
 
     for i in hosts_to_update:
@@ -259,7 +260,7 @@ if __name__ == "__main__":
         db_patch_file = 'db_patch_test.bat'
         db_name = 'pts'
         db_host = '172.19.1.127'
-	
+    
     elif target == 'branch':
         application_host = [ 'pts-tst-as2' ]
         war_name = target + '.war'
