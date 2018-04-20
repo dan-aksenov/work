@@ -1,1 +1,1 @@
-patch.bat pts-tst-cu /u01/apache-tomcat-8.5.23 > D:\pts_patch\log\bel-master.log
+patch.bat pts-tst-cu /u01/apache-tomcat-8.5.23

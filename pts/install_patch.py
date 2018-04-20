@@ -1,220 +1,42 @@
-# -*- coding: utf-8 -*-
 # for args and exit
 import sys
 # for db connection
 from psycopg2 import connect
+#from os import os.listdir, os.rename, rmdir, os.path, os.makedirs
 # for war file search
 from glob import glob
 from getopt import getopt
-# for ssh connection and ftp transfer.
-import paramiko
-# for file md5s
-import hashlib
-
-# for correct patch number sorting 0.9.2 mast be before 0.20.1
-from natsort import natsorted, ns
+# moved to utils
+#import paramiko
+#import hashlib
+# for waiting
+from time import sleep
+# for coloured output
+from termcolor import colored
 
 import subprocess
 import shutil
 import os
+import re
+import requests
 
-''' VARS '''
-
-# Get patch number and target server
-def usage():
-    print 'Usage: -n for patch number(i.e. 2.10.1), -t for master or branch'
-
-# Get n and t parameters
-try:    
-    opts, args = getopt( sys.argv[1:], 'n:t:h:' )
-except:
-    usage()
-    sys.exit()
-
-# Assign n - patch_num, t - target
-for opt, arg in opts:
-    if opt in ( '-n' ):
-        patch_num = arg
-    elif opt in ( '-t' ):
-        target = arg
-    elif opt in ( '-h' ):
-        usage()
-    else:
-        usage()
-        sys.exit()
-
-# If params not supplied prompt for them
-# raw_input used, so no need for additional quotes
-try:
-    patch_num
-except:
-    patch_num = raw_input('Enter patch number: ')
-
-try:
-    target        
-except:
-    target = raw_input('master or branch?')
-
-# Correct target server or quit
-if target not in [ 'master', 'branch' ]:
-    usage()
-    sys.exit()
-
-# Assign variables, depending on target
-    
-if target == 'master':
-    # Tomcat application server
-    application_host = [ 'pts-tst-as1.fors.ru' ]
-    
-    # Имя файла приложения (predprod.war/skpdi.war).
-    # war_name = target + '.war'
-    # Директория с распакованным приложением (predprod/skpdi).
-    # war_fldr = target
-    # Батник для установки патчей БД.
-    # db_patch_file = 'db_patch_predprod.bat'
-    
-    # Database name
-    db_name = 'pts'
-    
-    # Database server
-    db_host = '172.19.1.127'
-    
-elif target == 'branch':
-    # Сервер приложения tomcat.
-    application_host = [ 'pts-tst-as2.fors.ru' ]
-    
-    # Имя файла приложения (predprod.war/skpdi.war).
-    # war_name = target + '.war'
-    # Директория с распакованным приложением (predprod/skpdi).
-    # war_fldr = target
-    # Батник для установки патчей БД.
-    db_patch_file = 'db_patch_skpdi.bat'
-    
-    # Имя БД.
-    db_name = 'pts_branch'
-    
-    # Сервер БД.
-    db_host = '172.19.1.127'
-    
-else:
-    usage()
-    sys.exit()
-
-# Temporary storage
-stage_dir = 'd:\\tmp\\pts'
-
-# Sunny builds address
-sunny_path = '\\\sunny\\builds\\pts\\'
-# Current patch directory
-sunny_patch = sunny_path + patch_num
-
-'''
-war files mappings. Format: [ 'name on sunny', 'desired application name']
-'''
-war_integration = [ 'pts-integration-*.war', 'integration.war' ]
-war_portal = [ 'pts-public-*.war', 'portal.war' ]
-war_pts = [ 'pts-restricted-*.war', 'pts.war' ]
-war_portal2 = [ 'pts-portal*.war', 'portal2.war' ]
-war_jointstorate = [ 'pts-jointstorage*.war', 'jointstorage.war' ]
-
-
-''' Linux stuff '''
-# Путь к расположения ключа SSH. Если такого нет - выход. Довавить возможность менять его?
-linux_key_path = 'C:\Users\daniil.aksenov\Documents\ssh\id_rsa.key'
-if os.path.isfile( linux_key_path ) != True:
-   print "ERROR: Linux ssh key " + linux_key_path + " not found!"
-   sys.exit()
-
-# Ключ SSH подготовленный для работы paramiko.
-linux_key = paramiko.RSAKey.from_private_key_file( linux_key_path )
-# Пользователь SSH.
-ssh_user = 'ansible'
-# Порт SSH.
-ssh_port = 22
-
-# Версия и расположение приложений Tomcat.
-tomcat_name = 'apache-tomcat-8.5.4'
-app_path = '/opt/' + tomcat_name + '/webapps'
-
-# Для перенаправления вывода subprocess при установке патча БД. Там все равно нет ничего интересного.
-dnull = open("NUL", "w")
-
-''' VARS. End '''
+from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec
 
 ''' Internal functions ''' 
 
-def md5_check( checked_file ):
-    ''' Проверка md5 для war файлов '''
+def usage():
+    ''' Usage '''
     
-    md5sum = hashlib.md5(open(checked_file,'rb').read()).hexdigest()
-    return md5sum
+    print 'Usage: -n for patch number(i.e. 2.10.1), -t for fishery or predprod'
 
-def linux_exec( linux_host, shell_command ):
-    ''' Удаленное выполение команд на Linux '''
-       
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect( hostname = linux_host, username = ssh_user, port = ssh_port, pkey = linux_key )
+linux = Deal_with_linux()
     
-    stdin, stdout, stderr = client.exec_command( shell_command )
-    data = stdout.read() + stderr.read()
-    client.close()
-    return data
-
-def linux_put( linux_host, source_path, dest_path ):
-    ''' Копирование файлов на удаленный Linux '''
-           
-    transport = paramiko.Transport(( linux_host, ssh_port ))
-    transport.connect( username = ssh_user, pkey = linux_key )
-    sftp = paramiko.SFTPClient.from_transport( transport )
-    
-    localpath = source_path
-    remotepath = dest_path
-
-    sftp.put( localpath, remotepath )
-    sftp.close()
-    transport.close()
-
-def recreate_dir( dir_name ):
-    ''' Recreate Windows directory '''
-    
-    if os.path.exists( dir_name ):
-        shutil.rmtree( dir_name )
-    else:
-        os.makedirs( dir_name )
-
-def postgres_exec ( sql_query ):
-    ''' Execute query in database '''
-    # pgpass should be used insead of password    
-    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host
-    try:
-        conn = connect( conn_string )
-    except:
-        print '\nERROR: unable to connect to the database!'
-        sys.exit()
-    cur = conn.cursor()
-    cur.execute( sql_query )
-    query_results = []
-    # Эта проверка нужна, так как при удалении нет курсора, который можно будет вернуть.
-    if cur.description != None:
-        rows = cur.fetchall()
-       # В дальнейшем удобнее манипулировать строковыми значениями, а не картежами. Поэтому результат прообразоваывается в массим строк.
-        for row in rows:
-            query_results.append(row[0])
-    # Количество обработанных строк. Для просчета delete.
-    rowcnt = cur.rowcount
-    conn.commit()
-    # Закрытие курсора и коннекта не обязательно, просто для порядка.
-    cur.close()
-    conn.close()
-    return query_results, rowcnt
-
-def war_compare( war_name ):
-    print "Checking java application version:"
+def war_compare( target_host, war_name ):
+    print "Checking java application version for " + war_name[1] + ":"
     # glob returns array, using first [0] element to use in in md5_check.
-    # Search war file on in target directory on sunny. TODO: what if more then one candidate?
+    # Search war file on in target directory on sunny.
     if glob(sunny_patch + '\\' + war_name[0]) == []:
-        print "ERROR: Unable to locate war file for " + war_name[1] + "!"
+        print "ERROR: Unable to locate war file for " + war_name[0] + "!"
         sys.exit()
 
     war_path = glob( sunny_patch + '\\' + war_name[0])[0]
@@ -224,149 +46,269 @@ def war_compare( war_name ):
 
     # Get war's md5 from target applicaton server.
     # Compare Sunny's war whit target server's war.
-    # По результатам формируется список hosts_to_update для установки обновления.
-    for i in application_host:
-        target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name[1] + '.war' )
-        hosts_to_update = []
-        if source_md5 != target_md5.split(" ")[0]: 
-            print "\t Applicatoin " + war_name[1] + " on " + i + " will be updated."
-            hosts_to_update.append(i)
-        return hosts_to_update
 
-def war_update( war_name, hosts_to_update ):
-    # to be here
-    return result
-        
+    # hosts_to_upate needs to be removed or set as global...
+    target_md5 = linux.linux_exec( target_host, 'sudo md5sum ' + app_path + '/' + war_name[1])
+    if source_md5 != target_md5.split(" ")[0]: 
+        print "\t Applicatoin " + war_name[1] + " on " + target_host + " will be updated."
+        #where hosts_to_update to be initialized?
+        hosts_to_update.append( target_host )
+    else:
+        print "\t Applicatoin " + war_name[1] + " on " + target_host + " matches target."
+                                                                
 ''' Internal functions. End '''
     
-'''
-Preparations
-'''
+def main():
+    '''
+    Preparation
+    '''
+    
+    #linux = Deal_with_linux()
+    
+    # Check if patch exists on Sunny
+    if os.path.isdir( sunny_patch ) != True:
+        print "ERROR: No such patch on Sunny!"
+        print "\tNo such directory " + sunny_patch
+        sys.exit()
 
-# Проверка наличия указанного патча на Sunny
-if os.path.isdir( sunny_patch ) != True:
-    print "ERROR: No such patch on Sunny!"
-    print "\tNo such directory " + sunny_patch
-    sys.exit()
-
-# Очистка временной директории.
-recreate_dir( stage_dir )
-
-'''
-DB patches install
-'''
-
-# Получеине списка уже устаноленных патей.
-# [0] потомучто массив значений - на первой позиции.
-patches_curr = postgres_exec ( 'select name from parameter.fdc_patches_log order by id desc;' )[0]
-
-# Получение списка патчей БД из директории с патчами.
-# Переделать под птс
-patches_targ = [ name for name in os.listdir( sunny_pach ) ]
-
-# Сравненеие уже установленных патчей с патчами из директории.
-# Если версия на БД младше чем лежит в директории с патчами, устанавливаются недостающие патчи.
-print "\nChecking database patch level:"
-if max(patches_targ) == max(patches_curr):
-    print "\tNo database patch required.\n"
-elif max(patches_targ) > max(patches_curr):
-    print "\tDatabase needs patching.\n"
-    patches_miss = []
-    for i in (set(patches_targ) - set(patches_curr)):
-        if i > max(patches_curr):
-            patches_miss.append(i)
-
-    print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
-    for i in patches_miss:
-        # Копирование только недостающих патчей с Sunny.
-        subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
-        # Копирование установщика патчей в директории с патчами.
-        subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
-
-    # Остановка tomcat.
-    for i in application_host:
-        print "Stopping application server " + i + "...\n"
-        linux_exec( i, 'sudo systemctl stop tomcat' )
-    # Установка патчей БД
-    # Для выполенния по-порядку применен sort.
-    for i in sorted(patches_miss):    
-        print "Applying database patch " + i + "..."
-        # Вывод отправлен в null - тк там все равно ничего по делу. Результат будет анализирован через чтение лога.
-        subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
-        # Просмотре лога на предмет фразы "finsih install patch ods objects"
-        try:
-            logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
-        except:
-            print "\tUnable to read logfile. Somethnig wrong with installation.\n"
-            sys.exit()
-        loglines = logfile.read()
-        success_marker = loglines.find('finsih install patch ods objects')
-        if success_marker != -1:
-            print "\tDone.\n"
+    # Clear temporary directory. May fall if somebody is "sitting" in it.
+    try:
+        recreate_dir( stage_dir )
+    except:
+        print "ERROR: Unable to recreate patch staging directory."
+        sys.exit()
+    
+    '''
+    Database patching
+    '''
+    # Get list of already applied patches
+    # Function returns list tuples + row count, right now need only tuples, so [0]
+    patches_curr = postgres_exec ( db_host, db_name,  'select name from parameter.patches_log order by id desc;' )[0]
+    
+    # Get list of patches from from Sunny
+    if os.path.isdir( sunny_patch + '\\patches' ) != True:
+        print "NOTICE: No database patch found in build. Assume database patching not required."
+    else:
+        patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
+        
+        # Compare installed patches with patches from Sunny.
+        # If latest database patch version lower then on Sunny - install missing patches.
+        print "\nChecking database patch level:"
+        # To handle file name suffixes for directories like "db_0190_20171113_v2.19" additional variable declared to hold max(patches_targ)
+        last_patch_targ = max( patches_targ )
+        last_patch_targ_strip = re.findall('db_.*_\d{8}', last_patch_targ)[0] # findall returns list
+        if last_patch_targ_strip == max(patches_curr):
+            print "\tDatabase patch level: " + max(patches_curr) 
+            print "\tLatest patch on Sunny: " + last_patch_targ_strip
+            print "\tNo database patch required.\n"
+        elif last_patch_targ_strip > max(patches_curr):
+            print "\tDatabase patch level: " + max(patches_curr)
+            print "\tLatest patch on Sunny: " + last_patch_targ_strip
+            print "\tDatabase needs patching.\n"
+            patches_miss = []
+            for i in (set(patches_targ) - set(patches_curr)):
+                if i > max(patches_curr):
+                    patches_miss.append(i)
+    
+            print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
+            for i in patches_miss:
+                # Copy needed patches from Sunny.
+                subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
+                # Place patch installer to patch subdirectories.
+                subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
+    
+            # Stop tomcat.
+            for i in application_host:
+                print "Stopping application server " + i + "...\n"
+                linux.linux_exec( i, 'sudo systemctl stop tomcat' )
+            # Apply database patches
+            # Using sort to execute patches in right order.
+            for i in sorted(patches_miss):    
+                print "Applying database patch " + i + "..."
+                # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
+                subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file, db_host, db_name ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
+                # Search logfile for "finish install patch ods objects
+                try:
+                    logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
+                except:
+                    print "\tUnable to read logfile. Somethnig wrong with installation.\n"
+                    sys.exit()
+                loglines = logfile.read()
+                success_marker = loglines.find('finsih install patch ods objects')
+                if success_marker != -1:
+                    print "\tDone.\n"
+                else:
+                    print "\tError installing database patch. Examine logfile " + stage_dir + '\\patches\\' + i + '\\install_db_log.log' + "\n"
+                    sys.exit()
+                logfile.close()
+   
         else:
-            print "\tError installing database patch.\n"
+            print "\tDatabase patch level: " + max(patches_curr)
+            print "\t Latest patch on Sunny: " + last_patch_targ_strip
+            print "ERROR: Something wrong with database patching!\n"
             sys.exit()
-        logfile.close()
-        # Дополнетельная проверка. Выборка устанавливаемого патча из таблицы с патчами.
-        is_db_patch_applied = postgres_exec("select name from parameter.fdc_patches_log where name = '" + i + "'")
-        if is_db_patch_applied != []:
-            pass    
-        else:    
-            print "ERROR: Unable to confirm patch installation!"
-            exit()
+        
+    '''
+    Application update
+    '''
     
-else:
-    print "ERROR: Something wrong with database patching!\n"
+    hosts_to_update = []    
+    for host in application_host:
+        for war in wars:
+            war_compare( host, war )
     
-'''
-Application patches install.
-'''
+    # Finish if hosts_to_update empty.
+    if hosts_to_update == []:
+        print "\tAll application hosts already up to date."
+        sys.exit()
+ 
+    print "\n"
+    
+	# Distinct hosts to update
+    hosts_to_update = list( set( hosts_to_update ) )
 
-# print "Checking java application version:"
-# Moved to functions 
+    for i in hosts_to_update:
+        # Delete and recreate temporary directory for war file.
+#        linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+        
+        # Copy war to target server.
+        print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
+#        linux.linux_put( i, war_path, '/tmp/webapps/' + war_name )
+#        linux.linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
+        
+        # Stop tomcat server.
+        print "Stopping application server " + i + "..."
+#        linux.linux_exec( i, 'sudo systemctl stop tomcat' )
+        
+    #for i in hosts_to_update:
+        print "Applying application patch on " + i + "..."
+        # Delete old application. Both warfile and directory.
+#        linux.linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
+#        linux.linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
+        
+        # Copy war to webapps folder.
+#        linux.linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
+        
+        print "Starting application server " + i + "..."
+#        linux.linux_exec( i, 'sudo systemctl start tomcat' )
+        
+        # Check if server really started.
+        tcat_sctl = linux.linux_exec( i, 'sudo systemctl status tomcat' )
+        tcat_status = tcat_sctl.find( 'Active: active (running) since' )
+        if tcat_status != -1:
+            print "\tDone!\n"
+        else:
+            print "\tFailed!\n"
+        print "Waiting 60 seconds for application to (re)deploy..."
+#        sleep(60)
+#        check_webpage(patch_num, i, target)
 
+    # Doublecheck md5.
+    for i in hosts_to_update:
+        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+        if source_md5 == target_md5.split(" ")[0]: 
+            print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
+        else:
+            print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
 
-# Просто для форматирования.    
-print "\n"
+if __name__ == "__main__":
+    ''' Variables '''
+    # Get patch number and target environment from parameters n and t
+    try:    
+        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
+    except:
+        usage()
+        sys.exit()
 
+    # Assibn variables n - patch_num, t - target.
+    for opt, arg in opts:
+        if opt in ( '-n' ):
+            patch_num = arg
+        elif opt in ( '-t' ):
+            target = arg
+        elif opt in ( '-h' ):
+            usage()
+        else:
+            usage()
+            sys.exit()
 
-# to be replaced with function ...
-for i in hosts_to_update:
-    #/need separate function for war update?
-    # Удалить и пересоздать директорию для временного хранения war файла.
-    linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
+# If no parameter supplied prompt for them
+    try:
+        patch_num
+    except:
+        patch_num = raw_input('Enter patch number: ')
+
+    try:
+        target 
+    except:
+        target = raw_input('master or manual: ')
+
+    # Check for valid target name.    
+    if target not in [ 'master', 'manual']:
+        usage()
+        sys.exit()
+
+    # Assign variables depending on target
+    # Full variable explanation in 'manual' section
+    if target == 'master':
+        application_host = [ 'fishery-test-app' ]
+        war_name = target + '.war'
+        war_fldr = target
+        db_patch_file = 'db_patch_test.bat'
+        db_name = 'fishery'
+        db_host = 'fishery-test-db'
     
-    # Скопировать war файл на сервер приложений.
-    print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
-    linux_put( i, war_path, '/tmp/webapps/' + war_name )
-    linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
+    elif target == 'manual':
+        # Input application hosts to array.
+        application_host = list()
+        num = raw_input("How many application servers? ")
+        for i in range(int(num)):
+            host_name = raw_input("Application server " + str(i) + ": ")
+            application_host.append( host_name )
+
+        # Directory with deployed application (predprod/fishery)
+        war_fldr = raw_input('Enter applicaton name (warfile name): ')    
+
+        # warfile name (predprod.war/fishery.war)
+        war_name = war_fldr + '.war'
+               
+        # batfile for database patching
+        db_patch_file = 'db_patch_generic.bat'
+       
+        # database server
+        db_host = raw_input('Enter database server hostname: ')
+        
+        # database name
+        db_name = raw_input('Enter database name: ')
     
-    # Остановить сервер приложений.
-    print "Stopping application server " + i + "..."
-    linux_exec( i, 'sudo systemctl stop tomcat' )
-    
-    # Удалить старое приложение.
-    print "Applying application patch on " + i + "..."
-    linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
-    linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
-    
-    # Копировать war в целевую директорию на сервере приложений.
-    linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
-    print "Starting application server " + i + "..."
-    linux_exec( i, 'sudo systemctl start tomcat' )
-    
-    # Проверить работу сервера приложений после запуска.
-    tcat_sctl = linux_exec( i, 'sudo systemctl status tomcat' )
-    tcat_status = tcat_sctl.find( 'Active: active (running) since' )
-    if tcat_status != -1:
-        print "\tDone!\n"
     else:
-        print "\tFailed!\n"
+        usage()
+        sys.exit()
 
-# Final md5 check. To be replaced with function.
-for i in hosts_to_update:
-    target_md5 = linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-    if source_md5 == target_md5.split(" ")[0]: 
-        print "DONE: Application version on " + i + " now matches " + patch_num + ".\n"
-    else:
-        print "ERROR: Application version on " + i + " still not matches " + patch_num + "!\n"
+    # Patchfile temporary directory
+    stage_dir = 'd:\\tmp\\fishery_patch'
+
+    # Patch address on SUNNY
+    sunny_path = '\\\sunny\\builds\\fishery\\'
+    # Exact directory path
+    sunny_patch = sunny_path + patch_num
+
+    # Tomcat webapps location on target server(s)
+    tomcat_name = 'apache-tomcat-8.5.8'
+    app_path = '/u01/' + tomcat_name + '/webapps'
+
+    # Send subprocess for database patching to null. Nothing interesting there anyway.
+    dnull = open("NUL", "w")
+    
+    '''
+    war files mappings. Format: [ 'name on sunny', 'desired application name']
+    '''
+    wars = [
+    [ 'fishery-integration-' + patch_num + '.war', 'integration.war' ],
+    [ 'fishery-public-' + patch_num + '.war', 'portal.war' ],
+    [ 'fishery-restricted-' + patch_num + '.war', 'fishery.war' ]
+    ]
+
+    ''' Variables. End.'''
+
+    main()
