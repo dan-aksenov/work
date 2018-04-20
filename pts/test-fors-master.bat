@@ -1,1 +1,1 @@
-patch.bat pts-tst-as1 > D:\pts_patch\log\master.log
+patch.bat pts-tst-as1 /opt/apache-tomcat-8.5.27 > D:\pts_patch\log\master.log
