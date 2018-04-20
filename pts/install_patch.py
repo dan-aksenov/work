@@ -27,7 +27,7 @@ from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec
 def usage():
     ''' Usage '''
     
-    print 'Usage: -n for patch number(i.e. 2.10.1), -t for fishery or predprod'
+    print 'Usage: -n for patch number(i.e. 0.29.1), -t for master or predprod'
 
 linux = Deal_with_linux()
     
@@ -80,7 +80,7 @@ def main():
     
     '''
     Database patching
-    '''
+    
     # Get list of already applied patches
     # Function returns list tuples + row count, right now need only tuples, so [0]
     patches_curr = postgres_exec ( db_host, db_name,  'select name from parameter.patches_log order by id desc;' )[0]
@@ -148,7 +148,7 @@ def main():
             print "ERROR: Something wrong with database patching!\n"
             sys.exit()
         
-    '''
+
     Application update
     '''
     
@@ -251,12 +251,12 @@ if __name__ == "__main__":
     # Assign variables depending on target
     # Full variable explanation in 'manual' section
     if target == 'master':
-        application_host = [ 'fishery-test-app' ]
+        application_host = [ 'pts-tst-as1' ]
         war_name = target + '.war'
         war_fldr = target
         db_patch_file = 'db_patch_test.bat'
-        db_name = 'fishery'
-        db_host = 'fishery-test-db'
+        db_name = 'pts'
+        db_host = '172.19.1.127'
     
     elif target == 'manual':
         # Input application hosts to array.
@@ -286,16 +286,16 @@ if __name__ == "__main__":
         sys.exit()
 
     # Patchfile temporary directory
-    stage_dir = 'd:\\tmp\\fishery_patch'
+    stage_dir = 'd:\\tmp\\pts_patch'
 
     # Patch address on SUNNY
-    sunny_path = '\\\sunny\\builds\\fishery\\'
+    sunny_path = '\\\sunny\\builds\\pts\\'
     # Exact directory path
     sunny_patch = sunny_path + patch_num
 
     # Tomcat webapps location on target server(s)
-    tomcat_name = 'apache-tomcat-8.5.8'
-    app_path = '/u01/' + tomcat_name + '/webapps'
+    tomcat_name = 'apache-tomcat-8.5.27'
+    app_path = '/opt/' + tomcat_name + '/webapps'
 
     # Send subprocess for database patching to null. Nothing interesting there anyway.
     dnull = open("NUL", "w")
@@ -304,11 +304,13 @@ if __name__ == "__main__":
     war files mappings. Format: [ 'name on sunny', 'desired application name']
     '''
     wars = [
-    [ 'fishery-integration-' + patch_num + '.war', 'integration.war' ],
-    [ 'fishery-public-' + patch_num + '.war', 'portal.war' ],
-    [ 'fishery-restricted-' + patch_num + '.war', 'fishery.war' ]
+    [ 'pts-integration-' + patch_num + '.war', 'integration.war' ],
+    [ 'pts-public-' + patch_num + '.war', 'mobile.war' ],
+    [ 'pts-restricted-' + patch_num + '.war', 'pts.war' ],
+	[ 'pts-portal-' + patch_num + '.war', 'portal.war' ],
+	[ 'pts-jointstorage-' + patch_num + '.war', 'jointstorage.war'  ]
     ]
-
+	
     ''' Variables. End.'''
 
     main()
