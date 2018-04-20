@@ -1,1 +1,1 @@
-patch.bat pts-tst-as1 /opt/apache-tomcat-8.5.27-test > D:\pts_patch\log\demo.log
+patch.bat pts-tst-as1 /opt/apache-tomcat-8.5.27-test test > D:\pts_patch\log\demo.log

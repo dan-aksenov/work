@@ -1,1 +1,1 @@
-patch.bat pts-tst-cu /u01/apache-tomcat-8.5.23-branch > D:\pts_patch\log\bel-branch.log
+patch.bat pts-tst-cu /u01/apache-tomcat-8.5.23-branch branch > D:\pts_patch\log\bel-branch.log

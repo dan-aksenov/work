@@ -16,7 +16,7 @@ ren pts-portal*.war portal.war
 ren pts-jointstorage*.war jointstorage.war
 
 rem Stop tomcat.
-%plink_cmd% "sudo systemctl stop tomcat%2"
+%plink_cmd% "sudo systemctl stop tomcat%3"
 
 rem Remove old app files and dirs
 %plink_cmd% "sudo rm %app_name%/webapps/integration.war -f"
@@ -50,7 +50,7 @@ md5sum jointstorage.war
 %plink_cmd% "sudo md5sum %app_name%/webapps/jointstorage.war"
 
 rem Start tomcat.
-%plink_cmd% "sudo systemctl start tomcat%2"
+%plink_cmd% "sudo systemctl start tomcat%3"
 
 rem Check tomcat after starting.
-%plink_cmd% "sudo systemctl status tomcat%2"
+%plink_cmd% "sudo systemctl status tomcat%3"
