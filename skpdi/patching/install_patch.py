@@ -16,7 +16,7 @@ import re
 import requests
 
 #Custom utilities
-from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec
+from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec, Bcolors
 
 ''' Internal functions ''' 
 
@@ -43,18 +43,19 @@ def purge_panels():
     print "\tDeleted " + str(rows_deleted) + " rows from fdc_sys_class_panel.\n"
     
 def check_webpage(patch_num, application_host, target):
-    # todo redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
+    # redo it with /u01/apache-tomcat-8.5.23/webapps/record/META-INF/maven/ru.fors.ods/record/pom.xml version check?
+	# cos it'll also work on pts
     ''' Seek version name in web page's code. '''
 
     page = requests.get('http://' + application_host + ":8080/" + target)
     if page.status_code <> 200:
-       print "WARNING: Application webpage unnaccesseble: " + str(page.status_code) + "\n"
+       print Bcolors.WARING + "WARNING: Application webpage unnaccesseble: " + str(page.status_code) + "\n" + Bcolors.ENDC
     elif 'ver-' + patch_num in page.text:
-        print colored( "SUCCESS: Application webpage matches " + patch_num, 'white', 'on_green' ) + "\n"
+        print Bcolors.OKGREEN + "SUCCESS: Application webpage matches " + patch_num + "\n" + Bcolors.ENDC
     elif 'ver-' + patch_num not in page.text:
-        print "WARNING: Application webpage not matches " + patch_num + "\n"
+        print Bcolors.WARING + "WARNING: Application webpage not matches " + patch_num + "\n" + Bcolors.ENDC
     else:
-        print "WARING: Problem determining application version.\n"
+        print Bcolors.WARING + "WARING: Problem determining application version.\n" + Bcolors.ENDC
 
 ''' Internal functions. End '''
     
@@ -68,7 +69,7 @@ def main():
     
     # Check if patch exists on Sunny
     if os.path.isdir( sunny_patch ) != True:
-        print "ERROR: No such patch on Sunny!"
+        print Bcolors.FAIL + "ERROR: No such patch on Sunny!" + Bcolors.ENDC
         print "\tNo such directory " + sunny_patch
         sys.exit()
 
@@ -76,7 +77,7 @@ def main():
     try:
         recreate_dir( stage_dir )
     except:
-        print "ERROR: Unable to recreate patch staging directory."
+        print Bcolors.FAIL + "ERROR: Unable to recreate patch staging directory." + Bcolors.ENDC
         sys.exit()
     
     '''
@@ -132,17 +133,17 @@ def main():
                 try:
                     logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
                 except:
-                    print "\tUnable to read logfile. Somethnig wrong with installation.\n"
+                    print Bcolors.FAIL + "\tUnable to read logfile" + stage_dir + "\\patches\\" + i + "\\install_db_log.log. Somethnig wrong with installation.\n" + Bcolors.ENDC
                     sys.exit()
                 loglines = logfile.read()
                 success_marker = loglines.find('finsih install patch ods objects')
                 if success_marker != -1:
-                    print "\tDone.\n"
+                    print Bcolors.OKGREEN + "\tDone.\n" + Bcolors.ENDC
                 else:
-                    print "\tError installing database patch. Examine logfile " + stage_dir + '\\patches\\' + i + '\\install_db_log.log' + "\n"
+                    print Bcolors.FAIL + "\tError installing database patch. Examine logfile " + stage_dir + "\\patches\\" + i + "\\install_db_log.log for details\n" + Bcolors.ENDC
                     sys.exit()
                 logfile.close()
-            # Additional check from database fdc_patches_log...
+            # Add additional check from database fdc_patches_log?
             #cur.execute("select name from parameter.fdc_patches_log where name = '" + i + "'")
             #is_db_patch_applied = postgres_exec ( db_host, db_name,  "select name from parameter.fdc_patches_log where name = '" + i + "'" )[0]
             #if is_db_patch_applied != []:
@@ -157,7 +158,7 @@ def main():
         else:
             print "\tDatabase patch level: " + max(patches_curr)
             print "\t Latest patch on Sunny: " + last_patch_targ_strip
-            print "ERROR: Something wrong with database patching!\n"
+            print Bcolors.FAIL + "ERROR: Something wrong with database patching!\n" + Bcolors.ENDC
             sys.exit()
         
     '''
@@ -170,7 +171,7 @@ def main():
     # glob returns an array, need its first([0]) element to user in md5_check.
     # Search ods*war file in Sunny's patch directory. TODO what if there are more then one? Like on PTS.
     if glob( sunny_patch + '\\ods*.war' ) == []:
-        print "ERROR: Unable to locate war file on Sunny!"
+        print Bcolors.FAIL + "ERROR: Unable to locate war file on Sunny!" + Bcolors.ENDC
         sys.exit()
     
     war_path = glob( sunny_patch + '\\ods*.war' )[0]
@@ -192,7 +193,7 @@ def main():
     
     # Finish if hosts_to_update empty.
     if hosts_to_update == []:
-        print "\tAll application hosts already up to date."
+        print Bcolors.OKBLUE + "\tAll application hosts already up to date." + Bcolors.ENDC
         sys.exit()  
  
     print "\n"
@@ -226,9 +227,9 @@ def main():
         tcat_sctl = linux.linux_exec( i, 'sudo systemctl status tomcat' )
         tcat_status = tcat_sctl.find( 'Active: active (running) since' )
         if tcat_status != -1:
-            print "\tDone!\n"
+            print Bcolors.OKGREEN +"\tDone!\n" + Bcolors.ENDC
         else:
-            print "\tFailed!\n"
+            print Bcolors.FAIL + "\tFailed!\n" + Bcolors.ENDC
         print "Waiting 60 seconds for application to (re)deploy..."
         sleep(60)
         check_webpage(patch_num, i, target)
@@ -237,9 +238,9 @@ def main():
     for i in hosts_to_update:
         target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
-            print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
+            print Bcolors.OKGREEN + "DONE: Application version on " + i + " now matches " + patch_num + "." + Bcolors.ENDC
         else:
-            print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
+            print Bcolors.FAIL + "ERROR: Application version on " + i + " still not matches " + patch_num + "!" + Bcolors.ENDC
 
 if __name__ == "__main__":
     
