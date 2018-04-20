@@ -49,13 +49,13 @@ def check_webpage(patch_num, application_host, target):
 
     page = requests.get('http://' + application_host + ":8080/" + target)
     if page.status_code <> 200:
-       print Bcolors.WARING + "WARNING: Application webpage unnaccesseble: " + str(page.status_code) + "\n" + Bcolors.ENDC
+       print Bcolors.WARNING + "WARNING: Application webpage unnaccesseble: " + str(page.status_code) + "\n" + Bcolors.ENDC
     elif 'ver-' + patch_num in page.text:
         print Bcolors.OKGREEN + "SUCCESS: Application webpage matches " + patch_num + "\n" + Bcolors.ENDC
     elif 'ver-' + patch_num not in page.text:
-        print Bcolors.WARING + "WARNING: Application webpage not matches " + patch_num + "\n" + Bcolors.ENDC
+        print Bcolors.WARNING + "WARNING: Application webpage not matches " + patch_num + "\n" + Bcolors.ENDC
     else:
-        print Bcolors.WARING + "WARING: Problem determining application version.\n" + Bcolors.ENDC
+        print Bcolors.WARNING + "WARNING: Problem determining application version.\n" + Bcolors.ENDC
 
 ''' Internal functions. End '''
     
@@ -225,7 +225,7 @@ def main():
         
         # Check if server really started.
         tcat_sctl = linux.linux_exec( i, 'sudo systemctl status tomcat' )
-        tcat_status = tcat_sctl.find( 'Active: active (running) since' )
+        tcat_status = tcat_sctl.find( 'Active: active ' )
         if tcat_status != -1:
             print Bcolors.OKGREEN +"\tDone!\n" + Bcolors.ENDC
         else:
@@ -238,7 +238,7 @@ def main():
     for i in hosts_to_update:
         target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
         if source_md5 == target_md5.split(" ")[0]: 
-            print Bcolors.OKGREEN + "DONE: Application version on " + i + " now matches " + patch_num + "." + Bcolors.ENDC
+            print Bcolors.OKBLUE + "DONE: Application version on " + i + " now matches " + patch_num + "." + Bcolors.ENDC
         else:
             print Bcolors.FAIL + "ERROR: Application version on " + i + " still not matches " + patch_num + "!" + Bcolors.ENDC
 
