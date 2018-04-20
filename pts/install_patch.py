@@ -30,6 +30,8 @@ def usage():
     print 'Usage: -n for patch number(i.e. 0.29.1), -t for master or predprod'
 
 linux = Deal_with_linux()
+
+hosts_to_update = []
     
 def war_compare( target_host, war_name ):
     print "Checking java application version for " + war_name[1] + ":"
@@ -244,7 +246,7 @@ if __name__ == "__main__":
         target = raw_input('master or manual: ')
 
     # Check for valid target name.    
-    if target not in [ 'master', 'manual']:
+    if target not in [ 'master', 'branch', 'manual']:
         usage()
         sys.exit()
 
@@ -256,6 +258,14 @@ if __name__ == "__main__":
         war_fldr = target
         db_patch_file = 'db_patch_test.bat'
         db_name = 'pts'
+        db_host = '172.19.1.127'
+	
+    elif target == 'branch':
+        application_host = [ 'pts-tst-as2' ]
+        war_name = target + '.war'
+        war_fldr = target
+        db_patch_file = 'db_patch_test.bat'
+        db_name = 'pts_branch'
         db_host = '172.19.1.127'
     
     elif target == 'manual':
@@ -307,10 +317,10 @@ if __name__ == "__main__":
     [ 'pts-integration-' + patch_num + '.war', 'integration.war' ],
     [ 'pts-public-' + patch_num + '.war', 'mobile.war' ],
     [ 'pts-restricted-' + patch_num + '.war', 'pts.war' ],
-	[ 'pts-portal-' + patch_num + '.war', 'portal.war' ],
-	[ 'pts-jointstorage-' + patch_num + '.war', 'jointstorage.war'  ]
+    [ 'pts-portal-' + patch_num + '.war', 'portal.war' ],
+    [ 'pts-jointstorage-' + patch_num + '.war', 'jointstorage.war'  ]
     ]
-	
+    
     ''' Variables. End.'''
 
     main()
