@@ -50,16 +50,15 @@ def war_compare( target_host, war_name ):
     # hosts_to_upate needs to be removed or set as global...
     target_md5 = linux.linux_exec( target_host, 'sudo md5sum ' + app_path + '/' + war_name[1])
     if source_md5 != target_md5.split(" ")[0]: 
-        print "\t Applicatoin " + war_name[1] + " on " + target_host + " will be updated."
-        #where to_update to be initialized?
-        host_to_update = target_host
+        print "\t Outdated..."
         app_to_update_src = war_name[0]
         app_to_update_dst = war_name[1]
-    else:
-        print "\t Applicatoin " + war_name[1] + " on " + target_host + " matches target."
-        #host_to_update = ''
-        #app_to_update=''
-    return host_to_update, app_to_update_src, app_to_update_dst
+		to_update_dst = 1
+    elif source_md5 == target_md5.split(" ")[0]:
+        print "\t Up to date"
+        app_to_update_src = 0
+        app_to_update_dst = 0
+    return app_to_update_src, app_to_update_dst, to_update
                                                                 
 ''' Internal functions. End '''
     
@@ -158,23 +157,22 @@ def main():
     '''
 
     # list to hold hosts and wars for updating
-    to_update = []
-    for host in application_host:
-        for war in wars:
-            host_to_update, app_to_update_src, app_to_update_dst = war_compare( host, war )
-            to_update.append( [host_to_update, app_to_update_src, app_to_update_dst] )
     
-    # Finish if to_update empty.
-    if to_update == []:
-        print "\tAll application hosts already up to date."
-        sys.exit()
+    for host in application_host:
+        to_update = []
+        for war in wars:
+            app_to_update_src, app_to_update_dst = war_compare( host, war )
+            to_update.append( [ app_to_update_src, app_to_update_dst ] )
+        print to_update
+        # Finish if to_update empty.
+        if to_update == []:
+            print "\tAll application hosts already up to date."
+            sys.exit()
+        else:
+            print "Applications on " + host + " will be updated"
  
     print "\n"
-    
-    # debug hosts to update
-    print to_update
-
-
+    '''
     for host_to_update, app_to_update_src, app_to_update_dst in to_update:
         # Delete and recreate temporary directory for war file.
 #        linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
@@ -218,7 +216,7 @@ def main():
        #     print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
         #else:
          #   print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
-
+    '''
 if __name__ == "__main__":
     ''' Variables '''
     # Get patch number and target environment from parameters n and t
