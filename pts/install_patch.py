@@ -53,12 +53,11 @@ def war_compare( target_host, war_name ):
         print "\t Outdated..."
         app_to_update_src = war_name[0]
         app_to_update_dst = war_name[1]
-		to_update_dst = 1
     elif source_md5 == target_md5.split(" ")[0]:
         print "\t Up to date"
-        app_to_update_src = 0
-        app_to_update_dst = 0
-    return app_to_update_src, app_to_update_dst, to_update
+        app_to_update_src = None
+        app_to_update_dst = None
+    return app_to_update_src, app_to_update_dst
                                                                 
 ''' Internal functions. End '''
     
