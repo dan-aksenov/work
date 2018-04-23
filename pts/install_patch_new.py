@@ -23,14 +23,14 @@ wars = [
                                                        
 # check database version and apply database patch
 
-# copy war files to asnible host
-# run serial task to update apps one by one from ansible host.
-# will restart of servers be serial too&
-
-# Copy war to target server.
+# copy war files to asnible jump_host
 for war in wars:
     if glob(sunny_patch + '\\' + war[0]) == []:
         print "ERROR: Unable to locate war file for " + war[0] + "!"
         sys.exit()
     war_path = glob( sunny_patch + '\\' + war[0])[0]
     linux.linux_put( jump_host, war_path, '/tmp/webapps/' + war[1] )
+
+# run serial task to update apps one by one from ansible host.
+# will restart of servers be serial too&
+# ansible run in python
