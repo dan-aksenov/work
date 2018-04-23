@@ -51,12 +51,15 @@ def war_compare( target_host, war_name ):
     target_md5 = linux.linux_exec( target_host, 'sudo md5sum ' + app_path + '/' + war_name[1])
     if source_md5 != target_md5.split(" ")[0]: 
         print "\t Applicatoin " + war_name[1] + " on " + target_host + " will be updated."
-        #where hosts_to_update to be initialized?
+        #where to_update to be initialized?
         host_to_update = target_host
+        app_to_update_src = war_name[0]
+        app_to_update_dst = war_name[1]
     else:
         print "\t Applicatoin " + war_name[1] + " on " + target_host + " matches target."
-        host_to_update = ''
-    return host_to_update
+        #host_to_update = ''
+        #app_to_update=''
+    return host_to_update, app_to_update_src, app_to_update_dst
                                                                 
 ''' Internal functions. End '''
     
@@ -154,37 +157,39 @@ def main():
     Application update
     '''
 
-    hosts_to_update = []
+    # list to hold hosts and wars for updating
+    to_update = []
     for host in application_host:
         for war in wars:
-            host_to_update = war_compare( host, war )
-            hosts_to_update.append( host_to_update )
+            host_to_update, app_to_update_src, app_to_update_dst = war_compare( host, war )
+            to_update.append( [host_to_update, app_to_update_src, app_to_update_dst] )
     
-    # Finish if hosts_to_update empty.
-    if hosts_to_update == []:
+    # Finish if to_update empty.
+    if to_update == []:
         print "\tAll application hosts already up to date."
         sys.exit()
  
     print "\n"
     
-    # Distinct hosts to update
-    hosts_to_update = list( set( hosts_to_update ) )
+    # debug hosts to update
+    print to_update
 
-    for i in hosts_to_update:
+
+    for host_to_update, app_to_update_src, app_to_update_dst in to_update:
         # Delete and recreate temporary directory for war file.
 #        linux.linux_exec( i, 'rm -rf /tmp/webapps && mkdir /tmp/webapps' )
         
         # Copy war to target server.
-        print "Copying " + war_path + " to " + i + ":/tmp/webapps/" + war_name + "\n"
+        print "Copying " + app_to_update_src + " to " + host_to_update + ":/tmp/webapps/" + app_to_update_dst + "\n"
 #        linux.linux_put( i, war_path, '/tmp/webapps/' + war_name )
 #        linux.linux_exec( i, 'sudo chown tomcat.tomcat /tmp/webapps/' + war_name )
         
         # Stop tomcat server.
-        print "Stopping application server " + i + "..."
+        print "Stopping application server " + host_to_update + "..."
 #        linux.linux_exec( i, 'sudo systemctl stop tomcat' )
         
-    #for i in hosts_to_update:
-        print "Applying application patch on " + i + "..."
+    #for i in to_update:
+        print "Applying application patch on " + host_to_update + "..."
         # Delete old application. Both warfile and directory.
 #        linux.linux_exec( i, 'sudo rm ' + app_path + '/' + war_name )
 #        linux.linux_exec( i, 'sudo rm -rf ' + app_path + '/' + war_fldr )
@@ -192,11 +197,11 @@ def main():
         # Copy war to webapps folder.
 #        linux.linux_exec( i, 'sudo cp /tmp/webapps/' + war_name + ' ' + app_path + '/' + war_name )
         
-        print "Starting application server " + i + "..."
+        print "Starting application server " + host_to_update + "..."
 #        linux.linux_exec( i, 'sudo systemctl start tomcat' )
         
         # Check if server really started.
-        tcat_sctl = linux.linux_exec( i, 'sudo systemctl status tomcat' )
+        tcat_sctl = linux.linux_exec( host_to_update, 'sudo systemctl status tomcat' )
         tcat_status = tcat_sctl.find( 'Active: active (running) since' )
         if tcat_status != -1:
             print "\tDone!\n"
@@ -206,13 +211,13 @@ def main():
 #        sleep(60)
 #        check_webpage(patch_num, i, target)
 
-    # Doublecheck md5.
-    for i in hosts_to_update:
-        target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
-        if source_md5 == target_md5.split(" ")[0]: 
-            print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
-        else:
-            print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
+    # Doublecheck md5. to be rewritten!
+    #for i in to_update:
+     #   target_md5 = linux.linux_exec( i, 'sudo md5sum ' + app_path + '/' + war_name )
+      #  if source_md5 == target_md5.split(" ")[0]: 
+       #     print colored("DONE: Application version on " + i + " now matches " + patch_num + ".", 'white', 'on_green')
+        #else:
+         #   print colored("ERROR: Application version on " + i + " still not matches " + patch_num + "!", 'white', 'on_red')
 
 if __name__ == "__main__":
     ''' Variables '''
