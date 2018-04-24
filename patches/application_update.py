@@ -32,8 +32,8 @@ class ApplicationUpdate:
         ''' tomcat_name is systemd service name '''
     
         print "Attempting to make tomcat " + tomcat_state + "..."
-        a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + self.application_host + ' -m service -a "name=' + tomcat_name + ' state=' + tomcat_state + '" --become')
-        ansible_result = get_ansible_result(a)
+        a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m service -a "name=' + tomcat_name + ' state=' + tomcat_state + '" --become')
+        ansible_result = self.get_ansible_result(a)
         if ansible_result['state'] == tomcat_state:
             print "OK: Tomcat " + tomcat_state
         elif ansible_result['state'] <> tomcat_state:
