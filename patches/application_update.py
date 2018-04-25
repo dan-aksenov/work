@@ -5,7 +5,8 @@ from utils import Deal_with_linux
 
 class ApplicationUpdate:
     def __init__( self, jump_host, patch_num, sunny_path, application_hosts, application_path, tomcat_name, ansible_inventory, wars ):
-        self.jump_host = jump_host
+        # intermediate host with ansible installation.
+		self.jump_host = jump_host
         self.patch_num = patch_num
         self.sunny_path = sunny_path
         self.sunny_patch = sunny_path + patch_num
@@ -73,10 +74,10 @@ class ApplicationUpdate:
                 #TODO: only for updated wars...
                 for war in self.wars:
                     # Remove deployed folders.
-                    a = self.linux.linux_exec( jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + application_path + war[1] + ' state=absent" --become' )
+                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + self.application_path + war[1] + ' state=absent" --become' )
                     # perform actual war copy. become?
                     print "Attempt to copy "+ war[1] + " to " + application_host + "..."
-                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=/tmp/' + war[1] +'.war dest=' + application_path + war[1] + '.war" --become --become-user=tomcat' )
+                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=/tmp/' + war[1] +'.war dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
                     if 'SUCCESS' in a:
                         print "\tDone."
                     else:
