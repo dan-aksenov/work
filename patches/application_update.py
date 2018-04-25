@@ -1,15 +1,15 @@
 import sys
 import json
 from glob import glob
-from utils import Deal_with_linux
+from utils import Deal_with_linux, md5_check
 
 class ApplicationUpdate:
     def __init__( self, jump_host, patch_num, sunny_path, application_hosts, application_path, tomcat_name, ansible_inventory, wars ):
         # intermediate host with ansible installation.
-		self.jump_host = jump_host
+        self.jump_host = jump_host
         self.patch_num = patch_num
         self.sunny_path = sunny_path
-        self.sunny_patch = sunny_path + patch_num
+        self.sunny_patch = sunny_path + patch_num + '/'
         # application hosts as writen in ansible invenrory
         self.application_hosts = application_hosts
         self.application_path = application_path
@@ -19,7 +19,7 @@ class ApplicationUpdate:
         # war files mappings. example [ 'pts-integration-' + patch_num + '.war', 'integration' ].
         self.wars = wars
         self.linux = Deal_with_linux()
-			
+            
     def get_ansible_result( self, paramiko_result ):
         ''' Convert paramiko result(string) to json '''
         
@@ -43,31 +43,26 @@ class ApplicationUpdate:
         else:
             print "FAIL: Error determining tomcat state!"
             sys.exit()
-    
-    # copy war files to asnible jump_host. check if already exists?
-    def application_update( self ):
-        print "Copy patch files from SUNNY to jumphost: " + self.jump_host
-        for war in self.wars:
-            if glob(self.sunny_patch + '\\' + war[0]) == []:
-                print "ERROR: Unable to locate war file for " + war[0] + "!"
-                sys.exit()
-            war_path = glob( self.sunny_patch + '\\' + war[0])[0]
-            self.linux.linux_put( self.jump_host, war_path, '/tmp/' + war[1] )
 
+    def application_update( self ):
+        
+        # TODO add check if patch path on sunny
         #run ansibble command on every host sequentially (loop to be here)
+        # NEED to handle FAILED and UNREACHABLE ansible results!!!
         for application_host in self.application_hosts:
             print "Checking application files on " + application_host +":"
             app_to_update = False
             for war in self.wars:
                 # check if wars on app_host  = wars from sunny
-                a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=/tmp/' + war[1] +'.war dest=' + self.application_path + war[1] + '.war" --check' )
+                a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=' + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --check --become --become-user=tomcat' )
                 ansible_result = self.get_ansible_result(a)
-                #if changed = true set restart app flag to true
+                # if changed = true set restart app flag to true
+				# deal if not success!!!
                 if ansible_result['changed'] == True:
-                    print "\t"+ war[1] + " needs to be updated."
+                    print "\t"+ war[1] + " application needs to be updated."
                     app_to_update = True
             if app_to_update == False:
-                print "\tNo application changed were made. Exiting."
+                print "\tApplications version on "+ application_host +" already " + self.patch_num
                 sys.exit()
             elif app_to_update == True:
                 self.deal_with_tomcat( application_host, 'tomcat', 'stopped' )
@@ -76,12 +71,13 @@ class ApplicationUpdate:
                     # Remove deployed folders.
                     a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + self.application_path + war[1] + ' state=absent" --become' )
                     # perform actual war copy. become?
-                    print "Attempt to copy "+ war[1] + " to " + application_host + "..."
-                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=/tmp/' + war[1] +'.war dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
+                    # print "Attempt to copy "+ war[1] + " to " + application_host + "..."
+                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src='  + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
+                    # TODO supress if particular app not needs updating
                     if 'SUCCESS' in a:
-                        print "\tDone."
+                        print "\tSuccesfully updated application " + war[1] + " on " + application_host
                     else:
-                        print "\tERROR"
+                        print a
                         sys.exit
                 # neet to variablize tomcat service name
                 self.deal_with_tomcat( application_host, 'tomcat', 'started' )

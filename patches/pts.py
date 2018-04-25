@@ -7,7 +7,7 @@ jump_host = "oemcc.fors.ru"
 # as parameter
 patch_num = '0.28.8.1'
 
-sunny_path= 'Y:\\pts\\'
+sunny_path= '/sunny/builds/pts/'
 # application hosts as writen in ansible invenrory
 application_hosts = ['pts-demo']
 application_path = '/u01/apache-tomcat-8.5.27/webapps/'
