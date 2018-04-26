@@ -54,13 +54,20 @@ class ApplicationUpdate:
             app_to_update = False
             for war in self.wars:
                 # check if wars on app_host  = wars from sunny
-                a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=' + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --check --become --become-user=tomcat' )
-                ansible_result = self.get_ansible_result(a)
+                paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=' + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --check --become --become-user=tomcat' )
+                ansible_result = self.get_ansible_result(paramiko_result)
                 # if changed = true set restart app flag to true
-				# deal if not success!!!
-                if ansible_result['changed'] == True:
-                    print "\t"+ war[1] + " application needs to be updated."
-                    app_to_update = True
+                # deal if not success!!!
+                if 'SUCCESS' in paramiko_result:
+                    if ansible_result['changed'] == True:
+                        print "\t"+ war[1] + " application needs to be updated."
+                        app_to_update = True
+                elif 'FAILED' in paramiko_result:
+                    print paramiko_result
+                    sys.exit()
+                else:
+                    print paramiko_result
+                    sys.exit()
             if app_to_update == False:
                 print "\tApplications version on "+ application_host +" already " + self.patch_num
                 sys.exit()
@@ -69,15 +76,15 @@ class ApplicationUpdate:
                 #TODO: only for updated wars...
                 for war in self.wars:
                     # Remove deployed folders.
-                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + self.application_path + war[1] + ' state=absent" --become' )
+                    paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + self.application_path + war[1] + ' state=absent" --become' )
                     # perform actual war copy. become?
                     # print "Attempt to copy "+ war[1] + " to " + application_host + "..."
-                    a = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src='  + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
+                    paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src='  + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
                     # TODO supress if particular app not needs updating
-                    if 'SUCCESS' in a:
+                    if 'SUCCESS' in paramiko_result:
                         print "\tSuccesfully updated application " + war[1] + " on " + application_host
                     else:
-                        print a
+                        print paramiko_result
                         sys.exit
                 # neet to variablize tomcat service name
                 self.deal_with_tomcat( application_host, 'tomcat', 'started' )
