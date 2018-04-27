@@ -8,6 +8,7 @@ STAGE_DIR=/usr/local/pgsql/backup_test
 mkdir $STAGE_DIR
 cd $STAGE_DIR
 # Copy backup from storage.
+echo Restore started at `date`
 cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
 
 # Edit postgresql.conf. Restrict listener and change active port.
@@ -15,7 +16,7 @@ sed -i 's/listen_addresses/#listen_addresses/g' $STAGE_DIR/$CURRENT_BACKUP/postg
 sed -i 's/port = 5432/port = 54320/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 # Archive command not needed.
 sed -i 's/archive_command/#archive_command/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
-#remove shared buffer and hugepages settings
+#decrease shared buffers
 sed -i 's/shared_buffers = .*/shared_buffers = 128MB/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 sed -i 's/huge_pages = .*/huge_pages = off/g' $STAGE_DIR/$CURRENT_BACKUP/postgresql.conf
 
@@ -27,12 +28,11 @@ EOF
 
 # Create log folder.
 mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
-
 # Attempt start.
 pg_ctl -w -D $STAGE_DIR/$CURRENT_BACKUP start
 
-read -p "Restore completed. Press [Enter] to proceed"
-
+read -p "Restore completed at `date`. Press [Enter] to proceed"
+echo last date from event.fdc_app_log
 psql -p 54320 ods_prod -c "select a.datetime from event.fdc_app_log a order by datetime desc limit 1"
 
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
