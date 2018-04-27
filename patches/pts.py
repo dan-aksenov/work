@@ -1,11 +1,24 @@
 from application_update import ApplicationUpdate
 import utils
+from getopt import getopt
+import sys, os
+
+# Get patch number and target environment from parameters n and t
+try:    
+    opts, args = getopt( sys.argv[1:], 'n:' )
+except:
+    print "-n for patch number"
+    sys.exit()
+
+for opt, arg in opts:
+    if opt in ( '-n' ):
+        patch_num = arg
+    else:
+        print "-n for patch number"
+        sys.exit()
 
 #Variables
 jump_host = "oemcc.fors.ru"
-
-# as parameter
-patch_num = '0.28.8.1'
 
 sunny_path= '/sunny/builds/pts/'
 # application hosts as writen in ansible invenrory
