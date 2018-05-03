@@ -1,22 +1,30 @@
-# for args and exit
+# for args and exit and os stuff
 import sys
+import os
+import shutil
 # for ssh connection and ftp transfer.
 import paramiko
 # for file md5s
 import hashlib
-# for db connection
+# for postgresql connection
 from psycopg2 import connect
 
-import subprocess
-import shutil
-import os
-
+class Bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Deal_with_linux:
     def __init__(self):
-        self.linux_key_path = 'C:\Users\daniil.aksenov\.ssh\id_rsa.key'
+        self.linux_key_path = os.getenv('HOME') + '\\.ssh\\id_rsa.key'
         if os.path.isfile( self.linux_key_path ) != True:
-            print "ERROR: Linux ssh key " + self.linux_key_path + " not found!"
+            print Bcolors.FAIL + "\nERROR: Linux ssh key not found!" + Bcolors.ENDC
+            print "HINT: Make sure \"" + self.linux_key_path + "\" exists."
             sys.exit()
 
         # Prepare key for paramiko.
@@ -34,7 +42,7 @@ class Deal_with_linux:
         try:
             client.connect( hostname = linux_host, username = self.ssh_user, port = self.ssh_port, pkey = self.linux_key )
         except:
-            print '\nERROR: unable to execute on Linux machine!'
+            print Bcolors.FAIL + "\nERROR: unable to execute on Linux machine!" + Bcolors.ENDC
             sys.exit()
         stdin, stdout, stderr = client.exec_command( shell_command )
         data = stdout.read() + stderr.read()
@@ -48,7 +56,7 @@ class Deal_with_linux:
         try:
             transport.connect( username = self.ssh_user, pkey = self.linux_key )
         except:
-            print '\nERROR: unable to copy to Linux machine!'
+            print Bcolors.FAIL + "\nERROR: unable to copy to Linux machine!" + Bcolors.ENDC
             sys.exit()
         sftp = paramiko.SFTPClient.from_transport( transport )
     
@@ -81,7 +89,8 @@ def postgres_exec( db_host, db_name, sql_query ):
     try:
         conn = connect( conn_string )
     except:
-        print '\nERROR: unable to connect to the database!'
+        print Bcolors.FAIL + "\nERROR: unable to connect to the database!" + Bcolors.ENDC
+        print "HINT: Is .pgpass present and correct?"
         sys.exit()
     cur = conn.cursor()
     cur.execute( sql_query )
