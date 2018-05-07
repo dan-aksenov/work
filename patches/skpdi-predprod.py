@@ -20,10 +20,9 @@ for opt, arg in opts:
 
 #Variables
 jump_host = "oemcc.fors.ru"
-
-sunny_path= '/sunny/builds/odsxp/'
 # application hosts as writen in ansible invenrory
 application_hosts = ['gudhskpdi-test-app']
+sunny_path= '/sunny/builds/odsxp/'
 application_path = '/u01/apache-tomcat-8.5.8/webapps/'
 tomcat_name = 'tomcat'
 ansible_inventory = '~/ansible-hosts/skpdi-prod'
