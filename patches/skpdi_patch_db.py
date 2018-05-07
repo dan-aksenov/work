@@ -190,20 +190,18 @@ if __name__ == "__main__":
 
     # Assign variables depending on target
     # Full variable explanation in 'manual' section
+
     if target == 'predprod':
-        db_patch_file = 'db_patch_generic.bat'
+        application_host = [ 'gudhskpdi-test-app' ]
+		db_patch_file = 'db_patch_generic.bat'
         db_name = 'ods_predprod'
         db_host = 'gudhskpdi-db-test'
     
     elif target == 'skpdi':
-        db_patch_file = 'db_patch_generic.bat'
+        application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
+		db_patch_file = 'db_patch_generic.bat'
         db_name = 'ods_prod'
         db_host = 'gudhskpdi-db-01'
-
-    elif target == 'manual':
-        db_patch_file = 'db_patch_generic.bat'
-        db_host = raw_input('Enter database server hostname: ')
-        db_name = raw_input('Enter database name: ')
     
     else:
         usage()
