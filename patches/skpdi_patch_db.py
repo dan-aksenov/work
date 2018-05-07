@@ -44,7 +44,7 @@ def purge_panels():
     
 ''' Internal functions. End '''
     
-def main():
+def patch_db():
     
     '''
     Preparation
@@ -151,6 +151,9 @@ def main():
     Now done via ApplicationUpdate Class
     '''
 
+def main():
+    patch_db()
+
 if __name__ == "__main__":
     
     # Get patch number and target environment from parameters n and t
@@ -193,13 +196,13 @@ if __name__ == "__main__":
 
     if target == 'predprod':
         application_hosts = [ 'gudhskpdi-test-app' ]
-		db_patch_file = 'db_patch_generic.bat'
+        db_patch_file = 'db_patch_generic.bat'
         db_name = 'ods_predprod'
         db_host = 'gudhskpdi-db-test'
     
     elif target == 'skpdi':
         application_hosts = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
-		db_patch_file = 'db_patch_generic.bat'
+        db_patch_file = 'db_patch_generic.bat'
         db_name = 'ods_prod'
         db_host = 'gudhskpdi-db-01'
     
