@@ -105,7 +105,7 @@ def main():
                 subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
     
             # Stop tomcat.
-            for i in application_host:
+            for i in application_hosts:
                 print "Stopping application server " + i + "...\n"
                 linux.linux_exec( i, 'sudo systemctl stop tomcat' )
             # Apply database patches
@@ -192,13 +192,13 @@ if __name__ == "__main__":
     # Full variable explanation in 'manual' section
 
     if target == 'predprod':
-        application_host = [ 'gudhskpdi-test-app' ]
+        application_hosts = [ 'gudhskpdi-test-app' ]
 		db_patch_file = 'db_patch_generic.bat'
         db_name = 'ods_predprod'
         db_host = 'gudhskpdi-db-test'
     
     elif target == 'skpdi':
-        application_host = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
+        application_hosts = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
 		db_patch_file = 'db_patch_generic.bat'
         db_name = 'ods_prod'
         db_host = 'gudhskpdi-db-01'
