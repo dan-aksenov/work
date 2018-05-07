@@ -18,7 +18,6 @@ for opt, arg in opts:
         print "-n for patch number"
         sys.exit()
 
-
 #Variables
 jump_host = "oemcc.fors.ru"
 
