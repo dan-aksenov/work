@@ -23,25 +23,23 @@ from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec, Bcolo
 ''' Internal functions. End '''
 
 class PatchDatabase:
-    #def __init__( self, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
-    def __init__( self ):
-	#def __init__( self, jump_host, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
+    def __init__( self, patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, stage_dir, db_user, patch_table ):
+    #def __init__( self, jump_host, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
         # intermediate host with ansible installation.
         #self.jump_host = jump_host
-        self.patch_num = '3.4'
-        self.db_host = 'gudhskpdi-db-test'
-        self.db_name = 'ods_predprod'
-        #self.sunny_path = self.sunny_path
-        self.stage_dir = 'd:\\tmp\\skpdi_patch'
-        self.sunny_path = '\\\sunny\\builds\\odsxp\\'
+        self.patch_num = patch_num 
+        self.db_host = db_host
+        self.db_name = db_name
+        self.db_user = db_user
+        self.stage_dir = stage_dir
+        self.sunny_path = sunny_path
         self.sunny_patch = self.sunny_path + self.patch_num + '/'
-        # self.sunny_patch = self.sunny_path + patch_num
         # application hosts as writen in ansible invenrory
-        self.application_hosts = 'gudhskpdi-test-app'
-        #self.ansible_inventory = '~/ansible-hosts'
+        self.application_hosts = application_hosts
+        self.ansible_inventory = '~/ansible-hosts'
         #self.ansible_cmd_template = 'ansible -i ' + ansible_inventory + ' '
-        # patches_table - variable to hold db_patches_log(specific in different projects)
-        self.patch_table = 'parameter.fdc_patches_log'
+        # patch_table - variable to hold db_patches_log(specific in different projects)
+        self.patch_table = patch_table
         self.linux = Deal_with_linux()
         # Send subprocess for database patching to null. Nothing interesting there anyway.
         self.dnull = open("NUL", "w")
@@ -111,7 +109,7 @@ class PatchDatabase:
                 for i in sorted(patches_miss):    
                     print "Applying database patch " + i + "..."
                     # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
-                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + db_patch_file, self.db_host, self.db_name, db_port, db_user ], stdout=dnull, stderr = dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
+                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + db_patch_file, self.db_host, self.db_name, self.db_user ], stdout=dnull, stderr = dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
                     # Search logfile for "finish install patch ods objects
                     try:
                         logfile = open( self.stage_dir + '\\patches\\' + i + '\\install_db_log.log' )

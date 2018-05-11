@@ -4,8 +4,8 @@ REM UPDATE Skpdi server.
 REM Set database's host from first parameter.
 SET PGHOST=%1
 
-set PGPORT=%3
-set PGUSER=%4
+set PGPORT=5432
+set PGUSER=%3
 rem should be in .pgpass
 rem set PGPASSWORD=ods
 
