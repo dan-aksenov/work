@@ -23,23 +23,25 @@ from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec, Bcolo
 ''' Internal functions. End '''
 
 class PatchDatabase:
-    #def __init__( self, patch_num, sunny_path, application_hosts, ansible_inventory, patches_table ):
+    #def __init__( self, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
     def __init__( self ):
-	#def __init__( self, jump_host, patch_num, sunny_path, application_hosts, ansible_inventory, patches_table ):
+	#def __init__( self, jump_host, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
         # intermediate host with ansible installation.
         #self.jump_host = jump_host
         self.patch_num = '3.4'
-        #self.sunny_path = sunny_path
+        self.db_host = 'gudhskpdi-db-test'
+        self.db_name = 'ods_predprod'
+        #self.sunny_path = self.sunny_path
         self.stage_dir = 'd:\\tmp\\skpdi_patch'
         self.sunny_path = '\\\sunny\\builds\\odsxp\\'
         self.sunny_patch = self.sunny_path + self.patch_num + '/'
-        # sunny_patch = sunny_path + patch_num
+        # self.sunny_patch = self.sunny_path + patch_num
         # application hosts as writen in ansible invenrory
         self.application_hosts = 'gudhskpdi-test-app'
         #self.ansible_inventory = '~/ansible-hosts'
         #self.ansible_cmd_template = 'ansible -i ' + ansible_inventory + ' '
         # patches_table - variable to hold db_patches_log(specific in different projects)
-        self.patch_table = ''
+        self.patch_table = 'parameter.fdc_patches_log'
         self.linux = Deal_with_linux()
         # Send subprocess for database patching to null. Nothing interesting there anyway.
         self.dnull = open("NUL", "w")
@@ -66,13 +68,13 @@ class PatchDatabase:
         '''
         # Get list of already applied patches
         # Function returns list tuples + row count, right now need only tuples, so [0]
-        patches_curr = postgres_exec ( db_host, db_name,  'select name from '+ patches_table +' order by id desc;' )[0]
+        patches_curr = postgres_exec ( self.db_host, self.db_name,  'select name from '+ self.patch_table +' order by id desc;' )[0]
     
         # Get list of patches from from Sunny
-        if os.path.isdir( sunny_patch + '\\patches' ) != True:
+        if os.path.isdir( self.sunny_patch + '\\patches' ) != True:
             print "NOTICE: No database patch found in build. Assume database patching not required."
         else:
-            patches_targ = [ name for name in os.listdir( sunny_patch + '\\patches' ) ]
+            patches_targ = [ name for name in os.listdir( self.sunny_patch + '\\patches' ) ]
         
             # Compare installed patches with patches from Sunny.
             # If latest database patch version lower then on Sunny - install missing patches.
@@ -96,9 +98,9 @@ class PatchDatabase:
                 print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
                 for i in patches_miss:
                 # Copy needed patches from Sunny.
-                    subprocess.call( [ 'xcopy', '/e', '/i', '/q', sunny_patch + '\\patches\\' + i, stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
+                    subprocess.call( [ 'xcopy', '/e', '/i', '/q', self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
                 # Place patch installer to patch subdirectories.
-                    subprocess.call( [ 'copy', '/y', db_patch_file , stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
+                    subprocess.call( [ 'copy', '/y', db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
     
             # Stop tomcat.
                 for i in application_hosts:
@@ -109,19 +111,19 @@ class PatchDatabase:
                 for i in sorted(patches_miss):    
                     print "Applying database patch " + i + "..."
                     # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
-                    subprocess.call( [ stage_dir + '\\patches\\' + i + '\\' + db_patch_file, db_host, db_name, db_port, db_user ], stdout=dnull, stderr = dnull, shell = False, cwd = stage_dir + '\\patches\\' + i )
+                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + db_patch_file, self.db_host, self.db_name, db_port, db_user ], stdout=dnull, stderr = dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
                     # Search logfile for "finish install patch ods objects
                     try:
-                        logfile = open( stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
+                        logfile = open( self.stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
                     except:
-                        print Bcolors.FAIL + "\tUnable to read logfile" + stage_dir + "\\patches\\" + i + "\\install_db_log.log. Somethnig wrong with installation.\n" + Bcolors.ENDC
+                        print Bcolors.FAIL + "\tUnable to read logfile" + self.stage_dir + "\\patches\\" + i + "\\install_db_log.log. Somethnig wrong with installation.\n" + Bcolors.ENDC
                         sys.exit()
                     loglines = logfile.read()
                     success_marker = loglines.find('finsih install patch ods objects')
                     if success_marker != -1:
                         print Bcolors.OKGREEN + "\tDone.\n" + Bcolors.ENDC
                     else:
-                        print Bcolors.FAIL + "\tError installing database patch. Examine logfile " + stage_dir + "\\patches\\" + i + "\\install_db_log.log for details\n" + Bcolors.ENDC
+                        print Bcolors.FAIL + "\tError installing database patch. Examine logfile " + self.stage_dir + "\\patches\\" + i + "\\install_db_log.log for details\n" + Bcolors.ENDC
                         sys.exit()
                     logfile.close()
           
