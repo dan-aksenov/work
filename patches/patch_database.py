@@ -23,38 +23,40 @@ from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec, Bcolo
 ''' Internal functions. End '''
 
 class PatchDatabase:
-    def __init__( self, jump_host, patch_num, sunny_path, application_hosts, ansible_inventory, patches_table ):
+    #def __init__( self, patch_num, sunny_path, application_hosts, ansible_inventory, patches_table ):
+    def __init__( self ):
+	#def __init__( self, jump_host, patch_num, sunny_path, application_hosts, ansible_inventory, patches_table ):
         # intermediate host with ansible installation.
-        self.jump_host = jump_host
-        self.patch_num = patch_num
-        self.sunny_path = sunny_path
-        # stage_dir = 'd:\\tmp\\skpdi_patch'
-        # sunny_path = '\\\sunny\\builds\\odsxp\\'
-        self.sunny_patch = sunny_path + patch_num + '/'
+        #self.jump_host = jump_host
+        self.patch_num = '3.4'
+        #self.sunny_path = sunny_path
+        self.stage_dir = 'd:\\tmp\\skpdi_patch'
+        self.sunny_path = '\\\sunny\\builds\\odsxp\\'
+        self.sunny_patch = self.sunny_path + self.patch_num + '/'
         # sunny_patch = sunny_path + patch_num
         # application hosts as writen in ansible invenrory
-        self.application_hosts = application_hosts
-        self.ansible_inventory = ansible_inventory
-        self.ansible_cmd_template = 'ansible -i ' + ansible_inventory + ' '
-         # patches_table - variable to hold db_patches_log(specific in different projects)
-        self.patch_table = patch_table
+        self.application_hosts = 'gudhskpdi-test-app'
+        #self.ansible_inventory = '~/ansible-hosts'
+        #self.ansible_cmd_template = 'ansible -i ' + ansible_inventory + ' '
+        # patches_table - variable to hold db_patches_log(specific in different projects)
+        self.patch_table = ''
         self.linux = Deal_with_linux()
         # Send subprocess for database patching to null. Nothing interesting there anyway.
         self.dnull = open("NUL", "w")
     
-    def patchdb():
+    def patchdb( self ):
         '''
         Preparation
         '''
         # Check if patch exists on Sunny
-        if os.path.isdir( sunny_patch ) != True:
+        if os.path.isdir( self.sunny_patch ) != True:
             print Bcolors.FAIL + "ERROR: No such patch on Sunny!" + Bcolors.ENDC
-            print "\tNo such directory " + sunny_patch
+            print "\tNo such directory " + self.sunny_patch
             sys.exit()
 
         # Clear temporary directory. May fall if somebody is "sitting" in it.
         try:
-            recreate_dir( stage_dir )
+            recreate_dir( self.stage_dir )
         except:
             print Bcolors.FAIL + "ERROR: Unable to recreate patch staging directory." + Bcolors.ENDC
             sys.exit()
