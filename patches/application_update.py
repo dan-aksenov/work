@@ -47,8 +47,6 @@ class ApplicationUpdate:
     def application_update( self ):
         
         # TODO add check if patch path on sunny
-        #run ansibble command on every host sequentially (loop to be here)
-        # NEED to handle FAILED and UNREACHABLE ansible results!!!
         for application_host in self.application_hosts:
             print "Checking application files on " + application_host +":"
             app_to_update = False
@@ -78,7 +76,7 @@ class ApplicationUpdate:
                     # Remove deployed folders.
                     paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + self.application_path + war[1] + ' state=absent" --become' )
                     # perform actual war copy. become?
-                    # print "Attempt to copy "+ war[1] + " to " + application_host + "..."
+                    print "Attempt to copy "+ war[1] + " to " + application_host + "..."
                     paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src='  + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
                     # TODO supress if particular app not needs updating
                     if 'SUCCESS' in paramiko_result:
