@@ -133,67 +133,20 @@ def main():
 if __name__ == "__main__":
     
     # Get patch number and target environment from parameters n and t
-    try:    
-        opts, args = getopt( sys.argv[1:], 'n:t:h:' )
-    except:
-        usage()
-        sys.exit()
-    # Assign variables n - patch_num, t - target.
-    for opt, arg in opts:
-        if opt in ( '-n' ):
-            patch_num = arg
-        elif opt in ( '-t' ):
-            target = arg
-        elif opt in ( '-h' ):
-            usage()
-        else:
-            usage()
-            sys.exit()
         
     ''' Variables '''
     
-    # If no parameter supplied prompt for them
-    try:
-        patch_num
-    except:
-        patch_num = raw_input('Enter patch number: ')
-    try:
-        target 
-    except:
-        target = raw_input('skpdi, predprod of manual: ')
-
-    # Check for valid target name.    
-    if target not in [ 'skpdi', 'predprod', 'manual']:
-        usage()
-        sys.exit()
-
-    # Assign variables depending on target
-    # Full variable explanation in 'manual' section
-
-    if target == 'predprod':
-        application_hosts = [ 'gudhskpdi-test-app' ]
-        db_patch_file = 'db_patch_generic.bat'
-        db_name = 'ods_predprod'
-        db_host = 'gudhskpdi-db-test'
-    
-    elif target == 'skpdi':
-        application_hosts = [ 'gudhskpdi-app-01', 'gudhskpdi-app-02' ]
-        db_patch_file = 'db_patch_generic.bat'
-        db_name = 'ods_prod'
-        db_host = 'gudhskpdi-db-01'
-    
-    else:
-        usage()
-        sys.exit()
+    # patch_num
 
     # Patchfile temporary directory
-    stage_dir = 'd:\\tmp\\skpdi_patch'
+    # stage_dir = 'd:\\tmp\\skpdi_patch'
     # Patch address on SUNNY
-    sunny_path = '\\\sunny\\builds\\odsxp\\'
+    # sunny_path = '\\\sunny\\builds\\odsxp\\'
     # Exact directory path
-    sunny_patch = sunny_path + patch_num
+    # sunny_patch = sunny_path + patch_num
     
     # Send subprocess for database patching to null. Nothing interesting there anyway.
+    move to class
     dnull = open("NUL", "w")
 
     ''' Variables. End.'''
