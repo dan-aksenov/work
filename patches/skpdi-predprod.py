@@ -37,7 +37,7 @@ db_name = 'ods_predprod'
 db_user = 'ods'
 patch_table = 'parameter.fdc_patches_log'
 stage_dir = 'd:/tmp/skpdi_patch'
-
+        	
 c = PatchDatabase(patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, stage_dir, db_user, patch_table)
 c.patchdb()
 
