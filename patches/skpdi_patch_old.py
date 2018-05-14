@@ -174,7 +174,7 @@ def main():
         print Bcolors.FAIL + "ERROR: Unable to locate war file on Sunny!" + Bcolors.ENDC
         sys.exit()
     
-    war_path = glob( sunny_patch + '\\ods*.war' )[0]
+    war_path = glob( sunny_patch + '\\skpdi*.war' )[0]
     
     
     # Get application md5 from Sunny.
