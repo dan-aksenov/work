@@ -26,7 +26,10 @@ class ApplicationUpdate:
         a = paramiko_result
         #ansible_result = json.loads(a[a.find("{"):a.find("}")+1])
         # upper works incorrectly with multiple nested {}. Not shure if we need to propper terminate on last }?
-        ansible_result = json.loads(a[a.find("{"):])
+        try:
+            ansible_result = json.loads(a[a.find("{"):])
+        except:
+            print 'ERROR: ' + paramiko_result
         return ansible_result
     
     def deal_with_tomcat( self, application_host, tomcat_name, tomcat_state ):
