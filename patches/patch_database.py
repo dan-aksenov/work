@@ -43,6 +43,7 @@ class PatchDatabase:
         self.linux = Deal_with_linux()
         # Send subprocess for database patching to null. Nothing interesting there anyway.
         self.dnull = open("NUL", "w")
+        self.db_patch_file = 'db_patch.bat'
     
     def patchdb( self ):
         '''
@@ -98,7 +99,7 @@ class PatchDatabase:
                 # Copy needed patches from Sunny.
                     subprocess.call( [ 'xcopy', '/e', '/i', '/q', self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i  ], stdout=dnull, shell=True )
                 # Place patch installer to patch subdirectories.
-                    subprocess.call( [ 'copy', '/y', db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
+                    subprocess.call( [ 'copy', '/y', self.db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=dnull, shell=True )
     
             # Stop tomcat.
                 for i in application_hosts:
@@ -109,7 +110,7 @@ class PatchDatabase:
                 for i in sorted(patches_miss):    
                     print "Applying database patch " + i + "..."
                     # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
-                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + db_patch_file, self.db_host, self.db_name, self.db_user ], stdout=dnull, stderr = dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
+                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + self.db_patch_file, self.db_host, self.db_name, self.db_user ], stdout=dnull, stderr = dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
                     # Search logfile for "finish install patch ods objects
                     try:
                         logfile = open( self.stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
