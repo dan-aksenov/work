@@ -42,7 +42,7 @@ class Deal_with_linux:
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            client.connect(hostname = linux_host, username = self.ssh_user, port = self.ssh_port, pkey = self.linux_key)
+            client.connect(hostname=linux_host, username=self.ssh_user, port=self.ssh_port, pkey=self.linux_key)
         except:
             print Bcolors.FAIL + "\nERROR: unable to execute on Linux machine!" + Bcolors.ENDC
             sys.exit()
@@ -56,7 +56,7 @@ class Deal_with_linux:
            
         transport = paramiko.Transport((linux_host, self.ssh_port))
         try:
-            transport.connect(username = self.ssh_user, pkey = self.linux_key)
+            transport.connect(username=self.ssh_user, pkey=self.linux_key)
         except:
             print Bcolors.FAIL + "\nERROR: unable to copy to Linux machine!" + Bcolors.ENDC
             sys.exit()
@@ -74,7 +74,7 @@ class Deal_with_linux:
       
         transport = paramiko.Transport((linux_host, self.ssh_port))
         try:
-            transport.connect(username = self.ssh_user, pkey = self.linux_key)
+            transport.connect(username=self.ssh_user, pkey=self.linux_key)
         except:
             print Bcolors.FAIL + "\nERROR: unable to copy to Linux machine!" + Bcolors.ENDC
             sys.exit()
@@ -103,7 +103,7 @@ def recreate_dir(dir_name):
 
 def postgres_exec(db_host, db_name, sql_query):
     ''' SQL execution '''
-    
+
     # pgpass shoule be used insead of password
     conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host
     try:
@@ -116,9 +116,9 @@ def postgres_exec(db_host, db_name, sql_query):
     cur.execute(sql_query)
     query_results = []
     # This check needed, because delete doesn't return cursor
-    if cur.description != None:
+    if cur.description is not None:
         rows = cur.fetchall()
-       # Need list of stings instead of tuples for future manipulation.
+        # Need list of stings instead of tuples for future manipulation.
         for row in rows:
             query_results.append(row[0])
     rowcnt = cur.rowcount
