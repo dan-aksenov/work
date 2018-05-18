@@ -104,7 +104,7 @@ class PatchDatabase:
             # Stop tomcat.
                 for i in self.application_hosts:
                     print "Stopping application server " + i + "...\n"
-                    linux.linux_exec( i, 'sudo systemctl stop tomcat' )
+                    self.linux.linux_exec( i, 'sudo systemctl stop tomcat' )
                 # Apply database patches
                 # Using sort to execute patches in right order.
                 for i in sorted(patches_miss):    
