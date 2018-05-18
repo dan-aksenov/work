@@ -1,7 +1,7 @@
 import sys
 import json
 from glob import glob
-from utils import Deal_with_linux, md5_check
+from utils import Deal_with_linux
 
 class ApplicationUpdate:
     def __init__( self, jump_host, patch_num, sunny_path, application_hosts, application_path, tomcat_name, ansible_inventory, wars ):
@@ -52,33 +52,32 @@ class ApplicationUpdate:
         # TODO add check if patch path on sunny
         for application_host in self.application_hosts:
             print "Checking application files on " + application_host +":"
-            app_to_update = False
+            # apps_to_update will hold application names to be updated, so actual applications won't be undeployed.
+            apps_to_update = []
             for war in self.wars:
-                # check if wars on app_host  = wars from sunny
+                # check if wars on app_host = wars from sunny
                 paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src=' + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --check --become --become-user=tomcat' )
                 ansible_result = self.get_ansible_result(paramiko_result)
-                # if changed = true set restart app flag to true
-                # deal if not success!!!
+                # if changed add to apps_to_update list
                 if 'SUCCESS' in paramiko_result:
                     if ansible_result['changed'] == True:
                         print "\t"+ war[1] + " application needs to be updated."
-                        app_to_update = True
+                        apps_to_update.append(war)
                 elif 'FAILED' in paramiko_result:
                     print paramiko_result
                     sys.exit()
                 else:
                     print paramiko_result
                     sys.exit()
-            if app_to_update == False:
+            if apps_to_update == []:
                 print "\tApplications version on "+ application_host +" already " + self.patch_num
                 sys.exit()
-            elif app_to_update == True:
+            elif not apps_to_update == []:
                 self.deal_with_tomcat( application_host, 'tomcat', 'stopped' )
-                #TODO: only for updated wars...
-                for war in self.wars:
+                for war in apps_to_update:
                     # Remove deployed folders.
                     paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m file -a "path=' + self.application_path + war[1] + ' state=absent" --become' )
-                    # perform actual war copy. become?
+                    # Perform war copy.
                     print "Attempt to copy "+ war[1] + " to " + application_host + "..."
                     paramiko_result = self.linux.linux_exec( self.jump_host, self.ansible_cmd_template + application_host + ' -m copy -a "src='  + self.sunny_patch + war[0] + ' dest=' + self.application_path + war[1] + '.war" --become --become-user=tomcat' )
                     # TODO supress if particular app not needs updating
