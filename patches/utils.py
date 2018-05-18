@@ -67,6 +67,24 @@ class Deal_with_linux:
         sftp.close()
         transport.close()
 
+    def linux_get(self, linux_host, source_path, dest_path ):
+        ''' Copy from remote Linux '''
+      
+        transport = paramiko.Transport(( linux_host, self.ssh_port ))
+        try:
+            transport.connect( username = self.ssh_user, pkey = self.linux_key )
+        except:
+            print Bcolors.FAIL + "\nERROR: unable to copy to Linux machine!" + Bcolors.ENDC
+            sys.exit()
+        sftp = paramiko.SFTPClient.from_transport( transport )
+ 
+        localpath = source_path
+        remotepath = dest_path
+
+        sftp.get(localpath,remotepath)
+        sftp.close()
+        transport.close()
+
 def md5_check( checked_file ):
     ''' *.war file md5 check '''
     
