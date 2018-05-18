@@ -97,9 +97,11 @@ class PatchDatabase:
                 print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
                 for i in patches_miss:
                 # Copy needed patches from Sunny.
-                    subprocess.call( [ 'xcopy', '/e', '/i', '/q', self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i  ], stdout=self.dnull, shell=True )
+                    shutil.copytree(self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i)
+#                   subprocess.call( [ 'xcopy', '/e', '/i', '/q', self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i  ], stdout=self.dnull, shell=True )
                 # Place patch installer to patch subdirectories.
-                    subprocess.call( [ 'copy', '/y', self.db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=self.dnull, shell=True )
+#                    subprocess.call( [ 'copy', '/y', self.db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=self.dnull, shell=True )
+                    shutil.copy(self.db_patch_file , self.stage_dir + '\\patches\\' + i)
     
             # Stop tomcat.
                 for i in self.application_hosts:
