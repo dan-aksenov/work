@@ -102,7 +102,7 @@ class PatchDatabase:
                     subprocess.call( [ 'copy', '/y', self.db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=self.dnull, shell=True )
     
             # Stop tomcat.
-                for i in application_hosts:
+                for i in self.application_hosts:
                     print "Stopping application server " + i + "...\n"
                     linux.linux_exec( i, 'sudo systemctl stop tomcat' )
                 # Apply database patches
