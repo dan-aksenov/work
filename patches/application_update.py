@@ -2,6 +2,7 @@ import sys
 import json
 from glob import glob
 from utils import Deal_with_linux
+from time import sleep
 
 class ApplicationUpdate:
     def __init__( self, jump_host, patch_num, sunny_path, application_hosts, application_path, tomcat_name, ansible_inventory, wars ):
