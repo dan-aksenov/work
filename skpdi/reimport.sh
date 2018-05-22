@@ -5,8 +5,8 @@
 
 echo ###################################################################################
 echo Create temporary database $dbname_tmp
-psql $db_dest -c "create database $dbname_tmp with owner ods" postgres
-psql $db_dest -c "select datname, (pg_stat_file('base/'||oid||'/PG_VERSION')).modification AS datcreated from pg_database where datname = '$dbname_tmp'"
+psql $db_dest -c "create database ${dbname}_tmp with owner ods" postgres
+psql $db_dest -c "select datname, (pg_stat_file('base/'||oid||'/PG_VERSION')).modification AS datcreated from pg_database where datname = '${dbname}_tmp'"
 read -p "Press [Enter] key to proceed..."
 echo ###################################################################################
 echo Import source ODS_PROD database to $dbname_tmp. Exclude event log and parameters data.
