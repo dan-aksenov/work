@@ -120,7 +120,7 @@ class PatchDatabase:
                         print Bcolors.FAIL + "\tUnable to read logfile" + self.stage_dir + "\\patches\\" + i + "\\install_db_log.log. Somethnig wrong with installation.\n" + Bcolors.ENDC
                         sys.exit()
                     loglines = logfile.read()
-                    success_marker = loglines.find('finsih install patch ods objects')
+                    success_marker = loglines.find('finsih install patch')
                     if success_marker != -1:
                         print Bcolors.OKGREEN + "\tDone.\n" + Bcolors.ENDC
                     else:
