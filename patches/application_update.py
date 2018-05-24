@@ -50,7 +50,7 @@ class ApplicationUpdate:
 
     def application_update( self ):
         
-        # TODO add check if patch path on sunny
+        # TODO add check if patch path directory and war files on sunny
         for application_host in self.application_hosts:
             print "Checking application files on " + application_host +":"
             # apps_to_update will hold application names to be updated, so actual applications won't be undeployed.
