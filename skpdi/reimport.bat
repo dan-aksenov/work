@@ -7,16 +7,16 @@
 echo ###################################################################################
 echo Create temporary database %dbname%_tmp
 psql %db_dest% -c "create database %dbname%_tmp with owner ods" postgres
-pause
 
 echo ###################################################################################
 echo Import source ODS_PROD database to %dbname%_tmp. Exclude event log and parameters data.
+pause
 pg_dump %db_src% -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod > d:/tmp/%dbname%.sql
 psql %db_dest% -f d:/tmp/%dbname%.sql %dbname%_tmp 2>d:/tmp/%dbname%_import.log
-pause
 
 echo ###################################################################################
 echo Reimport parameter_md from old db
+pause
 pg_dump %db_dest% -Fp -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
 
 echo ###################################################################################
