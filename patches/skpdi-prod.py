@@ -40,7 +40,8 @@ wars = [
 
 db_host = 'gudhskpdi-db-01'
 db_name = 'ods_prod'
-db_user = 'ods'
+db_user = 'ods',
+db_port = '5432'
 # databaes table to look for current db_version
 patch_table = 'parameter.fdc_patches_log'
 # temporary directory to hold database patches.
@@ -53,6 +54,7 @@ d = PatchDatabase(
     ansible_inventory,
     db_host,
     db_name,
+    db_port,
     stage_dir,
     db_user,
     patch_table

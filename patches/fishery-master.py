@@ -42,6 +42,7 @@ wars = [
 db_host = 'fishery-test-db'
 db_name = 'fishery'
 db_user = 'fishery'
+db_port = '5432'
 # databaes table to look for current db_version
 patch_table = 'parameter.patches_log'
 # temporary directory to hold database patches.
@@ -54,6 +55,7 @@ d = PatchDatabase(
     ansible_inventory,
     db_host,
     db_name,
+    db_port,
     stage_dir,
     db_user,
     patch_table
