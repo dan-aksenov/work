@@ -1,4 +1,4 @@
-# for args and exit
+# for args and exit                                                                         /
 import sys
 import os
 # for war file search
@@ -23,7 +23,7 @@ from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec, Bcolo
 #c = PatchDatabase(patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, stage_dir, db_user, patch_table)    
 
 class PatchDatabase:
-    def __init__( self, patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, stage_dir, db_user, patch_table ):
+    def __init__( self, patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, db_port, stage_dir, db_user, patch_table ):
     #def __init__( self, jump_host, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
         # intermediate host with ansible installation.
         #self.jump_host = jump_host
@@ -31,6 +31,7 @@ class PatchDatabase:
         self.db_host = db_host
         self.db_name = db_name
         self.db_user = db_user
+        self.db_port = db_port
         self.stage_dir = stage_dir
         self.sunny_path = sunny_path
         self.sunny_patch = self.sunny_path + self.patch_num + '/'
@@ -67,7 +68,7 @@ class PatchDatabase:
         '''
         # Get list of already applied patches
         # Function returns list tuples + row count, right now need only tuples, so [0]
-        patches_curr = postgres_exec ( self.db_host, self.db_name,  'select name from '+ self.patch_table +' order by id desc;' )[0]
+        patches_curr = postgres_exec ( self.db_host, self.db_name, self.db_port,  'select name from '+ self.patch_table +' order by id desc;' )[0]
     
         # Get list of patches from from Sunny
         if os.path.isdir( self.sunny_patch + '\\patches' ) != True:

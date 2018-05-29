@@ -37,6 +37,7 @@ wars = [
 db_host = 'gudhskpdi-db-test'
 db_name = 'ods_predprod'
 db_user = 'ods'
+db_port = '5432'
 patch_table = 'parameter.fdc_patches_log'
 stage_dir = 'd:/tmp/skpdi_patch'
 
@@ -47,6 +48,7 @@ d = PatchDatabase(
     ansible_inventory,
     db_host,
     db_name,
+    db_port,
     stage_dir,
     db_user,
     patch_table
