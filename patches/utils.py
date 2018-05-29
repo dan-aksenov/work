@@ -105,7 +105,7 @@ def postgres_exec(db_host, db_name, db_port, sql_query):
     ''' SQL execution '''
 
     # pgpass shoule be used insead of password
-    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host + 'port=' + db_port)
+    conn_string = 'dbname= ' + db_name + ' user=''postgres'' host=' + db_host + 'port=' + db_port
     try:
         conn = connect(conn_string)
     except:
