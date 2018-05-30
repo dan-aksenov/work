@@ -19,9 +19,6 @@ import requests
 from utils import md5_check, recreate_dir, Deal_with_linux, postgres_exec, Bcolors
     
 # NOTE: purge_panels to be moved to skpdi specific.
-
-#c = PatchDatabase(patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, stage_dir, db_user, patch_table)    
-
 class PatchDatabase:
     def __init__( self, patch_num, sunny_path, application_hosts, ansible_inventory, db_host, db_name, db_port, stage_dir, db_user, patch_table ):
     #def __init__( self, jump_host, patch_num, self.sunny_path, application_hosts, ansible_inventory, patches_table ):
@@ -97,14 +94,12 @@ class PatchDatabase:
     
                 print "Following database patches will be applied: " + ', '.join(patches_miss) + "\n"
                 for i in patches_miss:
-                # Copy needed patches from Sunny.
+                    # Copy needed patches from Sunny.
                     shutil.copytree(self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i)
-#                   subprocess.call( [ 'xcopy', '/e', '/i', '/q', self.sunny_patch + '\\patches\\' + i, self.stage_dir + '\\patches\\' + i  ], stdout=self.dnull, shell=True )
-                # Place patch installer to patch subdirectories.
-#                    subprocess.call( [ 'copy', '/y', self.db_patch_file , self.stage_dir + '\\patches\\' + i ], stdout=self.dnull, shell=True )
+                    # Place patch installer to patch subdirectories.
                     shutil.copy(self.db_patch_file , self.stage_dir + '\\patches\\' + i)
     
-            # Stop tomcat.
+                # Stop tomcat.
                 for i in self.application_hosts:
                     print "Stopping application server " + i + "...\n"
                     self.linux.linux_exec( i, 'sudo systemctl stop tomcat' )
