@@ -113,7 +113,7 @@ class PatchDatabase:
                 for i in sorted(patches_miss):    
                     print "Applying database patch " + i + "..."
                     # Output to null - nothing usefull there anyway. Result to be analyzed by reading log. 
-                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + self.db_patch_file, self.db_host, self.db_name, self.db_user ], stdout=self.dnull, stderr = self.dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
+                    subprocess.call( [ self.stage_dir + '\\patches\\' + i + '\\' + self.db_patch_file, self.db_host, self.db_name, self.db_user, self.db_port ], stdout=self.dnull, stderr = self.dnull, shell = False, cwd = self.stage_dir + '\\patches\\' + i )
                     # Search logfile for "finish install patch ods objects
                     try:
                         logfile = open( self.stage_dir + '\\patches\\' + i + '\\install_db_log.log' )
