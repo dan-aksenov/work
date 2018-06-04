@@ -8,6 +8,7 @@ STAGE_DIR=/usr/local/pgsql/backup_test
 mkdir $STAGE_DIR
 cd $STAGE_DIR
 # Copy backup from storage.
+echo '##########################################################'
 echo Restore started at `date`
 cp $BACKUP_DIR/$CURRENT_BACKUP $STAGE_DIR -r
 
@@ -31,13 +32,15 @@ mkdir $STAGE_DIR/$CURRENT_BACKUP/pg_log
 # Attempt start.
 pg_ctl -w -D $STAGE_DIR/$CURRENT_BACKUP start
 
+echo '##########################################################'
 read -p "Restore completed at `date`. Press [Enter] to proceed"
-echo last date from event.fdc_app_log
-psql -p 54320 ods_prod -c "select a.datetime from event.fdc_app_log a order by datetime desc limit 1"
+echo Last date from event.fdc_app_log:
+psql --port 54320 --tuples-only ods_prod --command "select a.datetime from event.fdc_app_log a order by datetime desc limit 1"
 
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
 cp $STAGE_DIR/$CURRENT_BACKUP/pg_log/postgresql-$DOW.log /tmp/restore.log
 
+echo '##########################################################'
 read -p "Press [Enter] to stop test server and delete stage data"
 
 pg_ctl -D $STAGE_DIR/$CURRENT_BACKUP stop
