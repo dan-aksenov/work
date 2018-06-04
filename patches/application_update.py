@@ -51,10 +51,9 @@ class ApplicationUpdate:
 
     def application_update( self ):
         
-        # TODO add check if patch path directory and war files on sunny
         for application_host in self.application_hosts:
             print "Checking application files on " + application_host +":"
-            # apps_to_update will hold application names to be updated, so actual applications won't be undeployed.
+            # apps_to_update will hold application names to be updated, so uptodate applications won't be undeployed.
             apps_to_update = []
             for war in self.wars:
                 if os.path.isfile( self.sunny_patch + war[0] ) == True:
