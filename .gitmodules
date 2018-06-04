@@ -1,0 +1,3 @@
+[submodule "fsr_patches"]
+	path = fsr_patches
+	url = https://github.com/dan-aksenov/frs_patches.git
