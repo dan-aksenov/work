@@ -1,3 +1,0 @@
-[submodule "frs_patches"]
-	path = frs_patches
-	url = https://github.com/dan-aksenov/frs_patches.git
