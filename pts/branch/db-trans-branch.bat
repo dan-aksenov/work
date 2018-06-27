@@ -6,7 +6,7 @@ set PGHOST=172.19.1.127
 set PGPORT=5432
 
 set PGUSER=pts
-set PGDATABASE=trans-branch
+set PGDATABASE=trans_branch
 set PGPASSWORD=pts
 
 echo Connecting to %PGDATABASE%@%PGHOST%:%PGPORT%

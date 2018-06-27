@@ -6,7 +6,7 @@ set PGHOST=pts-demo.fors.ru
 set PGPORT=5432
 
 set PGUSER=pts
-set PGDATABASE=pts_show
+set PGDATABASE=pts_bel_show
 set PGPASSWORD=pts
 
 echo Connecting to %PGDATABASE%@%PGHOST%:%PGPORT%
