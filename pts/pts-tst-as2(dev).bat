@@ -1,1 +1,0 @@
-patch.bat pts-tst-as2 -dev > D:\pts_patch\log\dev.log

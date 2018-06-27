@@ -1,1 +1,0 @@
-patch.bat pts-demo /u01/apache-tomcat-8.5.27
