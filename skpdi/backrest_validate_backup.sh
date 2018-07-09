@@ -4,7 +4,7 @@ STAGE_DIR=/usr/local/pgsql/backup_test
 mkdir $STAGE_DIR
 chmod 700 $STAGE_DIR
 cd $STAGE_DIR
-# Copy backup from storage.
+
 echo '##########################################################'
 echo Restore started at `date`
 pgbackrest --db-path $STAGE_DIR --log-level-console=info --stanza=main restore
