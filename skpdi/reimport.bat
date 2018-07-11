@@ -4,20 +4,29 @@
 @REM set db_dest=-U postgres -p 5432 -h skpdi-test-db
 @REM set db_src=-U postgres -h gudhskpdi-db-01
 
+REM Putty config
+set ssh_key=C:\Users\daniil.aksenov\Documents\ssh\id_rsa.ppk
+set usr_nix=ansible
+set src_host=gudhskpdi-db-01
+REM Create plink command for use in script below.
+set plink_cmd=plink -i %ssh_key% %usr_nix%@%src_host%
+
 echo ###################################################################################
 echo Create temporary database %dbname%_tmp
 psql %db_dest% -c "create database %dbname%_tmp with owner ods" postgres
+psql %db_dest% -t -c "SELECT d.datname AS Name, pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) AS Size FROM pg_catalog.pg_database d where d.datname = '%dbname%_tmp'"
 
 echo ###################################################################################
 echo Import source ODS_PROD database to %dbname%_tmp. Exclude event log and parameters data.
 pause
-pg_dump %db_src% -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod > d:/tmp/%dbname%.sql
-psql %db_dest% -f d:/tmp/%dbname%.sql %dbname%_tmp 2>d:/tmp/%dbname%_import.log
-
+%plink_cmd% sudo -u postgres pg_dump --format=custom --compress 5 --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" --file=/tmp/reimp.dmp ods_prod 
+pscp -C -i %ssh_key% %usr_nix%@%src_host%:/tmp/reimp.dmp d:/tmp/reimp.dmp
+pg_restore %db_dest%_tmp -v d:/tmp/reimp.dmp 2>d:/tmp/%dbname%_import.log
+psql %db_dest% -t -c "SELECT d.datname AS Name, pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) AS Size FROM pg_catalog.pg_database d where d.datname = '%dbname%_tmp'"
 echo ###################################################################################
 echo Reimport parameter_md from old db
 pause
-pg_dump %db_dest% -Fp -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
+pg_dump %db_dest% --fortam plain --data-only -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
 
 echo ###################################################################################
 echo Rename database %dbname% to %dbname%_old
@@ -42,4 +51,5 @@ pause
 psql %db_dest% -c "update pg_database set datallowconn = false where datname = '%dbname%_old'"
 psql %db_dest% -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = '%dbname%_old'"
 psql %db_dest% -c "drop database %dbname%_old"
+psql %db_dest% -t -c "SELECT d.datname AS Name, pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) AS Size FROM pg_catalog.pg_database d where d.datname = '%dbname%'"
 pause
