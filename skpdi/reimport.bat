@@ -21,7 +21,7 @@ echo Import source ODS_PROD database to %dbname%_tmp. Exclude event log and para
 pause
 %plink_cmd% sudo -u postgres pg_dump --format=custom --compress 5 --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" --file=/tmp/reimp.dmp ods_prod 
 pscp -C -i %ssh_key% %usr_nix%@%src_host%:/tmp/reimp.dmp d:/tmp/reimp.dmp
-pg_restore %db_dest%_tmp -v d:/tmp/reimp.dmp 2>d:/tmp/%dbname%_import.log
+pg_restore -d %db_dest%_tmp -v d:/tmp/reimp.dmp 2>d:/tmp/%dbname%_import.log
 psql %db_dest% -t -c "SELECT d.datname AS Name, pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) AS Size FROM pg_catalog.pg_database d where d.datname = '%dbname%_tmp'"
 echo ###################################################################################
 echo Reimport parameter_md from old db
