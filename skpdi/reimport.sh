@@ -1,7 +1,7 @@
 # Variables to be passed from uper script.
-# set dbname=$1
-# set db_dest=-U postgres -p 5432 -h skpdi-test-db
-# set db_src=-U postgres -h gudhskpdi-db-01
+# export dbname=$1
+# export db_dest=-U postgres -p 5432 -h skpdi-test-db
+# export db_src=-U postgres -h gudhskpdi-db-01
 
 echo ###################################################################################
 echo Create temporary database ${dbname}_tmp
