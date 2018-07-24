@@ -27,7 +27,7 @@ psql %db_dest% -t -c "SELECT d.datname AS Name, pg_catalog.pg_size_pretty(pg_cat
 echo ###################################################################################
 echo Reimport parameter_md from old db
 pause
-pg_dump %db_dest% --fortam plain --data-only -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
+pg_dump %db_dest% --format plain --data-only -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
 
 echo ###################################################################################
 echo Rename database %dbname% to %dbname%_old
