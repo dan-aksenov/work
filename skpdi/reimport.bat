@@ -29,6 +29,9 @@ echo Reimport parameter_md from old db
 pause
 pg_dump %db_dest% --format plain --data-only -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
 
+echo SET password fro admin user
+psql %db_dest% -c "UPDATE secr.fdc_user_md SET passwd = '$2a$10$GwiQ4p7I6Si/Cr5LJN60duTrpjGVsTFn47ELx1kbRW7RPUD6ucuqy' WHERE sysname = 'ADMIN'" %dbname%_tmp
+
 echo ###################################################################################
 echo Rename database %dbname% to %dbname%_old
 pause
