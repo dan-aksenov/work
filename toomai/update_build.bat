@@ -15,7 +15,9 @@ echo Updateing %dst_host%
 psql -c "DROP SCHEMA toomai CASCADE" -U postgres -p 5432 -h toomai-pg postgres
 
 pscp -i %ssh_key% \\SUNNY\Work\toomai\server\var\toomai\toomai-server.jar %usr_nix%@%dst_host%:/tmp/toomai-server.jar
+%plink_cmd% "sudo rm /var/toomai/toomai-server.jar"
 %plink_cmd% "sudo cp /tmp/toomai-server.jar /var/toomai/toomai-server.jar"
+%plink_cmd% "sudo chmod +x /var/toomai/toomai-server.jar"
 
 pscp -i %ssh_key% \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar %usr_nix%@%dst_host%:/tmp/toomai-agent.jar
 %plink_cmd% "sudo cp /tmp/toomai-agent.jar /var/toomai/toomai-agent.jar"
