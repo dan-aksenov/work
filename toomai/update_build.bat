@@ -6,6 +6,7 @@ set usr_nix=ansible
 set dst_host=toomai-pg
 set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
+
 echo Updateing %dst_host%
 
 %plink_cmd% "sudo systemctl stop toomai-agent"
@@ -33,9 +34,10 @@ set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
 echo Updateing %dst_host%
 %plink_cmd% "sudo systemctl stop toomai-agent"
+%plink_cmd% "sudo systemctl stop toomai-agent"
+
 pscp -i %ssh_key% \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar %usr_nix%@%dst_host%:/tmp/toomai-agent.jar
 %plink_cmd% "sudo cp /tmp/toomai-agent.jar /var/toomai/toomai-agent.jar"
-
 %plink_cmd% "sudo systemctl start toomai-agent"
 
 echo Check md5 for %dst_host%
