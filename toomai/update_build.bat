@@ -6,8 +6,14 @@ set usr_nix=ansible
 set dst_host=toomai-pg
 set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
+echo UPDATING %dst_host%
+echo INITIAL CHECK MD5 FOR %dst_host%
+md5sum \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar
+%plink_cmd% "sudo md5sum /var/toomai/toomai-agent.jar"
+md5sum \\SUNNY\Work\toomai\server\var\toomai\toomai-server.jar
+%plink_cmd% "sudo md5sum /var/toomai/toomai-server.jar"
 
-echo Updateing %dst_host%
+pause
 
 %plink_cmd% "sudo systemctl stop toomai-agent"
 %plink_cmd% "sudo systemctl stop toomai"
@@ -25,16 +31,20 @@ pscp -i %ssh_key% \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar %usr_nix
 %plink_cmd% "sudo systemctl start toomai"
 %plink_cmd% "sudo systemctl start toomai-agent"
 
-echo Check md5 for %dst_host%
+echo FINAL CHECK MD5 FOR %dst_host%
 md5sum \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar
 %plink_cmd% "sudo md5sum /var/toomai/toomai-agent.jar"
 md5sum \\SUNNY\Work\toomai\server\var\toomai\toomai-server.jar
 %plink_cmd% "sudo md5sum /var/toomai/toomai-server.jar"
 
+echo #
+echo ########################################################################
+echo #
+
 set dst_host=toomai-oracle
 set plink_cmd=plink -i %ssh_key% %usr_nix%@%dst_host%
 
-echo Updateing %dst_host%
+echo UPDATING %dst_host%
 %plink_cmd% "sudo systemctl stop toomai-agent"
 %plink_cmd% "sudo systemctl stop toomai-agent"
 
@@ -42,7 +52,7 @@ pscp -i %ssh_key% \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar %usr_nix
 %plink_cmd% "sudo cp /tmp/toomai-agent.jar /var/toomai/toomai-agent.jar"
 %plink_cmd% "sudo systemctl start toomai-agent"
 
-echo Check md5 for %dst_host%
+echo FINAL CHECK MD5 FOR %dst_host%
 md5sum \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar
 %plink_cmd% "sudo md5sum /var/toomai/toomai-agent.jar"
 
