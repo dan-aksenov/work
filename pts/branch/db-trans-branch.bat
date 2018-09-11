@@ -2,8 +2,8 @@
 chcp 65001
 
 rem Тестовый контур ФОРС
-set PGHOST=172.19.1.127
-set PGPORT=5432
+set PGHOST=172.29.7.200
+set PGPORT=6432
 
 set PGUSER=pts
 set PGDATABASE=trans_branch
