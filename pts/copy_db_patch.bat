@@ -1,3 +1,5 @@
+REM COPY DB patchs from sunny
+robocopy y:\pts\ d:\pts_patch\ *.* /xd *install /xf *.war /s /MAXAGE:60
 REM copy patch executor to database patch subfolders.
 REM parameter %1 to copy master or branch patch
 for /D %%a in ("d:\pts_patch\*") do xcopy /y /d .\%1\db-%1.bat "%%a\patches\"
