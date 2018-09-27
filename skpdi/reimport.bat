@@ -26,6 +26,7 @@ pg_restore %db_dest% -d %dbname%_tmp -v d:/tmp/reimp.dmp 2>d:/tmp/%dbname%_impor
 psql %db_dest% -t -c "SELECT d.datname AS Name, pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) AS Size FROM pg_catalog.pg_database d where d.datname = '%dbname%_tmp'"
 echo ###################################################################################
 echo Reimport parameter_md from old db
+msg %username% Restore completed!
 pause
 pg_dump %db_dest% --format plain --data-only -t "parameter.fdc_parameter_md" %dbname% | psql %db_dest% %dbname%_tmp
 
