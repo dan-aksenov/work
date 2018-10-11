@@ -70,3 +70,27 @@ pscp -i %ssh_key% \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar %usr_nix
 echo FINAL CHECK MD5 FOR %dst_host%
 md5sum \\SUNNY\Work\toomai\agent\var\toomai\toomai-agent.jar
 %plink_cmd% "sudo md5sum /var/toomai/toomai-agent.jar"
+
+echo #
+echo ########################################################################
+echo #
+
+exit
+
+set dst_host=toomai-mssql
+powershell -Command "Start-Process sc '\\%toomai-mssql% stop toomai-agent' -Verb RunAs"
+del /f "\\%dst_host%\c$\Program Files\toomai\toomai-agent.jar"
+del /f "\\%dst_host%\c$\Program Files\toomai\toomai-agent.exe"
+copy "\\sunny\Work\toomai\windows\toomai-agent.jar" "\\%dst_host%\c$\Program Files\toomai\"
+copy "\\sunny\Work\toomai\windows\toomai-agent.exe" "\\%dst_host%\c$\Program Files\toomai\"
+powershell -Command "Start-Process sc '\\%toomai-mssql% start toomai-agent' -Verb RunAs"
+
+set dst_host=kite
+powershell -Command "Start-Process sc '\\%toomai-mssql% stop toomai-agent' -Verb RunAs"
+del /f "\\%dst_host%\c$\Program Files\toomai\toomai-agent.jar"
+del /f "\\%dst_host%\c$\Program Files\toomai\toomai-agent.exe"
+copy "\\sunny\Work\toomai\windows\toomai-agent.jar" "\\%dst_host%\c$\Program Files\toomai\"
+copy "\\sunny\Work\toomai\windows\toomai-agent.exe" "\\%dst_host%\c$\Program Files\toomai\"
+powershell -Command "Start-Process sc '\\%toomai-mssql% start toomai-agent' -Verb RunAs"
+
+
