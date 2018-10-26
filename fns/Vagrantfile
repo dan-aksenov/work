@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :ambari => {
+        :box_name => "centos/7",
+        :ip_addr => '192.168.11.101',
+  },
+  :datanode => {
+    :box_name => "centos/7",
+    :ip_addr => '192.168.11.102',
+},
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+
+      config.vm.define boxname do |box|
+
+          box.vm.box = boxconfig[:box_name]
+          box.vm.host_name = boxname.to_s
+          box.vm.network "private_network", ip: boxconfig[:ip_addr]
+
+          box.vm.provider :virtualbox do |vb|
+             vb.customize ["modifyvm", :id, "--memory", "2048"]
+          end
+
+            box.vm.provision "shell", inline: <<-SHELL
+              setenforce 0
+              mkdir -p ~root/.ssh
+              cp ~vagrant/.ssh/auth* ~root/.ssh
+              
+              echo 192.168.11.101 ambari ipa>>/etc/hosts
+              echo 192.168.11.102 datanode client>>/etc/hosts
+
+              if [ "$HOSTNAME" = ambari ]
+              then
+              yum -y install httpd
+              systemctl start httpd
+              systemctl enable httpd
+              
+              mkdir /staging
+              chmod a+rx /staging
+
+              cp AMBARI-2.6.1-RHEL7.tar /staging
+              cp adh-mpack-1.6.0.1-19.tar.gz /staging
+              cp ADH-1.6.0-RHEL7.tar /staging
+              cp ADH-1.6.0-UTIS-RHEL7.tar /staging
+
+              tar -xvf /staging/AMBARI-2.6.1.tar -C /staging/
+              tar -xvf /staging/adh-mpack-1.6.0.1-19.tar.gz -C /staging/
+              tar -xvf /staging/ADH-1.6.0-RHEL7.tar -C /staging/
+              tar -xvf /staging/ADH-1.6.0-UTIS-RHEL7.tar -C /staging/ 
+              
+              /staging/AMBARI-2.6.1/setup_repo.sh
+              /staging/ADH-1.6.0-RHEL7/setup_repo.sh   
+              /staging/ADH-1.6.0-UTILS-RHEL7/setup_repo.sh
+              
+              yum install ambari-server
+              #ambari-server setup  
+              ambari-server install-mpack --mpack=/staging/adh-mpack-1.6.0.1-19.tar.gz
+              #ambari-server restart
+               
+              fi
+              
+              if [ "$HOSTNAME" = datanode ]
+              then
+              hostname
+              fi
+  	  SHELL
+      end
+  end
+end

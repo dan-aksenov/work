@@ -1,3 +1,5 @@
 *.dmp
 *.log
 *.pyc
+*.tar
+*.gz
