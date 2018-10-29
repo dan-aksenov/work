@@ -3,3 +3,6 @@
 *.pyc
 *.tar
 *.gz
+*.vdi
+.vagrant
+.vscode
