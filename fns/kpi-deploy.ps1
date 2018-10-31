@@ -13,40 +13,40 @@ $Stamp = $(get-date -f yyyyMMdd_hh_mm_ss)
 try {
 New-PSDrive –Name "K" –PSProvider FileSystem –Root "\\$DeployHost\D$" -Credential $Cred
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
 
 try {
 Copy-Item -Path kpi-ta\Build\Debug\Build -Destination K:\Builds\Build$Stamp –Recurse
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
 
 #copy deploy scripts
 try {
 Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-deploy.ps1 -Destination "K:\Builds\" -Force
-}
-Catch { exit $LastExitCode }
-
-try {
 Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-graceful-teardown-local.ps1 -Destination "K:\Builds\" -Force
+Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-azman.psm1 -Destination "K:\Builds\" -Force
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
+
 #run deployment scripts
 
 try {
-Invoke-command –computername 192.168.118.7 -credential $Cred –scriptblock { "D:\Builds\trc-graceful-teardown-local.ps1" }
+Invoke-command –computername 192.168.118.7 -credential $Cred –scriptblock { D:\Builds\trc-graceful-teardown-local.ps1 }
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
 
 try {
+Remove-Item -Recurse -Force K:\AIS3
 Copy-Item -Path kpi-ta\Build\Debug\Build -Destination K:\AIS3 –Recurse -Force
 }
-Catch { exit $LastExitCode }
-
+Catch {  BREAK  }
 
 try {
-Invoke-command –computername 192.168.118.7 -credential $Cred -argumentlist $Stamp –scriptblock { "D:\Builds\trc-deploy.ps1 d:\Builds\Build$args" }
+Invoke-command –computername 192.168.118.7 -credential $Cred -argumentlist $Stamp –scriptblock { 
+Set-Location -Path "D:\Builds"
+D:\Builds\trc-deploy.ps1 d:\AIS3 }
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
 
 #compress build
 try {
@@ -57,16 +57,16 @@ Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::CreateFromDirectory($src, $dst)
 }
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
 
 #delete folder
 try {
 Remove-Item K:\Builds\Build$Stamp -Force -Recurse
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
 
 # Remove net drive
 try {
 Remove-PSDrive -Name "K"
 }
-Catch { exit $LastExitCode }
+Catch {  BREAK  }
