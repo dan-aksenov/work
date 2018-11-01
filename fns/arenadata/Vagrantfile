@@ -48,12 +48,12 @@ Vagrant.configure("2") do |config|
               tar -xvf /vagrant/ADH-UTILS-1.6.0-RHEL7.tar -C /staging/ 
               
               /staging/AMBARI-2.6.1/setup_repo.sh
-              /staging/ADH-1.6.0-RHEL7/setup_repo.sh   
-              /staging/ADH-1.6.0-UTILS-RHEL7/setup_repo.sh
+              /staging/ADH-1.6.0/setup_repo.sh   
+              /staging/ADH-UTILS-1.6.0/setup_repo.sh
               
-              yum install ambari-server
+              yum install ambari-server -y
               #ambari-server setup  
-              ambari-server install-mpack --mpack=/staging/adh-mpack-1.6.0.1-19.tar.gz
+              ambari-server install-mpack --mpack=/vagrant/adh-mpack-1.6.0.1-19.tar.gz
               #ambari-server restart
                
               fi
