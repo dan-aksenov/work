@@ -42,10 +42,10 @@ Vagrant.configure("2") do |config|
               mkdir /staging
               chmod a+rx /staging
 
-              tar -xvf /vagrant/AMBARI-2.6.1.tar -C /staging/
+              tar -xvf /vagrant/AMBARI-2.6.1-RHEL7.tar -C /staging/
               tar -xvf /vagrant/adh-mpack-1.6.0.1-19.tar.gz -C /staging/
               tar -xvf /vagrant/ADH-1.6.0-RHEL7.tar -C /staging/
-              tar -xvf /vagrant/ADH-1.6.0-UTIS-RHEL7.tar -C /staging/ 
+              tar -xvf /vagrant/ADH-UTILS-1.6.0-RHEL7.tar -C /staging/ 
               
               /staging/AMBARI-2.6.1/setup_repo.sh
               /staging/ADH-1.6.0-RHEL7/setup_repo.sh   
