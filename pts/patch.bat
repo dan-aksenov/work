@@ -1,5 +1,5 @@
 rem Update pts script.
-set stage_dir=d:\pts_patch
+set stage_dir=c:\tmp\pts
 set ssh_key=C:\Users\daniil.aksenov\Documents\ssh\id_rsa.ppk
 set dst_host=%1
 set usr_nix=ansible
