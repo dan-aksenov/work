@@ -5,23 +5,19 @@ MACHINES = {
   :ambari => {
     :box_name => "centos/7",
     :ip_addr => '192.168.11.101',
-    :shared_folder_disabled => 'false'
   },
   :datanode1 => {
     :box_name => "centos/7",
     :ip_addr => '192.168.11.102',
-    :shared_folder_disabled => 'true'
 },
   :datanode2 => {
     :box_name => "centos/7",
     :ip_addr => '192.168.11.103',
-    :shared_folder_disabled => 'true'
 },
 }
 
 Vagrant.configure("2") do |config|
   MACHINES.each do |boxname, boxconfig|
-      config.vm.synced_folder '.', '/vagrant', disabled: :shared_folder_disabled
       config.vm.define boxname do |box|
 
           box.vm.box = boxconfig[:box_name]
@@ -37,7 +33,7 @@ Vagrant.configure("2") do |config|
               mkdir -p ~root/.ssh
               cp ~vagrant/.ssh/auth* ~root/.ssh
               
-              echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDlrNV1G+IUr+3enuJGbC2TnHixq05OF6sBtIStJMQfjrvNsJCHvYGjTUYFlxT9/Q2hTu8OE4849aipPDUbzW1YxVk3lqn62HuBzyLIs2CmHZWFKCG60/CWmsJ+Q2cmF8CQ1Pl/+XCrrn2gUt67FDcMVIbDctX7FcMUfPgyMz69w7b0In55Etu6Xv0HBer5z2i9s07XsAWkYZrmhNKlYLgcb9jjGyBMwXdUSFoJepOgUUz0Y3h/NUzKYq5yNdkj2RLcpGUjzfULU2YsYd9Cf8/QAcF06KZL2+cOqW9EYtO9/ozwn9py/QEofaE9ZYpiTVfo/XW81nqe0zEKSpizmML9 root@centos7-test-1 >> /root/.ssh/authorized_keys
+              cat /vagrant/id_rsa.pub >> /root/.ssh/authorized_keys
 
               echo 192.168.11.101 ambari.local ambari>>/etc/hosts
               echo 192.168.11.102 datanode1.local datanode1>>/etc/hosts
