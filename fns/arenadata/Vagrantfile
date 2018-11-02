@@ -3,22 +3,25 @@
 
 MACHINES = {
   :ambari => {
-        :box_name => "centos/7",
-        :ip_addr => '192.168.11.101',
+    :box_name => "centos/7",
+    :ip_addr => '192.168.11.101',
+    :shared_folder_disabled => 'false'
   },
   :datanode1 => {
     :box_name => "centos/7",
     :ip_addr => '192.168.11.102',
+    :shared_folder_disabled => 'true'
 },
   :datanode2 => {
     :box_name => "centos/7",
     :ip_addr => '192.168.11.103',
+    :shared_folder_disabled => 'true'
 },
 }
 
 Vagrant.configure("2") do |config|
   MACHINES.each do |boxname, boxconfig|
-
+      config.vm.synced_folder '.', '/vagrant', disabled: :shared_folder_disabled
       config.vm.define boxname do |box|
 
           box.vm.box = boxconfig[:box_name]
