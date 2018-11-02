@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
           box.vm.network "private_network", ip: boxconfig[:ip_addr]
 
           box.vm.provider :virtualbox do |vb|
-             vb.customize ["modifyvm", :id, "--memory", "4096"]
+             vb.customize ["modifyvm", :id, "--memory", "2048"]
           end
 
             box.vm.provision "shell", inline: <<-SHELL
@@ -40,9 +40,10 @@ Vagrant.configure("2") do |config|
               echo 192.168.11.102 datanode1.local datanode1>>/etc/hosts
               echo 192.168.11.102 datanode2.local datanode2>>/etc/hosts
 
-              if [ "$HOSTNAME" = ^ambari.* ]
+              if [ "$HOSTNAME" = ambari ]
               then
               
+              hostnamectl set-hostname ambari.local
               cp /vagrant/id_rsa /root/.ssh/id_rsa
               chmod 700 ~root/.ssh
               chmod 600 ~root/.ssh/id_rsa 
@@ -70,9 +71,9 @@ Vagrant.configure("2") do |config|
                
               fi
               
-              if [ "$HOSTNAME" = ^datanode.* ]
+              if [[ "$HOSTNAME" = datanode[1..2] ]];
               then
-              hostname
+              hostnamectl set-hostname $HOSTNAME.localhost
               fi
   	  SHELL
       end
