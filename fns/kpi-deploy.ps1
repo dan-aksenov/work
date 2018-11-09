@@ -10,64 +10,86 @@ $Stamp = $(get-date -f yyyyMMdd_hh_mm_ss)
 
 # Add net drive
 # check if exists
-try {
 New-PSDrive –Name "K" –PSProvider FileSystem –Root "\\$DeployHost\D$" -Credential $Cred
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
-try {
 Copy-Item -Path kpi-ta\Build\Debug\Build -Destination K:\Builds\Build$Stamp –Recurse
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
 #copy deploy scripts
-try {
-Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-deploy.ps1 -Destination "K:\Builds\" -Force
-Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-graceful-teardown-local.ps1 -Destination "K:\Builds\" -Force
-Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-azman.psm1 -Destination "K:\Builds\" -Force
-Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\trc-index.ps1 -Destination "K:\Builds\" -Force
+Copy-Item -Path kpi-ta\Source\TRC\Source\Ais3.TRC.Resources\Scripts\* -Destination "K:\Builds\" -Force
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
 #run deployment scripts
-
-try {
 Invoke-command –computername 192.168.118.7 -credential $Cred –scriptblock { D:\Builds\trc-graceful-teardown-local.ps1 }
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
-try {
 Remove-Item -Recurse -Force K:\AIS3
-Copy-Item -Path kpi-ta\Build\Debug\Build -Destination K:\AIS3 –Recurse -Force
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
-try {
+Copy-Item -Path kpi-ta\Build\Debug\Build -Destination K:\AIS3 –Recurse -Force
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
+}
+
 Invoke-command –computername 192.168.118.7 -credential $Cred -argumentlist $Stamp –scriptblock { 
 Set-Location -Path "D:\Builds"
 D:\Builds\trc-deploy.ps1 d:\AIS3 }
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
+else {
+write-host Результат сборки: $?}
 
 #compress build
-try {
 Invoke-command –computername 192.168.118.7 -credential $Cred -argumentlist $Stamp –scriptblock {
 $src = "d:\Builds\Build$args"
 $dst = "d:\Builds\Build$args.zip"
 Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::CreateFromDirectory($src, $dst)
 }
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
 #delete folder
-try {
 Remove-Item K:\Builds\Build$Stamp -Force -Recurse
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
 
 # Remove net drive
-try {
 Remove-PSDrive -Name "K"
+if ($? -ne $true)
+{
+	write-host $?
+	exit 1
 }
-Catch {  BREAK  }
