@@ -76,6 +76,7 @@ echo ########################################################################
 echo #
 
 exit
+REM powershell section disabled so far...
 
 set dst_host=toomai-mssql
 powershell -Command "Start-Process sc '\\%toomai-mssql% stop toomai-agent' -Verb RunAs"
