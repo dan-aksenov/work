@@ -10,6 +10,11 @@ MACHINES = {
     :box_name => "centos/7",
     :ip_addr => '192.168.11.103',
 },
+  :datanode3 => {
+    :box_name => "centos/7",
+    :ip_addr => '192.168.11.104',
+},
+
 }
 
 Vagrant.configure("2") do |config|
@@ -29,6 +34,7 @@ Vagrant.configure("2") do |config|
               echo 192.168.11.101 ambari.local ambari>>/etc/hosts
               echo 192.168.11.102 datanode1.local datanode1>>/etc/hosts
               echo 192.168.11.103 datanode2.local datanode2>>/etc/hosts
+              echo 192.168.11.104 datanode3.local datanode3>>/etc/hosts
               hostnamectl set-hostname $HOSTNAME.local
   	  SHELL
       end

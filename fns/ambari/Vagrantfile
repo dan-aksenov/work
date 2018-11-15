@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
           box.vm.network "private_network", ip: boxconfig[:ip_addr]
 
           box.vm.provider :virtualbox do |vb|
-             vb.customize ["modifyvm", :id, "--memory", "8192"]
+             vb.customize ["modifyvm", :id, "--memory", "4096"]
           end
 
             box.vm.provision "shell", inline: <<-SHELL
@@ -30,6 +30,7 @@ Vagrant.configure("2") do |config|
               echo 192.168.11.101 ambari.local ambari>>/etc/hosts
               echo 192.168.11.102 datanode1.local datanode1>>/etc/hosts
               echo 192.168.11.103 datanode2.local datanode2>>/etc/hosts
+              echo 192.168.11.104 datanode3.local datanode3>>/etc/hosts
               hostnamectl set-hostname ambari.local
 
               cp /vagrant/id_rsa /root/.ssh/id_rsa
