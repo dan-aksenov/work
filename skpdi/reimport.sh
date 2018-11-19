@@ -1,5 +1,5 @@
 # Variables to be passed from uper script.
-# export dbname=$1
+export dbname=$1
 # export db_dest=-U postgres -p 5432 -h skpdi-test-db
 # export db_src=-U postgres -h gudhskpdi-db-01
 
@@ -10,7 +10,6 @@ psql $db_dest -c "select datname, (pg_stat_file('base/'||oid||'/PG_VERSION')).mo
 read -p "Press [Enter] key to proceed..."
 echo ###################################################################################
 echo Import source ODS_PROD database to ${dbname}_tmp. Exclude event log and parameters data.
-pg_dump $db_src -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod > /tmp/$dbname.sql
 psql $db_dest -f /tmp/$dbname.sql ${dbname}_tmp 2>/tmp/${dbname}_import.log
 read -p "Press [Enter] key to proceed..."
 echo ###################################################################################
