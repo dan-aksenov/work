@@ -34,10 +34,10 @@ metrics = [
 ['Free swap space', 91, 100],
 ['Free disk space HDD1', 50, 51], 
 ['Free disk space HDD2', 50, 51],
-['Read оп/с', 1, 99],
-['Write оп/с', 1, 99],
-['Read Мб/с', 1, 10],
-['Write Мб/с' ,1, 10],
+['Read op/s', 1, 99],
+['Write op/s', 1, 99],
+['Read Mb/s', 1, 10],
+['Write Mb/s' ,1, 10],
 ['Incoming traffic', 1, 10],
 ['Outgoing traffic', 1, 10]
 ]
@@ -49,11 +49,11 @@ servers_db = [
 ]
 
 metrics_db = [
-['PostgreSQL: number of active connections', 1, 69],
+['PostgreSQL number of active connections', 1, 69],
 ['Database size', 1299, 1300],
-['PostgreSQL: service uptime',600 , 50000],
-['PostgreSQL: streaming replication lag', 1,149],
-['PostgreSQL: ping', 1, 9]
+['PostgreSQL service uptime',600 , 50000],
+['PostgreSQL streaming replication lag', 1,149],
+['PostgreSQL ping', 1, 9]
 ]
 
 servers_app = [
@@ -63,7 +63,7 @@ servers_app = [
 ]
 
 metrics_app = [
-['Http запрос к службе', 1, 4]
+['Веб запрос к службе', 1, 4]
 ]
 
 servers_ceph = [
@@ -77,15 +77,16 @@ metrics_ceph = [
 ['ceph latency',1 , 49],
 ['ceph i/o', 1,99],
 ['ceph bandwith',1 ,9],
-['Http запрос к службе', 1, 4]
+['Веб запрос к службе', 1, 4]
 ]
+
 
 servers_bal = [
 'gudhskpdi-bal-01'    
 ]
 
 metrics_bal = [
-['Http запрос к службе', 1, 4]
+['Веб запрос к службе', 1, 4]
 ]
 
 
@@ -106,7 +107,7 @@ def generator(servers, metrics):
                 for metric in metrics:
                     a = random.uniform(metric[1], metric[2])
                     # append to csv to be here.
-                    metrics_writer.writerow([server, metric[0], stamp,  str(a), 'превышения нет'])
+                    metrics_writer.writerow([server, metric[0], stamp,  str(a), 'HOPMA'])
 
 generator(servers, metrics)
 generator(servers_db, metrics_db)
