@@ -1,8 +1,9 @@
 # export dbname=$1
-# export db_dest=-U postgres -p 5432 -h skpdi-test-db
-export db_src='-U postgres -h gudhskpdi-db-01 ods'
+
+src_host=gudhskpdi-db-01
 
 echo ###################################################################################
 echo Dump and download ODS_PROD database.
-pg_dump $db_src -Fp -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" ods_prod > /tmp/$dbname.sql
+time ssh $src_host sudo -u postgres pg_dump ods_prod -Fc -Z5 -v --exclude-table-data "event.fdc_app_log_*" --exclude-table-data "parameter.fdc_parameter_md" -f /backup/dump/prod.dmp
+time scp $src_host:/backup/dump/prod.dmp /tmp/
 echo ###################################################################################
