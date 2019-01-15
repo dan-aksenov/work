@@ -1,4 +1,3 @@
-# Variables to be passed from uper script.
 export dbname=$1
 export dst_host=$2
 export db_dest="-U postgres -p 5432 -h $dst_host"
@@ -9,7 +8,7 @@ psql $db_dest -c "select datname, pg_size_pretty(pg_catalog.pg_database_size(dat
 
 read -p "Press [Enter] key import source ODS_PROD database to ${dbname}_tmp. Exclude event log and parameters data."
 echo Import source ODS_PROD database to ${dbname}_tmp. Exclude event log and parameters data.
-time pg_restore $db_dest --jobs=4 -d ${dbname}_tmp /tmp/prod.dmp 2>/tmp/${dbname}_import.log
+time pg_restore $db_dest --jobs=4 -d ${dbname}_tmp /tmp/reimp.dmp 2>/tmp/${dbname}_import.log
 psql $db_dest -c "select datname, pg_size_pretty(pg_catalog.pg_database_size(datname)) AS Size, (pg_stat_file('base/'||oid||'/PG_VERSION')).modification AS datcreated from pg_database where datname = '${dbname}_tmp'"
 cat /tmp/${dbname}_import.log | mail -s "${dbname}_tmp reimported" -r "brservice@fors.ru" "daniil.aksenov@fors.ru"
 
