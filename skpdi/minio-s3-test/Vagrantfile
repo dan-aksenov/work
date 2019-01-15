@@ -28,7 +28,9 @@ Vagrant.configure("2") do |config|
               
               yum install vim wget -y
               wget https://dl.minio.io/server/minio/release/linux-amd64/minio -q -P /vagrant
+              wget https://dl.minio.io/client/mc/release/linux-amd64/mc -q -P /vagrant
               chmod +x /vagrant/minio
+              chmod +x /vagrant/mc
               mkdir /media/minio
               /vagrant/minio server /media/minio
   	  SHELL
