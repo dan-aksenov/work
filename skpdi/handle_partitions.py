@@ -1,9 +1,11 @@
+#!/bin/python
 import sys
 import subprocess
 from psycopg2 import connect
 
 db_host = 'localhost'
 db_name = 'ods_predprod'
+# keep at least this many partitions
 interval = 3
 dump_dir = '/usr/local/pgsql/backup/'
 
