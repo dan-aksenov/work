@@ -27,7 +27,7 @@ def postgres_exec(db_host, db_name, sql_query):
     return query_results
 
 get_partitions_sql = '''
-select a.drop_name_suffix, 'pg_dump ''' + db_name + ''' -Fc -Z5 --table="'|| string_agg(a.drop_table_name,'" --table="') ||'" --blobs --file="''' + dump_dir + '''dump_events_'||a.drop_name_suffix||'.tgz" &>''' + dump_dir + '''dump_events_'|| a.drop_name_suffix ||'.log'
+select a.drop_name_suffix, 'pg_dump ''' + db_name + ''' -Fc -Z5 --table="'|| string_agg(a.drop_table_name,'" --table="') ||'" --blobs --file="''' + dump_dir + '''events_dump'||a.drop_name_suffix||'.tgz" &>''' + dump_dir + '''events_dump'|| a.drop_name_suffix ||'.log'
 from
   (select distinct dt.drop_name_suffix,
                    dt.drop_table_name
@@ -56,13 +56,15 @@ partitions_to_handle = postgres_exec( db_host, db_name, get_partitions_sql)
 if not partitions_to_handle:
     print("No partitions to handle. Exiting.")
     sys.exit(0)
-
-# Export partitions. Exit if something goes wrong.
-for partition in partitions_to_handle:
-    if subprocess.call( [ partition[1] ], shell = True ) != 0:
-        print( "Unable to dump partition " + str(partition[0]) + ". Exiting.")
-        print( "HINT: Check corresponding logfile")
-        sys.exit(1)
+else:
+    # Export partitions. Exit if something goes wrong.
+    for partition in partitions_to_handle:
+        print( "Dumping " + str(partition[0]) + " partition...")  
+        if subprocess.call( [ partition[1] ], shell = True ) != 0:
+            print( "Unable to dump partition " + str(partition[0]) + ". Exiting.")
+            print( "HINT: Check corresponding logfile.")
+            sys.exit(1)
+        print( "Done.") 
 
 # Remove old and create new partitions.        
 if subprocess.call( ['psql -U ods '+ db_name + ' -c "select event.srv_handle_partitions()"'], shell = True ) != 0:
