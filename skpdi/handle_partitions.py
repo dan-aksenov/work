@@ -8,6 +8,7 @@ db_name = 'ods_predprod'
 # keep at least this many partitions
 interval = 3
 dump_dir = '/usr/local/pgsql/backup/'
+remote_dir = '/mnt/nfs/backup/dump/'
 
 def postgres_exec(db_host, db_name, sql_query):
     ''' SQL execution '''
@@ -27,7 +28,7 @@ def postgres_exec(db_host, db_name, sql_query):
     return query_results
 
 get_partitions_sql = '''
-select a.drop_name_suffix, 'pg_dump ''' + db_name + ''' -Fc -Z5 --table="'|| string_agg(a.drop_table_name,'" --table="') ||'" --blobs --file="''' + dump_dir + '''events_dump'||a.drop_name_suffix||'.tgz" &>''' + dump_dir + '''events_dump'|| a.drop_name_suffix ||'.log'
+select a.drop_name_suffix, 'pg_dump ''' + db_name + ''' -Fc -Z5 --table="'|| string_agg(a.drop_table_name,'" --table="') ||'" --blobs --file="''' + dump_dir + '''events_dump_'||a.drop_name_suffix||'.tgz" &>''' + dump_dir + '''events_dump_'|| a.drop_name_suffix ||'.log'
 from
   (select distinct dt.drop_name_suffix,
                    dt.drop_table_name
@@ -64,8 +65,9 @@ else:
             print( "Unable to dump partition " + str(partition[0]) + ". Exiting.")
             print( "HINT: Check corresponding logfile.")
             sys.exit(1)
-        print( "Done.") 
-
+        print( "Done.")
+        subprocess.call(["cp "+ dump_dir + "events_dump_"+ str(partition[0]) + ".tgz " + "remote_dir"], shell = True )
+        
 # Remove old and create new partitions.        
 if subprocess.call( ['psql -U ods '+ db_name + ' -c "select event.srv_handle_partitions()"'], shell = True ) != 0:
     print( "Partition handler failed.")
