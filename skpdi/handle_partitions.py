@@ -51,23 +51,25 @@ from
 group by a.drop_name_suffix
 '''
 
-partitions_to_handle = postgres_exec( db_host, db_name, get_partitions_sql)
+def main():
+    partitions_to_handle = postgres_exec( db_host, db_name, get_partitions_sql)
 
-# Check if list is no empty of exit
-if not partitions_to_handle:
-    print("No partitions to handle. Exiting.")
-    sys.exit(0)
-else:
-    # Export partitions. Exit if something goes wrong.
-    for partition in partitions_to_handle:
-        print( "Dumping " + str(partition[0]) + " partition...")  
-        if subprocess.call( [ partition[1] ], shell = True ) != 0:
-            print( "Unable to dump partition " + str(partition[0]) + ". Exiting.")
-            print( "HINT: Check corresponding logfile.")
-            sys.exit(1)
-        print( "Done.")
-        subprocess.call(["cp "+ dump_dir + "events_"+ str(partition[0]) + ".dmp " + remote_dir], shell = True )
+    # Check if list is no empty of exit
+    if not partitions_to_handle:
+        print("No partitions to handle. Exiting.")
+        sys.exit(0)
+    else:
+        # Export partitions. Exit if something goes wrong.
+        for partition in partitions_to_handle:
+            print( "Dumping " + str(partition[0]) + " partition...")  
+            if subprocess.call( [ partition[1] ], shell = True ) != 0:
+                print( "Unable to dump partition " + str(partition[0]) + ". Exiting.")
+                print( "HINT: Check corresponding logfile.")
+                sys.exit(1)
+            print( "Done.")
+            subprocess.call(["cp "+ dump_dir + "events_"+ str(partition[0]) + ".dmp " + remote_dir], shell = True )
+        if subprocess.call( ['psql -U ods '+ db_name + ' -c "select event.srv_handle_partitions()"'], shell = True ) != 0:
+            print( "Partition handler failed.")
         
-# Remove old and create new partitions.        
-if subprocess.call( ['psql -U ods '+ db_name + ' -c "select event.srv_handle_partitions()"'], shell = True ) != 0:
-    print( "Partition handler failed.")
+if __name__ == '__main__':
+    main()
