@@ -28,7 +28,7 @@ def postgres_exec(db_host, db_name, sql_query):
     return query_results
 
 get_partitions_sql = '''
-select a.drop_name_suffix, 'pg_dump ''' + db_name + ''' -Fc -Z5 --table="'|| string_agg(a.drop_table_name,'" --table="') ||'" --blobs --file="''' + dump_dir + '''events_dump_'||a.drop_name_suffix||'.tgz" &>''' + dump_dir + '''events_dump_'|| a.drop_name_suffix ||'.log'
+select a.drop_name_suffix, 'pg_dump ''' + db_name + ''' -Fc -Z5 --table="'|| string_agg(a.drop_table_name,'" --table="') ||'" --blobs --file="''' + dump_dir + '''events_'||a.drop_name_suffix||'.dmp" &>''' + dump_dir + '''events_dump_'|| a.drop_name_suffix ||'.log'
 from
   (select distinct dt.drop_name_suffix,
                    dt.drop_table_name
@@ -66,7 +66,7 @@ else:
             print( "HINT: Check corresponding logfile.")
             sys.exit(1)
         print( "Done.")
-        subprocess.call(["cp "+ dump_dir + "events_dump_"+ str(partition[0]) + ".tgz " + "remote_dir"], shell = True )
+        subprocess.call(["cp "+ dump_dir + "events_"+ str(partition[0]) + ".dmp " + remote_dir], shell = True )
         
 # Remove old and create new partitions.        
 if subprocess.call( ['psql -U ods '+ db_name + ' -c "select event.srv_handle_partitions()"'], shell = True ) != 0:
