@@ -54,7 +54,7 @@ group by a.drop_name_suffix
 def main():
     partitions_to_handle = postgres_exec( db_host, db_name, get_partitions_sql)
 
-    # Check if list is no empty of exit
+    # Check if list is not empty.
     if not partitions_to_handle:
         print("No partitions to handle. Exiting.")
         sys.exit(0)
