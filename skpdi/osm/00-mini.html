@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet</title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ==" crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js" integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log==" crossorigin=""></script>
+</head>
+<body>
+	<div id="mapid" style="width: 1850px; height: 940px;"></div>
+	<script>
+
+		var mymap = L.map('mapid', {
+			attributionControl: false,
+			center: [55.7, 37.6],
+			zoom: 10
+		});
+		
+		//L.tileLayer('http://skpdi.mosreg.ru/map/{z}/{x}/{y}.png').addTo(mymap);
+		L.tileLayer('http://10.139.127.6/map/{z}/{x}/{y}.png').addTo(mymap);
+
+	</script>
+</body>
+</html>
