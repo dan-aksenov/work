@@ -91,8 +91,8 @@ metrics_bal = [
 
 
 # timeframe generator
-dt = datetime.datetime(2018, 12, 26)
-end = datetime.datetime(2019, 03, 31, 23, 59, 59)
+dt = datetime.datetime(2019, 07, 01)
+end = datetime.datetime(2019, 07, 31, 23, 59, 59)
 step = datetime.timedelta(minutes=1)
 timestamps = []
 while dt < end:
