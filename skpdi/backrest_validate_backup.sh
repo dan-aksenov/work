@@ -20,9 +20,16 @@ sed -i 's/huge_pages = .*/huge_pages = off/g' $STAGE_DIR/conf.d/25ansible_postgr
 # Attempt start.
 pg_ctl -w -D $STAGE_DIR start
 
+# Check if db is in recovery/
+for i in $(seq 0 100); do
+response=$(psql -qAtX -p 54320 -c "SELECT pg_is_in_recovery()::int" -U postgres postgres)
+[[ $response == 0 || $i == $try ]] && break
+echo "Database is sitll recoverint. "
+sleep 60
+done
+
 echo '##########################################################'
-read -p "Restore completed at `date`. Press [Enter] to proceed"
-echo Last date from event.fdc_app_log:
+echo "Restore completed at `date`. Last date from event.fdc_app_log:"
 psql --port 54320 --tuples-only ods_predprod --command "select a.datetime from event.fdc_app_log a order by datetime desc limit 1"
 
 DOW=$(date --date=${dateinfile#?_} "+%A"|cut -c -3)
