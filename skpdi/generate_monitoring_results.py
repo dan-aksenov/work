@@ -66,6 +66,7 @@ metrics_app = [
 ['Веб запрос к службе', 1, 4]
 ]
 
+'''
 servers_ceph = [
 'gudhskpdi-ceph-01',
 'gudhskpdi-ceph-02',
@@ -79,7 +80,7 @@ metrics_ceph = [
 ['ceph bandwith',1 ,9],
 ['Веб запрос к службе', 1, 4]
 ]
-
+'''
 
 servers_bal = [
 'gudhskpdi-bal-01'    
@@ -91,8 +92,8 @@ metrics_bal = [
 
 
 # timeframe generator
-dt = datetime.datetime(2019, 07, 01)
-end = datetime.datetime(2019, 07, 31, 23, 59, 59)
+dt = datetime.datetime(2019, 8, 12)
+end = datetime.datetime(2019, 9, 30, 23, 59, 59)
 step = datetime.timedelta(minutes=1)
 timestamps = []
 while dt < end:
@@ -101,7 +102,7 @@ while dt < end:
 
 def generator(servers, metrics):
     for server in servers:
-        with open('c:/tmp/1/'+server+'.csv', mode='ab') as metrics_file:
+        with open('/tmp/'+server+'.csv', mode='ab') as metrics_file:
             metrics_writer = csv.writer(metrics_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for stamp in timestamps:
                 for metric in metrics:
