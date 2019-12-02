@@ -1,5 +1,6 @@
+#!/bin/bash
 if [ "$#" -ne 1 ]; then
-    echo "$1 for patch number" 
+    echo "1 for patch number" 
     exit 1
 fi
 
@@ -25,6 +26,6 @@ ssh ansible@ats-rd sudo md5sum /u01/apache-tomcat-8.5.8/webapps/ats-rd.war
 read -p "Press [Enter] key to proceed..."
 ssh ansible@ats-rd sudo -u tomcat /u01/apache-tomcat-8.5.8/bin/startup.sh
 
-cd ~
+cd -
 rm -rf /tmp/stage
 sudo umount /mnt/sunny
