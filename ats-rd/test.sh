@@ -20,6 +20,7 @@ read -p "Press [Enter] key to proceed..."
 ssh ansible@ats-rd mkdir /tmp/stage
 scp /tmp/stage/$ver/ats-rd-server-$ver.war ansible@ats-rd:/tmp/stage
 ssh ansible@ats-rd sudo cp /tmp/stage/ats-rd-server-$ver.war /u01/apache-tomcat-8.5.8/webapps/ats-rd.war
+ssh ansible@ats-rd sudo chown tomcat.tomcat /u01/apache-tomcat-8.5.8/webapps/ats-rd.war
 
 md5sum /mnt/sunny/$ver/ats-rd-server-$ver.war
 ssh ansible@ats-rd sudo md5sum /u01/apache-tomcat-8.5.8/webapps/ats-rd.war
