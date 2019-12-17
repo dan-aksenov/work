@@ -66,22 +66,6 @@ metrics_app = [
 ['Веб запрос к службе', 1, 4]
 ]
 
-'''
-servers_ceph = [
-'gudhskpdi-ceph-01',
-'gudhskpdi-ceph-02',
-'gudhskpdi-ceph-03'
-]
-
-metrics_ceph = [
-['ceph free space', 1000, 9999],
-['ceph latency',1 , 49],
-['ceph i/o', 1,99],
-['ceph bandwith',1 ,9],
-['Веб запрос к службе', 1, 4]
-]
-'''
-
 servers_bal = [
 'gudhskpdi-bal-01'    
 ]
@@ -92,8 +76,8 @@ metrics_bal = [
 
 
 # timeframe generator
-dt = datetime.datetime(2019, 8, 12)
-end = datetime.datetime(2019, 9, 30, 23, 59, 59)
+dt = datetime.datetime(2019, 10, 1)
+end = datetime.datetime(2019, 12, 18, 23, 59, 59)
 step = datetime.timedelta(minutes=1)
 timestamps = []
 while dt < end:
@@ -113,5 +97,4 @@ def generator(servers, metrics):
 generator(servers, metrics)
 generator(servers_db, metrics_db)
 generator(servers_app, metrics_app)
-generator(servers_ceph, metrics_ceph)
 generator(servers_bal, metrics_bal)
